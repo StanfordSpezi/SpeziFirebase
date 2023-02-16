@@ -20,7 +20,7 @@ jobs:
     name: Build and Test Swift Package
     uses: StanfordBDHG/.github/.github/workflows/build-and-test-xcodebuild-spm.yml@v1
     with:
-      scheme: CardinalKit-Package
+      scheme: CardinalKitFirebase-Package
   build_and_test-uitests:
     name: Build and Test UITests
     runs-on: macos-12
@@ -73,4 +73,4 @@ jobs:
     needs: [build_and_test-spm, build_and_test-uitests]
     uses: StanfordBDHG/.github/.github/workflows/create-and-upload-coverage-report.yml@v1
     with:
-      coveragereports: CardinalKit-Package.xcresult TestApp.xcresult
+      coveragereports: CardinalKitFirebase-Package.xcresult TestApp.xcresult
