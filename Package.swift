@@ -24,8 +24,8 @@ let package = Package(
         .library(name: "CardinalKitFirestorePrefixUserIdAdapter", targets: ["CardinalKitFirestorePrefixUserIdAdapter"])
     ],
     dependencies: [
-        .package(url: "https://github.com/StanfordBDHG/CardinalKit", .upToNextMinor(from: "0.3.0")),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.3.0")
+        .package(url: "https://github.com/StanfordBDHG/CardinalKit", .upToNextMinor(from: "0.3.3")),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.5.0")
     ],
     targets: [
         .target(
