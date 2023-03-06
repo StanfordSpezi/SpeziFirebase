@@ -16,9 +16,7 @@ import SwiftUI
 class TestAppDelegate: CardinalKitAppDelegate {
     override var configuration: Configuration {
         Configuration(standard: TestAppStandard()) {
-            Firestore(
-                settings: .emulator
-            )
+            Firestore(settings: .emulator)
             FirebaseAccountConfiguration(emulatorSettings: (host: "localhost", port: 9099))
         }
     }
