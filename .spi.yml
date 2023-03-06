@@ -11,14 +11,7 @@ builder:
   configs:
     - platform: ios
       documentation_targets:
-      - CardinalKit
-      - Account
-      - Contact
-      - FHIR
-      - HealthKitDataSource
-      - LocalStorage
-      - Onboarding
-      - Scheduler
-      - SecureStorage
-      - Views
-      - XCTRuntimeAssertions
+      - CardinalKitFirebaseAccount
+      - CardinalKitFirebaseConfiguration
+      - CardinalKitFirestore
+      - CardinalKitFirestorePrefixUserIdAdapter
