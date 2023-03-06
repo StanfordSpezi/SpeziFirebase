@@ -11,6 +11,7 @@ SPDX-License-Identifier: MIT
 # CardinalKit Firebase
 
 [![Build and Test](https://github.com/StanfordBDHG/CardinalKitFirebase/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/StanfordBDHG/CardinalKitFirebase/actions/workflows/build-and-test.yml)
+[![codecov](https://codecov.io/gh/StanfordBDHG/CardinalKitFirebase/branch/main/graph/badge.svg?token=LCRkf3e2lx)](https://codecov.io/gh/StanfordBDHG/CardinalKitFirebase)
 
 Google Firebase modules for the [CardinalKit framework](https://github.com/StanfordBDHG/CardinalKit).
 
