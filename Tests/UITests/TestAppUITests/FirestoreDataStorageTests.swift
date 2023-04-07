@@ -183,13 +183,19 @@ final class FirestoreDataStorageTests: XCTestCase {
         try app.textFields[identifierTextFieldIdentifier].delete(count: 42)
         try app.textFields[identifierTextFieldIdentifier].enter(value: id)
         
+        app.dismissKeyboard()
+        
         let collectionPathTextFieldIdentifier = "Enter the element's collection path."
         try app.textFields[collectionPathTextFieldIdentifier].delete(count: 42)
         try app.textFields[collectionPathTextFieldIdentifier].enter(value: collectionPath)
         
+        app.dismissKeyboard()
+        
         let contextFieldIdentifier = "Enter the element's optional context."
         try app.textFields[contextFieldIdentifier].delete(count: 42)
         try app.textFields[contextFieldIdentifier].enter(value: context.description)
+        
+        app.dismissKeyboard()
     }
     
     private func deleteAllDocuments() async throws {

@@ -250,7 +250,10 @@ extension XCUIApplication {
         XCTAssertTrue(self.navigationBars.buttons["Login"].waitForExistence(timeout: 2.0))
         
         try textFields["Enter your email ..."].enter(value: username)
+        dismissKeyboard()
+        
         try secureTextFields["Enter your password ..."].enter(value: password)
+        dismissKeyboard()
         
         swipeUp()
         
@@ -270,14 +273,22 @@ extension XCUIApplication {
         XCTAssertTrue(self.navigationBars.buttons["Sign Up"].waitForExistence(timeout: 2.0))
         
         try textFields["Enter your email ..."].enter(value: username)
+        dismissKeyboard()
+        
         try secureTextFields["Enter your password ..."].enter(value: password)
+        dismissKeyboard()
+        
         try secureTextFields["Repeat your password ..."].enter(value: password)
+        dismissKeyboard()
         
         swipeUp()
         
         try textFields["Enter your first name ..."].enter(value: givenName)
+        dismissKeyboard()
         swipeUp()
+        
         try textFields["Enter your last name ..."].enter(value: familyName)
+        dismissKeyboard()
         swipeUp()
         
         

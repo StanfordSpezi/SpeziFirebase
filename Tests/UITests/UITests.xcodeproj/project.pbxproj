@@ -567,7 +567,7 @@
 			repositoryURL = "https://github.com/StanfordBDHG/XCTestExtensions";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.3.0;
+				minimumVersion = 0.4.0;
 			};
 		};
 		2FB0758B299DF8F100C0B37F /* XCRemoteSwiftPackageReference "CardinalKit" */ = {
@@ -575,7 +575,7 @@
 			repositoryURL = "https://github.com/StanfordBDHG/CardinalKit";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.3.3;
+				minimumVersion = 0.3.5;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
