@@ -23,17 +23,26 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordBDHG/CardinalKit",
       "state" : {
-        "revision" : "6162a67a0b821c2be9358bec798d5d3e94cc5783",
-        "version" : "0.3.5"
+        "revision" : "b5476acaeb57092068a945e7750ab84ce02ddbc6",
+        "version" : "0.4.1"
       }
     },
     {
-      "identity" : "fhirmodels",
+      "identity" : "cardinalkitaccount",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/FHIRModels",
+      "location" : "https://github.com/StanfordBDHG/CardinalKitAccount.git",
       "state" : {
-        "revision" : "e115442fb3c5d44ffb1dc9b4e039b77fd143ad96",
-        "version" : "0.4.0"
+        "revision" : "a90e8ed53cd186d3634c751b55324b5181dda3f2",
+        "version" : "0.2.0"
+      }
+    },
+    {
+      "identity" : "cardinalkitviews",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/StanfordBDHG/CardinalKitViews",
+      "state" : {
+        "revision" : "eefa262d96a930fb6339de194a2e574b5fbc8810",
+        "version" : "0.2.1"
       }
     },
     {
@@ -91,15 +100,6 @@
       }
     },
     {
-      "identity" : "healthkitonfhir",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/StanfordBDHG/HealthKitOnFHIR",
-      "state" : {
-        "revision" : "d10f408766264183cd50bb117b99580255520aa3",
-        "version" : "0.2.3"
-      }
-    },
-    {
       "identity" : "leveldb",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/leveldb.git",
@@ -127,24 +127,6 @@
       }
     },
     {
-      "identity" : "researchkit",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/StanfordBDHG/ResearchKit",
-      "state" : {
-        "revision" : "52a9bd8bcf2112b2f70479cd192f8c5fa9850c31",
-        "version" : "2.2.8"
-      }
-    },
-    {
-      "identity" : "researchkitonfhir",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/StanfordBDHG/ResearchKitOnFHIR",
-      "state" : {
-        "revision" : "1bc7a15760916ade4c5058fa798a871e80c2955c",
-        "version" : "0.1.6"
-      }
-    },
-    {
       "identity" : "swift-protobuf",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-protobuf.git",
@@ -160,6 +142,15 @@
       "state" : {
         "revision" : "3037f2e8ad1cd2e08a0dfbe5f0a4866445102150",
         "version" : "0.4.0"
+      }
+    },
+    {
+      "identity" : "xctruntimeassertions",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/StanfordBDHG/XCTRuntimeAssertions",
+      "state" : {
+        "revision" : "654b3e49219c0e2303ae8b4ea8edf5e12d168e12",
+        "version" : "0.2.1"
       }
     }
   ],

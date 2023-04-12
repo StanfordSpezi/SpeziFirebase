@@ -6,12 +6,12 @@
 // SPDX-License-Identifier: MIT
 //
 
-import Account
 import CardinalKit
+import CardinalKitAccount
 import CardinalKitFirebaseAccount
+import CardinalKitViews
 import FirebaseAuth
 import SwiftUI
-import Views
 
 
 struct FirebaseAccountTestsView: View {
