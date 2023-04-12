@@ -6,8 +6,8 @@
 // SPDX-License-Identifier: MIT
 //
 
-import Account
 import CardinalKit
+import CardinalKitAccount
 @_exported import class FirebaseAuth.User
 import class FirebaseAuth.Auth
 import protocol FirebaseAuth.AuthStateDidChangeListenerHandle

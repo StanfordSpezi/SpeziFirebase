@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import Account
+import CardinalKitAccount
 import FirebaseAuth
 import SwiftUI
 
