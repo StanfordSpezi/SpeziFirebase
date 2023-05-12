@@ -1,5 +1,5 @@
 //
-// This source file is part of the CardinalKit open-source project
+// This source file is part of the Stanford Spezi open-source project
 //
 // SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -144,10 +144,10 @@ final class FirebaseAccountTests: XCTestCase {
     }
     
     
-    // curl -H "Authorization: Bearer owner" -X DELETE http://localhost:9099/emulator/v1/projects/cardinalkitfirebaseuitests/accounts
+    // curl -H "Authorization: Bearer owner" -X DELETE http://localhost:9099/emulator/v1/projects/spezifirebaseuitests/accounts
     private func deleteAllAccounts() async throws {
         let emulatorDocumentsURL = try XCTUnwrap(
-            URL(string: "http://localhost:9099/emulator/v1/projects/cardinalkitfirebaseuitests/accounts")
+            URL(string: "http://localhost:9099/emulator/v1/projects/spezifirebaseuitests/accounts")
         )
         var request = URLRequest(url: emulatorDocumentsURL)
         request.httpMethod = "DELETE"
@@ -169,10 +169,10 @@ final class FirebaseAccountTests: XCTestCase {
         }
     }
 
-    // curl -H "Authorization: Bearer owner" -H "Content-Type: application/json" -X POST -d '{}' http://localhost:9099/identitytoolkit.googleapis.com/v1/projects/cardinalkitfirebaseuitests/accounts:query
+    // curl -H "Authorization: Bearer owner" -H "Content-Type: application/json" -X POST -d '{}' http://localhost:9099/identitytoolkit.googleapis.com/v1/projects/spezifirebaseuitests/accounts:query
     private func getAllAccounts() async throws -> [FirestoreAccount] {
         let emulatorAccountsURL = try XCTUnwrap(
-            URL(string: "http://localhost:9099/identitytoolkit.googleapis.com/v1/projects/cardinalkitfirebaseuitests/accounts:query")
+            URL(string: "http://localhost:9099/identitytoolkit.googleapis.com/v1/projects/spezifirebaseuitests/accounts:query")
         )
         var request = URLRequest(url: emulatorAccountsURL)
         request.httpMethod = "POST"
@@ -206,10 +206,10 @@ final class FirebaseAccountTests: XCTestCase {
         }
     }
     
-    // curl -H 'Content-Type: application/json' -d '{"email":"[user@example.com]","password":"[PASSWORD]","returnSecureToken":true}' 'http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=cardinalkitfirebaseuitests'
+    // curl -H 'Content-Type: application/json' -d '{"email":"[user@example.com]","password":"[PASSWORD]","returnSecureToken":true}' 'http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=spezifirebaseuitests'
     private func createAccount(email: String, password: String, displayName: String) async throws {
         let emulatorAccountsURL = try XCTUnwrap(
-            URL(string: "http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=cardinalkitfirebaseuitests")
+            URL(string: "http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=spezifirebaseuitests")
         )
         var request = URLRequest(url: emulatorAccountsURL)
         request.httpMethod = "POST"
