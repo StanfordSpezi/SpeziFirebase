@@ -566,34 +566,34 @@
 /* Begin XCRemoteSwiftPackageReference section */
 		2F2E8EFA29E7363A00D439B7 /* XCRemoteSwiftPackageReference "SpeziAccount" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/StanfordBDHG/SpeziAccount.git";
+			repositoryURL = "https://github.com/StanfordSpezi/SpeziAccount.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.2.0;
+				minimumVersion = 0.3.0;
 			};
 		};
 		2F2E8EFD29E7369B00D439B7 /* XCRemoteSwiftPackageReference "SpeziViews" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/StanfordBDHG/SpeziViews.git";
+			repositoryURL = "https://github.com/StanfordSpezi/SpeziViews.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.2.1;
+				minimumVersion = 0.3.0;
 			};
 		};
 		2F746D9D29962B2A00BF54FE /* XCRemoteSwiftPackageReference "XCTestExtensions" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/StanfordBDHG/XCTestExtensions";
+			repositoryURL = "https://github.com/StanfordSpezi/XCTestExtensions";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.0;
+				minimumVersion = 0.4.1;
 			};
 		};
 		2FB0758B299DF8F100C0B37F /* XCRemoteSwiftPackageReference "Spezi" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/StanfordBDHG/Spezi";
+			repositoryURL = "https://github.com/StanfordSpezi/Spezi";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.1;
+				minimumVersion = 0.5.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

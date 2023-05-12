@@ -18,14 +18,14 @@ on:
 jobs:
   buildandtest:
     name: Build and Test Swift Package
-    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
+    uses: StanfordSpezi/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
     with:
       artifactname: SpeziFirebase-Package.xcresult
       runsonlabels: '["macOS", "self-hosted"]'
       scheme: SpeziFirebase-Package
   buildandtestuitests:
     name: Build and Test UI Tests
-    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
+    uses: StanfordSpezi/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
     with:
       artifactname: UITests.xcresult
       runsonlabels: '["macOS", "self-hosted"]'
@@ -36,6 +36,6 @@ jobs:
   uploadcoveragereport:
     name: Upload Coverage Report
     needs: [buildandtest, buildandtestuitests]
-    uses: StanfordBDHG/.github/.github/workflows/create-and-upload-coverage-report.yml@v2
+    uses: StanfordSpezi/.github/.github/workflows/create-and-upload-coverage-report.yml@v2
     with:
       coveragereports: SpeziFirebase-Package.xcresult UITests.xcresult
