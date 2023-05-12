@@ -1,19 +1,19 @@
 //
-// This source file is part of the CardinalKit open-source project
+// This source file is part of the Stanford Spezi open-source project
 //
 // SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
 
-import CardinalKit
-import CardinalKitAccount
+import Spezi
+import SpeziAccount
 @_exported import class FirebaseAuth.User
 import class FirebaseAuth.Auth
 import protocol FirebaseAuth.AuthStateDidChangeListenerHandle
-import CardinalKitFirebaseConfiguration
 import FirebaseCore
 import Foundation
+import SpeziFirebaseConfiguration
 
 
 /// Configures Firebase Auth `AccountService`s that can be used in any views of the `Account` module.
@@ -25,7 +25,7 @@ import Foundation
 ///
 /// The ``FirebaseAccountConfiguration`` can, e.g., be used to to connect to the Firebase Auth emulator:
 /// ```
-/// class ExampleAppDelegate: CardinalKitAppDelegate {
+/// class ExampleAppDelegate: SpeziAppDelegate {
 ///     override var configuration: Configuration {
 ///         Configuration(standard: /* ... */) {
 ///             FirebaseAccountConfiguration(emulatorSettings: (host: "localhost", port: 9099))

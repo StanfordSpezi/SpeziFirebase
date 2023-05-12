@@ -1,25 +1,25 @@
 //
-// This source file is part of the CardinalKit open-source project
+// This source file is part of the Stanford Spezi open-source project
 //
 // SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
 
-import CardinalKit
-import CardinalKitFirebaseConfiguration
 import FirebaseCore
 import FirebaseFirestore
 import FirebaseFirestoreSwift
+import Spezi
+import SpeziFirebaseConfiguration
 import SwiftUI
 
 
 /// The ``Firestore`` module & data storage provider enables the synchronization of data stored in a standard with the Firebase Firestore.
 ///
-/// You can configure the ``Firestore`` module in the `CardinalKitAppDelegate` including a chain of adapter from your standard basetype and
+/// You can configure the ``Firestore`` module in the `SpeziAppDelegate` including a chain of adapter from your standard basetype and
 /// removal context to ``FirestoreElement`` and ``FirestoreRemovalContext`` instances.
 /// ```swift
-/// class FirestoreExampleDelegate: CardinalKitAppDelegate {
+/// class FirestoreExampleDelegate: SpeziAppDelegate {
 ///     override var configuration: Configuration {
 ///         Configuration(standard: ExampleStandard()) {
 ///             Firestore(settings: .emulator) {

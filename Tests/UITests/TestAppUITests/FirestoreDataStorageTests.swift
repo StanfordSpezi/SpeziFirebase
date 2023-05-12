@@ -1,5 +1,5 @@
 //
-// This source file is part of the CardinalKit open-source project
+// This source file is part of the Stanford Spezi open-source project
 //
 // SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -26,7 +26,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         
         init(id: String, collectionPath: String, content: Int) {
             self.init(
-                name: "projects/cardinalkitfirebaseuitests/databases/(default)/documents/\(collectionPath)/\(id)",
+                name: "projects/spezifirebaseuitests/databases/(default)/documents/\(collectionPath)/\(id)",
                 fields: [
                     "collectionPath": [
                         "stringValue": collectionPath
@@ -200,7 +200,7 @@ final class FirestoreDataStorageTests: XCTestCase {
     
     private func deleteAllDocuments() async throws {
         let emulatorDocumentsURL = try XCTUnwrap(
-            URL(string: "http://localhost:8080/emulator/v1/projects/cardinalkitfirebaseuitests/databases/(default)/documents")
+            URL(string: "http://localhost:8080/emulator/v1/projects/spezifirebaseuitests/databases/(default)/documents")
         )
         var request = URLRequest(url: emulatorDocumentsURL)
         request.httpMethod = "DELETE"
@@ -223,7 +223,7 @@ final class FirestoreDataStorageTests: XCTestCase {
 
     private func getAllDocuments() async throws -> [FirestoreElement] {
         let documentsURL = try XCTUnwrap(
-            URL(string: "http://localhost:8080/v1/projects/cardinalkitfirebaseuitests/databases/(default)/documents/")
+            URL(string: "http://localhost:8080/v1/projects/spezifirebaseuitests/databases/(default)/documents/")
         )
         let (data, response) = try await URLSession.shared.data(from: documentsURL)
         

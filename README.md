@@ -8,22 +8,22 @@ SPDX-License-Identifier: MIT
   
 -->
 
-# CardinalKit Firebase
+# Spezi Firebase
 
-[![Build and Test](https://github.com/StanfordBDHG/CardinalKitFirebase/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/StanfordBDHG/CardinalKitFirebase/actions/workflows/build-and-test.yml)
-[![codecov](https://codecov.io/gh/StanfordBDHG/CardinalKitFirebase/branch/main/graph/badge.svg?token=LCRkf3e2lx)](https://codecov.io/gh/StanfordBDHG/CardinalKitFirebase)
+[![Build and Test](https://github.com/StanfordBDHG/SpeziFirebase/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/StanfordBDHG/SpeziFirebase/actions/workflows/build-and-test.yml)
+[![codecov](https://codecov.io/gh/StanfordBDHG/SpeziFirebase/branch/main/graph/badge.svg?token=LCRkf3e2lx)](https://codecov.io/gh/StanfordBDHG/SpeziFirebase)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7706899.svg)](https://doi.org/10.5281/zenodo.7706899)
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FStanfordBDHG%2FCardinalKitFirebase%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/StanfordBDHG/CardinalKitFirebase)
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FStanfordBDHG%2FCardinalKitFirebase%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/StanfordBDHG/CardinalKitFirebase)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FStanfordBDHG%2FSpeziFirebase%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/StanfordBDHG/SpeziFirebase)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FStanfordBDHG%2FSpeziFirebase%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/StanfordBDHG/SpeziFirebase)
 
-Google Firebase modules for the [CardinalKit framework](https://github.com/StanfordBDHG/CardinalKit).
+Google Firebase modules for the [Spezi framework](https://github.com/StanfordBDHG/Spezi).
 
-For more information, please refer to the [API documentation](https://swiftpackageindex.com/StanfordBDHG/CardinalKitFirebase/documentation).
+For more information, please refer to the [API documentation](https://swiftpackageindex.com/StanfordBDHG/SpeziFirebase/documentation).
 
 
-## The CardinalKit Template Application
+## The Spezi Template Application
 
-The [CardinalKit Template Application](https://github.com/StanfordBDHG/CardinalKitTemplateApplication) provides a great starting point and example using the CardinalKit Firebase Modules.
+The [Spezi Template Application](https://github.com/StanfordBDHG/SpeziTemplateApplication) provides a great starting point and example using the Spezi Firebase Modules.
 
 
 ## Contributing
@@ -33,7 +33,7 @@ Contributions to this project are welcome. Please make sure to read the [contrib
 
 ## License
 
-This project is licensed under the MIT License. See [Licenses](https://github.com/StanfordBDHG/CardinalKitFirebase/tree/main/LICENSES) for more information.
+This project is licensed under the MIT License. See [Licenses](https://github.com/StanfordBDHG/SpeziFirebase/tree/main/LICENSES) for more information.
 
 ![Spezi Footer](https://raw.githubusercontent.com/StanfordSpezi/.github/main/assets/FooterLight.png#gh-light-mode-only)
 ![Spezi Footer](https://raw.githubusercontent.com/StanfordSpezi/.github/main/assets/FooterDark.png#gh-dark-mode-only)

@@ -8,7 +8,7 @@ SPDX-License-Identifier: MIT
   
 -->
 
-CardinalKit Firebase contributors
+Spezi Firebase contributors
 ====================
 
 * [Paul Schmiedmayer](https://github.com/PSchmiedmayer)

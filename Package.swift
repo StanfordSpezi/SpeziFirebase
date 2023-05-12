@@ -1,7 +1,7 @@
 // swift-tools-version:5.7
 
 //
-// This source file is part of the CardinalKit open-source project
+// This source file is part of the Stanford Spezi open-source project
 //
 // SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
@@ -12,63 +12,63 @@ import PackageDescription
 
 
 let package = Package(
-    name: "CardinalKitFirebase",
+    name: "SpeziFirebase",
     defaultLocalization: "en",
     platforms: [
         .iOS(.v16)
     ],
     products: [
-        .library(name: "CardinalKitFirebaseAccount", targets: ["CardinalKitFirebaseAccount"]),
-        .library(name: "CardinalKitFirebaseConfiguration", targets: ["CardinalKitFirebaseConfiguration"]),
-        .library(name: "CardinalKitFirestore", targets: ["CardinalKitFirestore"]),
-        .library(name: "CardinalKitFirestorePrefixUserIdAdapter", targets: ["CardinalKitFirestorePrefixUserIdAdapter"])
+        .library(name: "SpeziFirebaseAccount", targets: ["SpeziFirebaseAccount"]),
+        .library(name: "SpeziFirebaseConfiguration", targets: ["SpeziFirebaseConfiguration"]),
+        .library(name: "SpeziFirestore", targets: ["SpeziFirestore"]),
+        .library(name: "SpeziFirestorePrefixUserIdAdapter", targets: ["SpeziFirestorePrefixUserIdAdapter"])
     ],
     dependencies: [
-        .package(url: "https://github.com/StanfordBDHG/CardinalKit", .upToNextMinor(from: "0.4.1")),
-        .package(url: "https://github.com/StanfordBDHG/CardinalKitAccount", .upToNextMinor(from: "0.2.0")),
+        .package(url: "https://github.com/StanfordBDHG/Spezi", .upToNextMinor(from: "0.4.1")),
+        .package(url: "https://github.com/StanfordBDHG/SpeziAccount", .upToNextMinor(from: "0.2.0")),
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.7.0")
     ],
     targets: [
         .target(
-            name: "CardinalKitFirebaseAccount",
+            name: "SpeziFirebaseAccount",
             dependencies: [
-                .target(name: "CardinalKitFirebaseConfiguration"),
-                .product(name: "CardinalKit", package: "CardinalKit"),
-                .product(name: "CardinalKitAccount", package: "CardinalKitAccount"),
+                .target(name: "SpeziFirebaseConfiguration"),
+                .product(name: "Spezi", package: "Spezi"),
+                .product(name: "SpeziAccount", package: "SpeziAccount"),
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ]
         ),
         .target(
-            name: "CardinalKitFirebaseConfiguration",
+            name: "SpeziFirebaseConfiguration",
             dependencies: [
-                .product(name: "CardinalKit", package: "CardinalKit"),
+                .product(name: "Spezi", package: "Spezi"),
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk")
             ]
         ),
         .target(
-            name: "CardinalKitFirestore",
+            name: "SpeziFirestore",
             dependencies: [
-                .target(name: "CardinalKitFirebaseConfiguration"),
-                .product(name: "CardinalKit", package: "CardinalKit"),
+                .target(name: "SpeziFirebaseConfiguration"),
+                .product(name: "Spezi", package: "Spezi"),
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
                 .product(name: "FirebaseFirestoreSwift", package: "firebase-ios-sdk")
             ]
         ),
         .target(
-            name: "CardinalKitFirestorePrefixUserIdAdapter",
+            name: "SpeziFirestorePrefixUserIdAdapter",
             dependencies: [
-                .target(name: "CardinalKitFirestore"),
-                .product(name: "CardinalKit", package: "CardinalKit"),
+                .target(name: "SpeziFirestore"),
+                .product(name: "Spezi", package: "Spezi"),
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ]
         ),
         .testTarget(
-            name: "CardinalKitFirebaseTests",
+            name: "SpeziFirebaseTests",
             dependencies: [
-                .target(name: "CardinalKitFirebaseAccount"),
-                .target(name: "CardinalKitFirebaseConfiguration"),
-                .target(name: "CardinalKitFirestore"),
-                .target(name: "CardinalKitFirestorePrefixUserIdAdapter")
+                .target(name: "SpeziFirebaseAccount"),
+                .target(name: "SpeziFirebaseConfiguration"),
+                .target(name: "SpeziFirestore"),
+                .target(name: "SpeziFirestorePrefixUserIdAdapter")
             ]
         )
     ]
