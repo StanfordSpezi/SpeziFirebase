@@ -33,11 +33,11 @@ enum FirebaseAccountError: LocalizedError {
         }
     }
 
-    private var errorDescription: String {
+    var errorDescription: String? {
         .init(localized: errorDescriptionValue, bundle: .module)
     }
     
-    var failureReason: String {
+    var failureReason: String? {
         errorDescription
     }
     
