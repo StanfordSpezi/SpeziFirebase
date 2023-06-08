@@ -18,7 +18,7 @@ enum FirebaseAccountError: LocalizedError {
     case unknown(AuthErrorCode.Code)
     
     
-    var errorDescription: String? {
+    private var errorDescriptionValue: String.LocalizationValue {
         switch self {
         case .invalidEmail:
             return "FIREBASE_ACCOUNT_ERROR_INVALID_EMAIL"
@@ -32,12 +32,16 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_UNKNOWN"
         }
     }
+
+    private var errorDescription: String {
+        .init(localized: errorDescriptionValue, bundle: .module)
+    }
     
-    var failureReason: String? {
+    var failureReason: String {
         errorDescription
     }
     
-    var recoverySuggestion: String? {
+    private var recoverySuggestionValue: String.LocalizationValue {
         switch self {
         case .invalidEmail:
             return "FIREBASE_ACCOUNT_ERROR_INVALID_EMAIL_SUGGESTION"
@@ -51,7 +55,11 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_UNKNOWN_SUGGESTION"
         }
     }
-    
+
+    var recoverySuggestion: String? {
+        .init(localized: recoverySuggestionValue, bundle: .module)
+    }
+
     
     init(authErrorCode: AuthErrorCode) {
         switch authErrorCode.code {
