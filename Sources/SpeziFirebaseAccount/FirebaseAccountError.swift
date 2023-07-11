@@ -14,6 +14,8 @@ enum FirebaseAccountError: LocalizedError {
     case invalidEmail
     case accountAlreadyInUse
     case weakPassword
+    case invalidCredentials
+    case internalPasswordResetError
     case setupError
     case unknown(AuthErrorCode.Code)
     
@@ -26,6 +28,10 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_ALREADY_IN_USE"
         case .weakPassword:
             return "FIREBASE_ACCOUNT_WEAK_PASSWORD"
+        case .invalidCredentials:
+            return "FIREBASE_ACCOUNT_INVALID_CREDENTIALS"
+        case .internalPasswordResetError:
+            return "FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET"
         case .setupError:
             return "FIREBASE_ACCOUNT_SETUP_ERROR"
         case .unknown:
@@ -37,10 +43,6 @@ enum FirebaseAccountError: LocalizedError {
         .init(localized: errorDescriptionValue, bundle: .module)
     }
     
-    var failureReason: String? {
-        errorDescription
-    }
-    
     private var recoverySuggestionValue: String.LocalizationValue {
         switch self {
         case .invalidEmail:
@@ -49,6 +51,10 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_ALREADY_IN_USE_SUGGESTION"
         case .weakPassword:
             return "FIREBASE_ACCOUNT_WEAK_PASSWORD_SUGGESTION"
+        case .invalidCredentials:
+            return "FIREBASE_ACCOUNT_INVALID_CREDENTIALS_SUGGESTION"
+        case .internalPasswordResetError:
+            return "FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET_SUGGESTION"
         case .setupError:
             return "FIREBASE_ACCOUNT_SETUP_ERROR_SUGGESTION"
         case .unknown:
@@ -63,12 +69,16 @@ enum FirebaseAccountError: LocalizedError {
     
     init(authErrorCode: AuthErrorCode) {
         switch authErrorCode.code {
-        case .invalidEmail:
+        case .invalidEmail, .invalidRecipientEmail:
             self = .invalidEmail
         case .emailAlreadyInUse:
             self = .accountAlreadyInUse
         case .weakPassword:
             self = .weakPassword
+        case .userDisabled, .wrongPassword:
+            self = .invalidCredentials
+        case .invalidSender, .invalidMessagePayload:
+            self = .internalPasswordResetError
         case .operationNotAllowed, .invalidAPIKey, .appNotAuthorized, .keychainError, .internalError:
             self = .setupError
         default:

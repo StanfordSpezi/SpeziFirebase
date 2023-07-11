@@ -34,24 +34,13 @@ import SpeziFirebaseConfiguration
 ///     }
 /// }
 /// ```
-public final class FirebaseAccountConfiguration: Component, ObservableObject, ObservableObjectProvider {
+public final class FirebaseAccountConfiguration: Component {
     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
-    
+
     private let emulatorSettings: (host: String, port: Int)?
     private let authenticationMethods: FirebaseAuthAuthenticationMethods
-    private let account: Account
-    private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
-    
-    @MainActor @Published public var user: User?
-    
-    
-    public var observableObjects: [any ObservableObject] {
-        [
-            self,
-            account
-        ]
-    }
-    
+
+    public let accountService: FirebaseEmailPasswordAccountService // TODO this protocol requirement requires us to make the service public!
     
     /// - Parameters:
     ///   - emulatorSettings: The emulator settings. The default value is `nil`, connecting the FirebaseAccount module to the Firebase Auth cloud instance.
@@ -62,55 +51,17 @@ public final class FirebaseAccountConfiguration: Component, ObservableObject, Ob
     ) {
         self.emulatorSettings = emulatorSettings
         self.authenticationMethods = authenticationMethods
-        
-        
-        var accountServices: [any AccountService] = []
-        if authenticationMethods.contains(.emailAndPassword) {
-            accountServices.append(FirebaseEmailPasswordAccountService())
-        }
-        self.account = Account(accountServices: accountServices)
+
+        // TODO at least one authenticationMethod!
+        //  if authenticationMethods.contains(.emailAndPassword)
+        self.accountService = FirebaseEmailPasswordAccountService()
     }
-    
     
     public func configure() {
         if let emulatorSettings {
             Auth.auth().useEmulator(withHost: emulatorSettings.host, port: emulatorSettings.port)
         }
-        
-        authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { _, user in
-            guard let user else {
-                self.updateSignedOut()
-                return
-            }
-            
-            self.updateSignedIn(user)
-        }
-        
-        Auth.auth().currentUser?.getIDTokenForcingRefresh(true) { _, error in
-            guard error == nil else {
-                self.updateSignedOut()
-                return
-            }
-        }
-    }
-    
-    private func updateSignedOut() {
-        Task {
-            await MainActor.run {
-                self.user = nil
-                self.account.signedIn = false
-            }
-        }
-    }
-    
-    private func updateSignedIn(_ user: User) {
-        Task {
-            await MainActor.run {
-                self.user = user
-                if self.account.signedIn == false {
-                    self.account.signedIn = true
-                }
-            }
-        }
+
+        accountService.configure()
     }
 }

@@ -565,8 +565,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/StanfordSpezi/SpeziAccount.git";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.0;
+				branch = "feature/simple-account-view";
+				kind = branch;
 			};
 		};
 		2F2E8EFD29E7369B00D439B7 /* XCRemoteSwiftPackageReference "SpeziViews" */ = {
@@ -574,7 +574,7 @@
 			repositoryURL = "https://github.com/StanfordSpezi/SpeziViews.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.3.0;
+				minimumVersion = 0.4.0;
 			};
 		};
 		2F746D9D29962B2A00BF54FE /* XCRemoteSwiftPackageReference "XCTestExtensions" */ = {
