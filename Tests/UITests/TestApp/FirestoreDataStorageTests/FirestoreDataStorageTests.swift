@@ -6,8 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
+import FirebaseFirestore
 import Spezi
 import SpeziFirestore
+import SpeziViews
 import SwiftUI
 
 
@@ -16,11 +18,8 @@ import SwiftUI
 /// Refer to https://firebase.google.com/docs/emulator-suite/connect_firestore about more information about the
 /// Firebase Local Emulator Suite.
 struct FirestoreDataStorageTestsView: View {
-    @EnvironmentObject var firebaseModule: Firestore<TestAppStandard>
-    @State var error: Error?
-    @State var element = TestAppStandard.BaseType(id: "TestElement")
-    @State var runningTest = false
-    @State var displayAlert = false
+    @State private var viewState: ViewState = .idle
+    @State private var element = TestAppType(id: "TestElement")
     
     
     var body: some View {
@@ -31,11 +30,6 @@ struct FirestoreDataStorageTestsView: View {
                     "Id",
                     text: $element.id,
                     prompt: Text("Enter the element's identifier.")
-                )
-                TextField(
-                    "CollectionPath",
-                    text: $element.collectionPath,
-                    prompt: Text("Enter the element's collection path.")
                 )
                 TextField(
                     "Context",
@@ -58,45 +52,36 @@ struct FirestoreDataStorageTestsView: View {
                     }
                 )
             }
-                .disabled(runningTest)
+                .disabled(viewState == .processing)
         }
-            .alert(isPresented: $displayAlert) {
-                Alert(title: Text(error?.localizedDescription ?? "Unspecified Error"))
-            }
+            .viewStateAlert(state: $viewState)
             .navigationTitle("FirestoreDataStorage")
     }
     
     
+    @MainActor
     private func uploadElement() {
+        viewState = .processing
         Task {
             do {
-                try await firebaseModule.process(.addition(element))
+                try await Firestore.firestore().collection("Test").document(element.id).setData(from: element)
+                viewState = .idle
             } catch {
-                self.error = error
-                self.displayAlert = true
+                viewState = .error(FirestoreError(error))
             }
         }
     }
     
+    @MainActor
     private func deleteElement() {
+        viewState = .processing
         Task {
             do {
-                try await firebaseModule.process(.removal(element.removalContext))
+                try await Firestore.firestore().collection("Test").document(element.id).delete()
+                viewState = .idle
             } catch {
-                self.error = error
-                self.displayAlert = true
+                viewState = .error(FirestoreError(error))
             }
         }
     }
 }
-
-
-#if DEBUG
-struct FirebaseDataStorageTestsView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            FirestoreDataStorageTestsView()
-        }
-    }
-}
-#endif

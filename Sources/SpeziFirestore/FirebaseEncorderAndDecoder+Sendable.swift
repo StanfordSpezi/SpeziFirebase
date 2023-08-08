@@ -6,9 +6,10 @@
 // SPDX-License-Identifier: MIT
 //
 
+import FirebaseFirestoreSwift
 
-/// Indicates an error on the ``FirestorePrefixUserIdAdapter``.
-public enum FirestorePrefixUserIdAdapterError: Error {
-    /// The user is not yet signed in.
-    case userNotSignedIn
-}
+
+extension FirebaseFirestore.Firestore.Encoder: @unchecked Sendable {}
+
+
+extension FirebaseFirestore.Firestore.Decoder: @unchecked Sendable {}

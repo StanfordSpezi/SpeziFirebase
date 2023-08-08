@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.8
 
 //
 // This source file is part of the Stanford Spezi open-source project
@@ -20,13 +20,12 @@ let package = Package(
     products: [
         .library(name: "SpeziFirebaseAccount", targets: ["SpeziFirebaseAccount"]),
         .library(name: "SpeziFirebaseConfiguration", targets: ["SpeziFirebaseConfiguration"]),
-        .library(name: "SpeziFirestore", targets: ["SpeziFirestore"]),
-        .library(name: "SpeziFirestorePrefixUserIdAdapter", targets: ["SpeziFirestorePrefixUserIdAdapter"])
+        .library(name: "SpeziFirestore", targets: ["SpeziFirestore"])
     ],
     dependencies: [
-        .package(url: "https://github.com/StanfordSpezi/Spezi", .upToNextMinor(from: "0.5.0")),
-        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", .upToNextMinor(from: "0.3.0")),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.7.0")
+        .package(url: "https://github.com/StanfordSpezi/Spezi", .upToNextMinor(from: "0.7.0")),
+        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", .upToNextMinor(from: "0.4.0")),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.13.0")
     ],
     targets: [
         .target(
@@ -54,21 +53,12 @@ let package = Package(
                 .product(name: "FirebaseFirestoreSwift", package: "firebase-ios-sdk")
             ]
         ),
-        .target(
-            name: "SpeziFirestorePrefixUserIdAdapter",
-            dependencies: [
-                .target(name: "SpeziFirestore"),
-                .product(name: "Spezi", package: "Spezi"),
-                .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
-            ]
-        ),
         .testTarget(
             name: "SpeziFirebaseTests",
             dependencies: [
                 .target(name: "SpeziFirebaseAccount"),
                 .target(name: "SpeziFirebaseConfiguration"),
-                .target(name: "SpeziFirestore"),
-                .target(name: "SpeziFirestorePrefixUserIdAdapter")
+                .target(name: "SpeziFirestore")
             ]
         )
     ]

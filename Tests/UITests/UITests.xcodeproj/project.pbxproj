@@ -14,14 +14,13 @@
 		2F6D139A28F5F386007C25D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F6D139928F5F386007C25D6 /* Assets.xcassets */; };
 		2F746D9F29962B2A00BF54FE /* XCTestExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 2F746D9E29962B2A00BF54FE /* XCTestExtensions */; };
 		2F87F9F12953EEB400810247 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2F87F9F02953EEB400810247 /* GoogleService-Info.plist */; };
-		2F8A431729130BBC005D2B8F /* TestAppStandard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F8A431629130BBC005D2B8F /* TestAppStandard.swift */; };
+		2F8A431729130BBC005D2B8F /* TestAppType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F8A431629130BBC005D2B8F /* TestAppType.swift */; };
 		2F8CE161298C2C6D003799A8 /* FirebaseAccountTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F8CE160298C2C6D003799A8 /* FirebaseAccountTests.swift */; };
 		2F9F07F129090B0500CDC598 /* TestAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F9F07F029090B0500CDC598 /* TestAppDelegate.swift */; };
 		2FA7382C290ADFAA007ACEB9 /* TestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA7382B290ADFAA007ACEB9 /* TestApp.swift */; };
 		2FB07593299DF96E00C0B37F /* SpeziFirebaseAccount in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07592299DF96E00C0B37F /* SpeziFirebaseAccount */; };
 		2FB07595299DF96E00C0B37F /* SpeziFirebaseConfiguration in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07594299DF96E00C0B37F /* SpeziFirebaseConfiguration */; };
 		2FB07597299DF96E00C0B37F /* SpeziFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07596299DF96E00C0B37F /* SpeziFirestore */; };
-		2FB07599299DF96E00C0B37F /* SpeziFirestorePrefixUserIdAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07598299DF96E00C0B37F /* SpeziFirestorePrefixUserIdAdapter */; };
 		2FB0759D299DF96E00C0B37F /* Spezi in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB0759C299DF96E00C0B37F /* Spezi */; };
 		2FE62C3D2966074F00FCBE7F /* FirestoreDataStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FE62C3C2966074F00FCBE7F /* FirestoreDataStorageTests.swift */; };
 /* End PBXBuildFile section */
@@ -45,7 +44,7 @@
 		2F6D13AC28F5F386007C25D6 /* TestAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TestAppUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F7B6CB4294C03C800FDC494 /* TestApp.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = TestApp.xctestplan; path = UITests.xcodeproj/TestApp.xctestplan; sourceTree = "<group>"; };
 		2F87F9F02953EEB400810247 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		2F8A431629130BBC005D2B8F /* TestAppStandard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestAppStandard.swift; sourceTree = "<group>"; };
+		2F8A431629130BBC005D2B8F /* TestAppType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestAppType.swift; sourceTree = "<group>"; };
 		2F8CE160298C2C6D003799A8 /* FirebaseAccountTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseAccountTests.swift; sourceTree = "<group>"; };
 		2F9F07F029090B0500CDC598 /* TestAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestAppDelegate.swift; sourceTree = "<group>"; };
 		2FA7382B290ADFAA007ACEB9 /* TestApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TestApp.swift; sourceTree = "<group>"; };
@@ -65,7 +64,6 @@
 				2F2E8EFC29E7366200D439B7 /* SpeziAccount in Frameworks */,
 				2FB0759D299DF96E00C0B37F /* Spezi in Frameworks */,
 				2FB07593299DF96E00C0B37F /* SpeziFirebaseAccount in Frameworks */,
-				2FB07599299DF96E00C0B37F /* SpeziFirestorePrefixUserIdAdapter in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,7 +141,7 @@
 		2F9F07ED29090AF500CDC598 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
-				2F8A431629130BBC005D2B8F /* TestAppStandard.swift */,
+				2F8A431629130BBC005D2B8F /* TestAppType.swift */,
 				2F9F07F029090B0500CDC598 /* TestAppDelegate.swift */,
 			);
 			path = Shared;
@@ -177,7 +175,6 @@
 				2FB07592299DF96E00C0B37F /* SpeziFirebaseAccount */,
 				2FB07594299DF96E00C0B37F /* SpeziFirebaseConfiguration */,
 				2FB07596299DF96E00C0B37F /* SpeziFirestore */,
-				2FB07598299DF96E00C0B37F /* SpeziFirestorePrefixUserIdAdapter */,
 				2FB0759C299DF96E00C0B37F /* Spezi */,
 				2F2E8EFB29E7366200D439B7 /* SpeziAccount */,
 				2F2E8EFE29E7369B00D439B7 /* SpeziViews */,
@@ -278,7 +275,7 @@
 				2F148C00298BB15900031B7F /* FirebaseAccountTestsView.swift in Sources */,
 				2FA7382C290ADFAA007ACEB9 /* TestApp.swift in Sources */,
 				2FE62C3D2966074F00FCBE7F /* FirestoreDataStorageTests.swift in Sources */,
-				2F8A431729130BBC005D2B8F /* TestAppStandard.swift in Sources */,
+				2F8A431729130BBC005D2B8F /* TestAppType.swift in Sources */,
 				2F9F07F129090B0500CDC598 /* TestAppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -569,7 +566,7 @@
 			repositoryURL = "https://github.com/StanfordSpezi/SpeziAccount.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.3.0;
+				minimumVersion = 0.4.0;
 			};
 		};
 		2F2E8EFD29E7369B00D439B7 /* XCRemoteSwiftPackageReference "SpeziViews" */ = {
@@ -585,7 +582,7 @@
 			repositoryURL = "https://github.com/StanfordSpezi/XCTestExtensions";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.1;
+				minimumVersion = 0.4.6;
 			};
 		};
 		2FB0758B299DF8F100C0B37F /* XCRemoteSwiftPackageReference "Spezi" */ = {
@@ -593,7 +590,7 @@
 			repositoryURL = "https://github.com/StanfordSpezi/Spezi";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.5.0;
+				minimumVersion = 0.7.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -625,10 +622,6 @@
 		2FB07596299DF96E00C0B37F /* SpeziFirestore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SpeziFirestore;
-		};
-		2FB07598299DF96E00C0B37F /* SpeziFirestorePrefixUserIdAdapter */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = SpeziFirestorePrefixUserIdAdapter;
 		};
 		2FB0759C299DF96E00C0B37F /* Spezi */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -34,7 +34,7 @@ import SpeziFirebaseConfiguration
 ///     }
 /// }
 /// ```
-public final class FirebaseAccountConfiguration<ComponentStandard: Standard>: Component, ObservableObject, ObservableObjectProvider {
+public final class FirebaseAccountConfiguration: Component, ObservableObject, ObservableObjectProvider {
     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
     
     private let emulatorSettings: (host: String, port: Int)?
@@ -42,8 +42,7 @@ public final class FirebaseAccountConfiguration<ComponentStandard: Standard>: Co
     private let account: Account
     private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
     
-    @MainActor @Published
-    public var user: User?
+    @MainActor @Published public var user: User?
     
     
     public var observableObjects: [any ObservableObject] {
