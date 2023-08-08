@@ -29,18 +29,22 @@ extension DocumentReference {
         from value: T,
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            do {
-                let encoded = try encoder.encode(value)
-                setData(encoded) { error in
-                    if let error {
-                        continuation.resume(throwing: error)
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                do {
+                    let encoded = try encoder.encode(value)
+                    setData(encoded) { error in
+                        if let error {
+                            continuation.resume(throwing: error)
+                        }
+                        continuation.resume()
                     }
-                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
                 }
-            } catch {
-                continuation.resume(throwing: error)
             }
+        } catch {
+            throw FirestoreError(error)
         }
     }
     
@@ -64,18 +68,22 @@ extension DocumentReference {
         merge: Bool,
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            do {
-                let encoded = try encoder.encode(value)
-                setData(encoded, merge: merge) { error in
-                    if let error {
-                        continuation.resume(throwing: error)
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                do {
+                    let encoded = try encoder.encode(value)
+                    setData(encoded, merge: merge) { error in
+                        if let error {
+                            continuation.resume(throwing: error)
+                        }
+                        continuation.resume()
                     }
-                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
                 }
-            } catch {
-                continuation.resume(throwing: error)
             }
+        } catch {
+            throw FirestoreError(error)
         }
     }
     
@@ -103,18 +111,22 @@ extension DocumentReference {
         mergeFields: [Any],
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            do {
-                let encoded = try encoder.encode(value)
-                setData(encoded, mergeFields: mergeFields) { error in
-                    if let error {
-                        continuation.resume(throwing: error)
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                do {
+                    let encoded = try encoder.encode(value)
+                    setData(encoded, mergeFields: mergeFields) { error in
+                        if let error {
+                            continuation.resume(throwing: error)
+                        }
+                        continuation.resume()
                     }
-                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
                 }
-            } catch {
-                continuation.resume(throwing: error)
             }
+        } catch {
+            throw FirestoreError(error)
         }
     }
 }

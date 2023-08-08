@@ -83,6 +83,11 @@ public enum FirestoreError: LocalizedError {
 
     
     public init<E: Error>(_ error: E) {
+        if let firestoreError = error as? Self {
+            self = firestoreError
+            return
+        }
+        
         if let firestoreDecodingError = error as? FirestoreDecodingError {
             switch firestoreDecodingError {
             case let .decodingIsNotSupported(reason):
@@ -139,6 +144,7 @@ public enum FirestoreError: LocalizedError {
             default:
                 self = .unknown
             }
+            return
         }
         
         self = .unknown
