@@ -13,10 +13,10 @@ import SpeziFirestore
 
 struct TestAppType: Identifiable, Codable, Sendable {
     var id: String
-    var content: Int
+    var content: String
     
     
-    init(id: String, content: Int = 42) {
+    init(id: String = "", content: String = "") {
         self.id = id
         self.content = content
     }

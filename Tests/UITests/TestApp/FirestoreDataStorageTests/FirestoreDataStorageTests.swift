@@ -19,7 +19,7 @@ import SwiftUI
 /// Firebase Local Emulator Suite.
 struct FirestoreDataStorageTestsView: View {
     @State private var viewState: ViewState = .idle
-    @State private var element = TestAppType(id: "TestElement")
+    @State private var element = TestAppType()
     
     
     var body: some View {
@@ -33,8 +33,7 @@ struct FirestoreDataStorageTestsView: View {
                 )
                 TextField(
                     "Context",
-                    value: $element.content,
-                    formatter: NumberFormatter(),
+                    text: $element.content,
                     prompt: Text("Enter the element's optional context.")
                 )
             }
