@@ -15,7 +15,7 @@ import SwiftUI
 
 
 struct FirebaseAccountTestsView: View {
-    @EnvironmentObject var firebaseAccount: FirebaseAccountConfiguration<TestAppStandard>
+    @EnvironmentObject var firebaseAccount: FirebaseAccountConfiguration
     @EnvironmentObject var account: Account
     @State var showLogin = false
     @State var showSignUp = false

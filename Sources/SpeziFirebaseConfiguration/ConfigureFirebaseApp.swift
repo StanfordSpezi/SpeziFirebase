@@ -22,7 +22,7 @@ import Spezi
 ///     // ...
 /// }
 /// ```
-public final class ConfigureFirebaseApp<ComponentStandard: Standard>: Component, DefaultInitializable {
+public final class ConfigureFirebaseApp: Component, DefaultInitializable {
     public init() {}
     
     

@@ -9,6 +9,25 @@
     }
   ],
   "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:..\/..",
+          "identifier" : "SpeziFirebaseAccount",
+          "name" : "SpeziFirebaseAccount"
+        },
+        {
+          "containerPath" : "container:..\/..",
+          "identifier" : "SpeziFirebaseConfiguration",
+          "name" : "SpeziFirebaseConfiguration"
+        },
+        {
+          "containerPath" : "container:..\/..",
+          "identifier" : "SpeziFirestore",
+          "name" : "SpeziFirestore"
+        }
+      ]
+    },
     "targetForVariableExpansion" : {
       "containerPath" : "container:UITests.xcodeproj",
       "identifier" : "2F6D139128F5F384007C25D6",

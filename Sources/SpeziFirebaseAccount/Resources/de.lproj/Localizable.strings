@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+
 // MARK: ERRORS
 "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR" = "Ein Password muss mindestens acht Zeichen und keine Leerzeichen haben.";
 

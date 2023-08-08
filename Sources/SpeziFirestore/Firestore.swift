@@ -16,104 +16,40 @@ import SwiftUI
 
 /// The ``Firestore`` module & data storage provider enables the synchronization of data stored in a standard with the Firebase Firestore.
 ///
-/// You can configure the ``Firestore`` module in the `SpeziAppDelegate` including a chain of adapter from your standard basetype and
-/// removal context to ``FirestoreElement`` and ``FirestoreRemovalContext`` instances.
+/// You can configure the ``Firestore`` module in the `SpeziAppDelegate`, e.g. the configure it using the Firebase emulator.
 /// ```swift
 /// class FirestoreExampleDelegate: SpeziAppDelegate {
 ///     override var configuration: Configuration {
-///         Configuration(standard: ExampleStandard()) {
-///             Firestore(settings: .emulator) {
-///                 // ... chain of `Adapter`s
-///             }
+///         Configuration {
+///             Firestore(settings: .emulator)
+///             // ...
 ///         }
 ///     }
 /// }
 /// ```
-public actor Firestore<ComponentStandard: Standard>: Module, DataStorageProvider {
-    public typealias FirestoreAdapter = any Adapter<
-        ComponentStandard.BaseType,
-        ComponentStandard.RemovalContext,
-        FirestoreElement,
-        FirestoreRemovalContext
-    >
-    
-    
+///
+/// We recommend using the [FIrebase Fireastore SDK as defined in the API documentation](https://firebase.google.com/docs/firestore/manage-data/add-data#swift)
+/// throughout the application. We **highly recommend using the async/await variants of the APIs** instead of the closure-based APIs the SDK provides.
+public class Firestore: Module, DefaultInitializable {
     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
     
     private let settings: FirestoreSettings
-    private let adapter: FirestoreAdapter
     
     
-    /// - Parameter settings: The firestore settings according to the [Firebase Firestore Swift Package](https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/FirestoreSettings)
-    public init(settings: FirestoreSettings = FirestoreSettings())
-    where ComponentStandard.BaseType: AnyFirestoreElement, ComponentStandard.RemovalContext: AnyFirestoreRemovalContext {
-        self.adapter = DefaultFirestoreElementAdapter<ComponentStandard.BaseType, ComponentStandard.RemovalContext>()
-        self.settings = settings
+    public required convenience init() {
+        self.init(settings: FirestoreSettings())
     }
     
     /// - Parameters:
-    ///   - adapter: A chain of adapter from your standard basetype and
-    /// removal context to ``FirestoreElement`` and ``FirestoreRemovalContext`` instances.
     ///   - settings: The firestore settings according to the [Firebase Firestore Swift Package](https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/FirestoreSettings)
-    public init(
-        @AdapterBuilder<FirestoreElement, FirestoreRemovalContext> adapter: () -> (FirestoreAdapter),
-        settings: FirestoreSettings = FirestoreSettings()
-    ) {
-        self.adapter = adapter()
+    public init(settings: FirestoreSettings) {
         self.settings = settings
     }
     
     
-    nonisolated public func configure() {
+    public func configure() {
         FirebaseFirestore.Firestore.firestore().settings = self.settings
         
         _ = FirebaseFirestore.Firestore.firestore()
-    }
-    
-    public func process(_ element: DataChange<ComponentStandard.BaseType, ComponentStandard.RemovalContext>) async throws {
-        try await process(asyncSequence: adapter.transformDataChanges([element]))
-    }
-    
-    private func process(asyncSequence: some TypedAsyncSequence<DataChange<FirestoreElement, FirestoreRemovalContext>>) async throws {
-        for try await dataChange in asyncSequence {
-            try await process(dataChange: dataChange)
-        }
-    }
-    
-    private func process(dataChange: DataChange<FirestoreElement, FirestoreRemovalContext>) async throws {
-        switch dataChange {
-        case let .addition(element):
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                do {
-                    let firestore = FirebaseFirestore.Firestore.firestore()
-                    try firestore
-                        .collection(element.collectionPath)
-                        .document(element.id)
-                        .setData(from: element, merge: false) { error in
-                            if let error {
-                                continuation.resume(throwing: error)
-                            } else {
-                                continuation.resume()
-                            }
-                        }
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
-        case let .removal(removalContext):
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                let firestore = FirebaseFirestore.Firestore.firestore()
-                firestore
-                    .collection(removalContext.collectionPath)
-                    .document(removalContext.id)
-                    .delete { error in
-                        if let error {
-                            continuation.resume(throwing: error)
-                        } else {
-                            continuation.resume()
-                        }
-                    }
-            }
-        }
     }
 }

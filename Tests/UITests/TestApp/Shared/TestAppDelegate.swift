@@ -9,13 +9,12 @@
 import Spezi
 import SpeziFirebaseAccount
 import SpeziFirestore
-import SpeziFirestorePrefixUserIdAdapter
 import SwiftUI
 
 
 class TestAppDelegate: SpeziAppDelegate {
     override var configuration: Configuration {
-        Configuration(standard: TestAppStandard()) {
+        Configuration {
             Firestore(settings: .emulator)
             FirebaseAccountConfiguration(emulatorSettings: (host: "localhost", port: 9099))
         }

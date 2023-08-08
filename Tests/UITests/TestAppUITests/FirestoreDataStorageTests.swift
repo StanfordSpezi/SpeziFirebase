@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import XCTestExtensions
 
 
 /// The `FirestoreDataStorageTests` require the Firebase Firestore Emulator to run at port 8080.
@@ -24,18 +25,15 @@ final class FirestoreDataStorageTests: XCTestCase {
             self.fields = fields
         }
         
-        init(id: String, collectionPath: String, content: Int) {
+        init(id: String, content: String) {
             self.init(
-                name: "projects/spezifirebaseuitests/databases/(default)/documents/\(collectionPath)/\(id)",
+                name: "projects/spezifirebaseuitests/databases/(default)/documents/Test/\(id)",
                 fields: [
-                    "collectionPath": [
-                        "stringValue": collectionPath
-                    ],
                     "id": [
                         "stringValue": id
                     ],
                     "content": [
-                        "integerValue": content.description
+                        "stringValue": content
                     ]
                 ]
             )
@@ -66,9 +64,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         var documents = try await getAllDocuments()
         XCTAssert(documents.isEmpty)
         
-        try add(id: "Identifier1", collectionPath: "CollectionPath1", context: 1)
-        try add(id: "Identifier2", collectionPath: "CollectionPath2", context: 2)
-        try add(id: "Identifier3", collectionPath: "CollectionPath1", context: 3)
+        try add(id: "Identifier1", context: "1")
         
         try await Task.sleep(for: .seconds(0.5))
         documents = try await getAllDocuments()
@@ -77,18 +73,7 @@ final class FirestoreDataStorageTests: XCTestCase {
             [
                 FirestoreElement(
                     id: "Identifier1",
-                    collectionPath: "CollectionPath1",
-                    content: 1
-                ),
-                FirestoreElement(
-                    id: "Identifier3",
-                    collectionPath: "CollectionPath1",
-                    content: 3
-                ),
-                FirestoreElement(
-                    id: "Identifier2",
-                    collectionPath: "CollectionPath2",
-                    content: 2
+                    content: "1"
                 )
             ]
         )
@@ -103,7 +88,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         var documents = try await getAllDocuments()
         XCTAssert(documents.isEmpty)
         
-        try add(id: "Identifier1", collectionPath: "CollectionPath1", context: 1)
+        try add(id: "Identifier1", context: "1")
         
         try await Task.sleep(for: .seconds(0.5))
         documents = try await getAllDocuments()
@@ -112,13 +97,12 @@ final class FirestoreDataStorageTests: XCTestCase {
             [
                 FirestoreElement(
                     id: "Identifier1",
-                    collectionPath: "CollectionPath1",
-                    content: 1
+                    content: "1"
                 )
             ]
         )
         
-        try add(id: "Identifier1", collectionPath: "CollectionPath1", context: 2)
+        try add(id: "Identifier1", context: "2")
         
         try await Task.sleep(for: .seconds(0.5))
         documents = try await getAllDocuments()
@@ -127,8 +111,7 @@ final class FirestoreDataStorageTests: XCTestCase {
             [
                 FirestoreElement(
                     id: "Identifier1",
-                    collectionPath: "CollectionPath1",
-                    content: 2
+                    content: "2"
                 )
             ]
         )
@@ -144,7 +127,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         var documents = try await getAllDocuments()
         XCTAssert(documents.isEmpty)
         
-        try add(id: "Identifier1", collectionPath: "CollectionPath1", context: 1)
+        try add(id: "Identifier1", context: "1")
         
         try await Task.sleep(for: .seconds(0.5))
         documents = try await getAllDocuments()
@@ -153,49 +136,38 @@ final class FirestoreDataStorageTests: XCTestCase {
             [
                 FirestoreElement(
                     id: "Identifier1",
-                    collectionPath: "CollectionPath1",
-                    content: 1
+                    content: "1"
                 )
             ]
         )
         
-        try remove(id: "Identifier1", collectionPath: "CollectionPath1", context: 1)
+        try remove(id: "Identifier1", context: "1")
         
         documents = try await getAllDocuments()
         XCTAssert(documents.isEmpty)
     }
     
     
-    private func add(id: String, collectionPath: String, context: Int) throws {
-        try enterFirestoreElement(id: id, collectionPath: collectionPath, context: context)
+    private func add(id: String, context: String) throws {
+        try enterFirestoreElement(id: id, context: context)
         XCUIApplication().buttons["Upload Element"].tap()
     }
     
-    private func remove(id: String, collectionPath: String, context: Int) throws {
-        try enterFirestoreElement(id: id, collectionPath: collectionPath, context: context)
+    private func remove(id: String, context: String) throws {
+        try enterFirestoreElement(id: id, context: context)
         XCUIApplication().buttons["Delete Element"].tap()
     }
     
-    private func enterFirestoreElement(id: String, collectionPath: String, context: Int) throws {
+    private func enterFirestoreElement(id: String, context: String) throws {
         let app = XCUIApplication()
         
         let identifierTextFieldIdentifier = "Enter the element's identifier."
         try app.textFields[identifierTextFieldIdentifier].delete(count: 42)
         try app.textFields[identifierTextFieldIdentifier].enter(value: id)
         
-        app.dismissKeyboard()
-        
-        let collectionPathTextFieldIdentifier = "Enter the element's collection path."
-        try app.textFields[collectionPathTextFieldIdentifier].delete(count: 42)
-        try app.textFields[collectionPathTextFieldIdentifier].enter(value: collectionPath)
-        
-        app.dismissKeyboard()
-        
         let contextFieldIdentifier = "Enter the element's optional context."
-        try app.textFields[contextFieldIdentifier].delete(count: 42)
-        try app.textFields[contextFieldIdentifier].enter(value: context.description)
-        
-        app.dismissKeyboard()
+        try app.textFields[contextFieldIdentifier].delete(count: 100)
+        try app.textFields[contextFieldIdentifier].enter(value: context)
     }
     
     private func deleteAllDocuments() async throws {
