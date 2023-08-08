@@ -47,7 +47,7 @@ public class Firestore: Module, DefaultInitializable {
     }
     
     
-    nonisolated public func configure() {
+    public func configure() {
         FirebaseFirestore.Firestore.firestore().settings = self.settings
         
         _ = FirebaseFirestore.Firestore.firestore()
