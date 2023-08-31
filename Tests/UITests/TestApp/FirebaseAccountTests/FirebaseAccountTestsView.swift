@@ -31,6 +31,10 @@ struct FirebaseAccountTestsView: View {
                         .frame(height: 30)
                     Text(details.userId)
                 }
+
+                AsyncButton("Logout", role: .destructive, state: $viewState) {
+                    try await details.accountService.logout()
+                }
             }
             Button("Account Setup") {
                 showSetup = true
@@ -41,26 +45,26 @@ struct FirebaseAccountTestsView: View {
                 .sheet(isPresented: $showSetup) {
                     NavigationStack {
                         AccountSetup()
+                            .toolbar {
+                                toolbar(closing: $showSetup)
+                            }
                     }
-                        .toolbar {
-                            toolbar(closing: $showSetup)
-                        }
                 }
                 .sheet(isPresented: $showOverview) {
                     NavigationStack {
                         AccountOverview(isEditing: $isEditing)
+                            .toolbar {
+                                toolbar(closing: $showOverview, isEditing: $isEditing)
+                            }
                     }
-                        .toolbar {
-                            toolbar(closing: $showOverview)
-                        }
                 }
         }
     }
 
 
     @ToolbarContentBuilder
-    func toolbar(closing flag: Binding<Bool>) -> some ToolbarContent {
-        if !isEditing {
+    func toolbar(closing flag: Binding<Bool>, isEditing: Binding<Bool> = .constant(false)) -> some ToolbarContent {
+        if isEditing.wrappedValue == false {
             ToolbarItemGroup(placement: .cancellationAction) {
                 Button("Close") {
                     flag.wrappedValue = false

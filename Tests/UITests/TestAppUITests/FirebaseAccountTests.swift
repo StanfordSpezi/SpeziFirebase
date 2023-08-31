@@ -245,14 +245,13 @@ final class FirebaseAccountTests: XCTestCase {
 
 extension XCUIApplication {
     fileprivate func login(username: String, password: String) throws {
-        buttons["Login"].tap()
-        buttons["Email and Password"].tap()
-        XCTAssertTrue(self.navigationBars.buttons["Login"].waitForExistence(timeout: 2.0))
+        buttons["Account Setup"].tap()
+        XCTAssertTrue(self.buttons["Login"].waitForExistence(timeout: 2.0))
         
-        try textFields["Enter your email ..."].enter(value: username)
+        try textFields["E-Mail Address"].enter(value: username)
         dismissKeyboard()
         
-        try secureTextFields["Enter your password ..."].enter(value: password)
+        try secureTextFields["Password"].enter(value: password)
         dismissKeyboard()
         
         swipeUp()
@@ -264,21 +263,22 @@ extension XCUIApplication {
             }
             allButtons[index].tap()
         }
+
+        sleep(3)
+        buttons["Close"].tap()
     }
     
     
     fileprivate func signup(username: String, password: String, givenName: String, familyName: String) throws {
-        buttons["Sign Up"].tap()
-        buttons["Email and Password"].tap()
-        XCTAssertTrue(self.navigationBars.buttons["Sign Up"].waitForExistence(timeout: 2.0))
+        buttons["Account Setup"].tap()
+        buttons["Signup"].tap()
+
+        XCTAssertTrue(staticTexts["Please fill out the details below to create a new account."].waitForExistence(timeout: 2.0))
         
-        try textFields["Enter your email ..."].enter(value: username)
+        try textFields["E-Mail Address"].enter(value: username)
         dismissKeyboard()
         
-        try secureTextFields["Enter your password ..."].enter(value: password)
-        dismissKeyboard()
-        
-        try secureTextFields["Repeat your password ..."].enter(value: password)
+        try secureTextFields["Password"].enter(value: password)
         dismissKeyboard()
         
         swipeUp()
@@ -299,5 +299,8 @@ extension XCUIApplication {
             }
             allButtons[index].tap()
         }
+
+        sleep(3)
+        buttons["Close"].tap()
     }
 }
