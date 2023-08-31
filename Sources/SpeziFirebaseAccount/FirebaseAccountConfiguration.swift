@@ -62,6 +62,8 @@ public final class FirebaseAccountConfiguration: Component {
             Auth.auth().useEmulator(withHost: emulatorSettings.host, port: emulatorSettings.port)
         }
 
-        accountService.configure()
+        Task {
+            await accountService.configure()
+        }
     }
 }

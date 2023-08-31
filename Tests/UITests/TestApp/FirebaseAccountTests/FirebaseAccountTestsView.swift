@@ -15,54 +15,26 @@ import SwiftUI
 
 
 struct FirebaseAccountTestsView: View {
-    @EnvironmentObject var firebaseAccount: FirebaseAccountConfiguration
     @EnvironmentObject var account: Account
-    @State var showLogin = false
-    @State var showSignUp = false
-    
+
+    @State var viewState: ViewState = .idle
     
     var body: some View {
         List {
-            if account.signedIn {
+            if let details = account.details {
                 HStack {
-                    if let displayName = firebaseAccount.user?.displayName,
-                       let name = try? PersonNameComponents(displayName) {
-                        UserProfileView(name: name)
-                            .frame(height: 30)
-                    }
-                    if let email = firebaseAccount.user?.email {
-                        Text(email)
-                    }
+                    UserProfileView(name: details.name)
+                        .frame(height: 30)
+                    Text(details.userId) // TODO specific email key?
                 }
+
+                // TODO rename this thing and move to SpeziViews!
+                AsyncDataEntrySubmitButton("Logout", state: $viewState) {
+                    try await details.accountService.logout()
+                }
+            } else {
+                AccountSetup() // TODO external parameter name
             }
-            Button("Login") {
-                showLogin.toggle()
-            }
-                .disabled(account.signedIn)
-            Button("Sign Up") {
-                showSignUp.toggle()
-            }
-                .disabled(account.signedIn)
-            Button("Logout", role: .destructive) {
-                try? Auth.auth().signOut()
-            }
-                .disabled(!account.signedIn)
         }
-            .sheet(isPresented: $showLogin) {
-                NavigationStack {
-                    Login()
-                }
-            }
-            .sheet(isPresented: $showSignUp) {
-                NavigationStack {
-                    SignUp()
-                }
-            }
-            .onChange(of: account.signedIn) { signedIn in
-                if signedIn {
-                    showLogin = false
-                    showSignUp = false
-                }
-            }
     }
 }

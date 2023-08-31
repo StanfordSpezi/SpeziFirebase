@@ -1,7 +1,7 @@
 //
 // This source file is part of the Stanford Spezi open-source project
 //
-// SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
+// SPDX-FileCopyrightText: 2023 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -11,7 +11,8 @@ import SpeziAccount
 import SwiftUI
 
 
-public class FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
+// TODO do we want this actor requirement?
+public actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     static var defaultPasswordValidationRule: ValidationRule {
         guard let regex = try? Regex(#"[^\s]{8,}"#) else {
             fatalError("Invalid Password Regex in the FirebaseEmailPasswordAccountService")
@@ -146,6 +147,7 @@ public class FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
         let details = AccountDetails.Builder()
             .add(UserIdAccountValueKey.self, value: email)
             .add(NameAccountValueKey.self, value: nameComponents)
+            .add(FirebaseEmailVerifiedKey.self, value: user.isEmailVerified)
             .build(owner: self)
 
         await account.supplyUserInfo(details)
