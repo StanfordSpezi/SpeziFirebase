@@ -103,6 +103,38 @@ final class FirebaseAccountTests: XCTestCase {
         XCTAssert(app.buttons["Logout"].waitForExistence(timeout: 10.0))
         app.buttons["Logout"].tap()
     }
+
+    @MainActor
+    func testAccountLogout() async throws {
+        try await createAccount(email: "test@username0.edu", password: "TestPassword0", displayName: "Test0 Username0")
+
+        let accounts = try await getAllAccounts()
+        XCTAssertEqual(accounts, [FirestoreAccount(email: "test@username0.edu", displayName: "Test0 Username0")])
+
+        let app = XCUIApplication()
+        app.launchArguments = ["--firebaseAccount"]
+        app.launch()
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        if app.buttons["Logout"].waitForExistence(timeout: 10.0) && app.buttons["Logout"].isHittable {
+            app.buttons["Logout"].tap()
+        }
+
+        try app.login(username: "test@username0.edu", password: "TestPassword0")
+        XCTAssert(app.staticTexts["test@username0.edu"].waitForExistence(timeout: 10.0))
+
+        app.buttons["Account Overview"].tap()
+        XCTAssertTrue(app.staticTexts["Test0 Username0"].waitForExistence(timeout: 5.0))
+
+        app.buttons["Logout"].tap()
+        // TODO logout button!
+    }
+
+    // TODO test removal
+
+    // TODO test edit
     
     
     @MainActor
@@ -199,11 +231,7 @@ final class FirebaseAccountTests: XCTestCase {
             let userInfo: [FirestoreAccount]
         }
 
-        do {
-            return try JSONDecoder().decode(ResponseWrapper.self, from: data).userInfo
-        } catch {
-            return []
-        }
+        return try JSONDecoder().decode(ResponseWrapper.self, from: data).userInfo
     }
     
     // curl -H 'Content-Type: application/json' -d '{"email":"[user@example.com]","password":"[PASSWORD]","returnSecureToken":true}' 'http://localhost:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=spezifirebaseuitests'
@@ -244,15 +272,23 @@ final class FirebaseAccountTests: XCTestCase {
 
 
 extension XCUIApplication {
+    func extendedDismissKeyboard() {
+        let keyboard = keyboards.firstMatch
+
+        if keyboard.waitForExistence(timeout: 1.0) && keyboard.buttons["Done"].isHittable {
+            keyboard.buttons["Done"].tap()
+        }
+    }
+
     fileprivate func login(username: String, password: String) throws {
         buttons["Account Setup"].tap()
         XCTAssertTrue(self.buttons["Login"].waitForExistence(timeout: 2.0))
         
         try textFields["E-Mail Address"].enter(value: username)
-        dismissKeyboard()
+        extendedDismissKeyboard()
         
         try secureTextFields["Password"].enter(value: password)
-        dismissKeyboard()
+        extendedDismissKeyboard()
         
         swipeUp()
         
@@ -276,25 +312,25 @@ extension XCUIApplication {
         XCTAssertTrue(staticTexts["Please fill out the details below to create a new account."].waitForExistence(timeout: 2.0))
         
         try textFields["E-Mail Address"].enter(value: username)
-        dismissKeyboard()
+        extendedDismissKeyboard()
         
         try secureTextFields["Password"].enter(value: password)
-        dismissKeyboard()
+        extendedDismissKeyboard()
         
         swipeUp()
         
         try textFields["Enter your first name ..."].enter(value: givenName)
-        dismissKeyboard()
+        extendedDismissKeyboard()
         swipeUp()
         
         try textFields["Enter your last name ..."].enter(value: familyName)
-        dismissKeyboard()
+        extendedDismissKeyboard()
         swipeUp()
         
         
         let allButtons = collectionViews.buttons.allElementsBoundByIndex
         for index in 0..<allButtons.count {
-            guard allButtons[index].label == "Sign Up", allButtons[index].isHittable else {
+            guard allButtons[index].label == "Signup", allButtons[index].isHittable else {
                 continue
             }
             allButtons[index].tap()

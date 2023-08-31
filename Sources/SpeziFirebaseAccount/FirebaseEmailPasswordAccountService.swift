@@ -12,9 +12,13 @@ import SpeziAccount
 import SwiftUI
 
 
-enum StateChangeResult {
+private enum UserChange {
     case user(_ user: User)
     case removed
+}
+
+private struct QueueUpdate {
+    let change: UserChange
 }
 
 
@@ -44,7 +48,8 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     let configuration: AccountServiceConfiguration
     private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
 
-    private var currentContinuation: CheckedContinuation<StateChangeResult, Never>?
+    private var shouldQueue = false
+    private var queuedUpdate: QueueUpdate?
 
     init(passwordValidationRules: [ValidationRule] = [FirebaseEmailPasswordAccountService.defaultPasswordValidationRule]) {
         self.configuration = AccountServiceConfiguration(
@@ -78,10 +83,19 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     }
 
     func login(userId: String, password: String) async throws {
+        Self.logger.debug("Received new login request...")
+
+        defer {
+            cleanupQueuedChanges()
+        }
+
+        shouldQueue = true
+
         do {
             try await Auth.auth().signIn(withEmail: userId, password: password)
+            Self.logger.debug("signIn(withEmail:password:)")
 
-            try await continueWithStateChange()
+            try await dispatchQueuedChanges()
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -90,18 +104,29 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     }
 
     func signUp(signupDetails: SignupDetails) async throws {
+        Self.logger.debug("Received new signup request...")
+
+        defer {
+            cleanupQueuedChanges()
+        }
+
+        shouldQueue = true
+
         do {
             let authResult = try await Auth.auth().createUser(withEmail: signupDetails.userId, password: signupDetails.password)
+            Self.logger.debug("createUser(withEmail:password:) for user.")
 
-            if let displayName = signupDetails.name?.formatted(.name(style: .long)) {
+            Self.logger.debug("Sending email verification link now...")
+            try await authResult.user.sendEmailVerification()
+
+            if let displayName = signupDetails.name {
+                Self.logger.debug("Creating change request for display name.")
                 let changeRequest = authResult.user.createProfileChangeRequest()
-                changeRequest.displayName = displayName
+                changeRequest.displayName = displayName.formatted(.name(style: .medium))
                 try await changeRequest.commitChanges()
             }
 
-            try await authResult.user.sendEmailVerification()
-
-            try await continueWithStateChange()
+            try await dispatchQueuedChanges()
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -112,6 +137,7 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     func resetPassword(userId: String) async throws {
         do {
             try await Auth.auth().sendPasswordReset(withEmail: userId)
+            Self.logger.debug("sendPasswordReset(withEmail:) for user.")
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -124,10 +150,17 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
             throw FirebaseAccountError.notSignedIn
         }
 
+        defer {
+            cleanupQueuedChanges()
+        }
+
+        shouldQueue = true
+
         do {
             try Auth.auth().signOut()
+            Self.logger.debug("signOut() for user.")
 
-            try await continueWithStateChange()
+            try await dispatchQueuedChanges()
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -140,10 +173,17 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
             throw FirebaseAccountError.notSignedIn
         }
 
+        defer {
+            cleanupQueuedChanges()
+        }
+
+        shouldQueue = true
+
         do {
             try await currentUser.delete()
+            Self.logger.debug("delete() for user.")
 
-            try await continueWithStateChange()
+            try await dispatchQueuedChanges()
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -156,30 +196,29 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
             throw FirebaseAccountError.notSignedIn
         }
 
-        var changes = false
+        defer {
+            cleanupQueuedChanges()
+        }
 
         do {
             if let userId = modifications.modifiedDetails.storage[UserIdKey.self] {
+                Self.logger.debug("updateEmail(to:) for user.")
                 try await currentUser.updateEmail(to: userId)
-                changes = true
             }
 
             if let password = modifications.modifiedDetails.password {
+                Self.logger.debug("updatePassword(to:) for user.")
                 try await currentUser.updatePassword(to: password)
-                changes = true
             }
 
             if let name = modifications.modifiedDetails.name {
+                Self.logger.debug("Creating change request for updated display name.")
                 let changeRequest = currentUser.createProfileChangeRequest()
                 changeRequest.displayName = name.formatted(.name(style: .long))
                 try await changeRequest.commitChanges()
-
-                changes = true
             }
 
-            if changes {
-                try await continueWithStateChange()
-            }
+            try await dispatchQueuedChanges()
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -190,41 +229,58 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     private func stateDidChangeListener(auth: Auth, user: User?) {
         // this is called by the FIRAuth framework.
 
-        let result: StateChangeResult
+        let change: UserChange
         if let user {
-            result = .user(user)
+            change = .user(user)
         } else {
-            result = .removed
+            change = .removed
         }
 
-        // if we have a current continuation waiting for our result, resume there
-        if let currentContinuation {
-            currentContinuation.resume(returning: result)
-            self.currentContinuation = nil
+
+        if shouldQueue {
+            Self.logger.debug("Received stateDidChange that is queued to be dispatched in active call.")
+            self.queuedUpdate = QueueUpdate(change: change)
         } else {
-            // Otherwise, there might still be cases where changes are triggered externally.
-            // We cannot sensibly display any error messages then, though.
-            Task {
-                do {
-                    try await updateUser(result)
-                } catch {
-                    // currently, this only happens if the storage standard fails to load the additional user record
-                    Self.logger.error("Failed to execute remote user change: \(error)")
-                }
+            Self.logger.debug("Received stateDidChange that that was triggered due to other reasons. Dispatching anonymously...")
+            anonymouslyDispatchChange(change)
+        }
+    }
+
+    private func cleanupQueuedChanges() {
+        shouldQueue = false
+
+        guard let queuedUpdate = self.queuedUpdate else {
+            return
+        }
+
+
+        self.queuedUpdate = nil
+        anonymouslyDispatchChange(queuedUpdate.change)
+    }
+
+    private func dispatchQueuedChanges() async throws {
+        shouldQueue = false
+
+        guard let queuedUpdate else {
+            return
+        }
+
+        try await apply(change: queuedUpdate.change)
+        self.queuedUpdate = nil
+    }
+
+    private func anonymouslyDispatchChange(_ change: UserChange) {
+        Task {
+            do {
+                try await apply(change: change)
+            } catch {
+                Self.logger.error("Failed to anonymously dispatch user change due to \(error)")
             }
         }
     }
 
-    func continueWithStateChange() async throws {
-        let result: StateChangeResult = await withCheckedContinuation { continuation in
-            self.currentContinuation = continuation
-        }
-
-        try await updateUser(result)
-    }
-
-    func updateUser(_ state: StateChangeResult) async throws {
-        switch state {
+    private func apply(change: UserChange) async throws {
+        switch change {
         case let .user(user):
             try await notifyUserSignIn(user: user)
         case .removed:
@@ -247,12 +303,14 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
             builder.set(\.name, value: nameComponents)
         }
 
+        Self.logger.debug("Notifying SpeziAccount with updated user details.")
 
         let details = builder.build(owner: self)
         try await account.supplyUserDetails(details)
     }
 
     func notifyUserRemoval() async {
+        Self.logger.debug("Notifying SpeziAccount of removed user details.")
         await account.removeUserDetails()
     }
 }
