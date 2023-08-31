@@ -7,12 +7,26 @@
 //
 
 import FirebaseAuth
+import OSLog
 import SpeziAccount
 import SwiftUI
 
 
-// TODO do we want this actor requirement?
-public actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
+enum StateChangeResult {
+    case user(_ user: User)
+    case removed
+}
+
+
+actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
+    private static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "AccountService")
+
+    private static let supportedKeys = AccountKeyCollection {
+        \.userId
+        \.password
+        \.name
+    }
+
     static var defaultPasswordValidationRule: ValidationRule {
         guard let regex = try? Regex(#"[^\s]{8,}"#) else {
             fatalError("Invalid Password Regex in the FirebaseEmailPasswordAccountService")
@@ -25,30 +39,32 @@ public actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
         )
     }
 
-    @WeakInjectable<Account> // TODO AccountReference is internal!
-    private var account: Account
+    @AccountReference private var account: Account
 
-    public let configuration: UserIdPasswordServiceConfiguration
+    let configuration: AccountServiceConfiguration
     private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
 
-    // TODO make this configurable?
+    private var currentContinuation: CheckedContinuation<StateChangeResult, Never>?
+
     init(passwordValidationRules: [ValidationRule] = [FirebaseEmailPasswordAccountService.defaultPasswordValidationRule]) {
-        self.configuration = .init(
+        self.configuration = AccountServiceConfiguration(
             name: LocalizedStringResource("FIREBASE_EMAIL_AND_PASSWORD", bundle: .atURL(from: .module)),
-            image: Image(systemName: "envelope.fill"),
-            signUpRequirements: AccountValueRequirements {
-                UserIdAccountValueKey.self
-                PasswordAccountValueKey.self
-                NameAccountValueKey.self
-            },
-            userIdType: .emailAddress,
-            userIdField: .emailAddress,
-            userIdSignupValidations: [.minimalEmailValidationRule],
-            passwordSignupValidations: passwordValidationRules
-        )
+            supportedKeys: .exactly(Self.supportedKeys)
+        ) {
+            AccountServiceImage(Image(systemName: "envelope.fill"))
+            RequiredAccountKeys {
+                \.userId
+                \.password
+            }
+            UserIdConfiguration(type: .emailAddress, keyboardType: .emailAddress)
+
+            FieldValidationRules(for: \.userId, rules: .minimalEmail)
+            FieldValidationRules(for: \.password, rules: passwordValidationRules)
+        }
     }
 
-    public func configure() {
+
+    func configure() {
         authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener(stateDidChangeListener)
 
         // if there is a cached user, we refresh the authentication token
@@ -61,15 +77,11 @@ public actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
         }
     }
 
-    public func login(userId: String, password: String) async throws {
+    func login(userId: String, password: String) async throws {
         do {
             try await Auth.auth().signIn(withEmail: userId, password: password)
 
-            // TODO why did we trigger?
-            // Task { @MainActor in
-                // account?.objectWillChange.send()
-            // }
-
+            try await continueWithStateChange()
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -77,29 +89,27 @@ public actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
         }
     }
 
-    public func signUp(signupRequest: SignupRequest) async throws {
+    func signUp(signupDetails: SignupDetails) async throws {
         do {
-            let authResult = try await Auth.auth().createUser(withEmail: signupRequest.userId, password: signupRequest.password)
+            let authResult = try await Auth.auth().createUser(withEmail: signupDetails.userId, password: signupDetails.password)
 
-            let profileChangeRequest = authResult.user.createProfileChangeRequest()
-            profileChangeRequest.displayName = signupRequest.name.formatted(.name(style: .long))
-            try await profileChangeRequest.commitChanges()
-
-            // TODO why did we trigger?
-            // Task { @MainActor in
-            //     account?.objectWillChange.send()
-            // }
+            if let displayName = signupDetails.name?.formatted(.name(style: .long)) {
+                let changeRequest = authResult.user.createProfileChangeRequest()
+                changeRequest.displayName = displayName
+                try await changeRequest.commitChanges()
+            }
 
             try await authResult.user.sendEmailVerification()
+
+            try await continueWithStateChange()
         } catch let error as NSError {
-            // TODO can we inline the `invalidEmail` and `weakPassword` errors? => weakPassword has to be updated in the validation rule!
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
             throw FirebaseAccountError.unknown(.internalError)
         }
     }
 
-    public func resetPassword(userId: String) async throws {
+    func resetPassword(userId: String) async throws {
         do {
             try await Auth.auth().sendPasswordReset(withEmail: userId)
         } catch let error as NSError {
@@ -109,11 +119,67 @@ public actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
         }
     }
 
-    public func logout() async throws {
+    func logout() async throws {
+        guard Auth.auth().currentUser != nil else {
+            throw FirebaseAccountError.notSignedIn
+        }
+
         do {
             try Auth.auth().signOut()
 
-            // TODO verify that this results in the user getting removed?
+            try await continueWithStateChange()
+        } catch let error as NSError {
+            throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
+        } catch {
+            throw FirebaseAccountError.unknown(.internalError)
+        }
+    }
+
+    func delete() async throws {
+        guard let currentUser = Auth.auth().currentUser else {
+            throw FirebaseAccountError.notSignedIn
+        }
+
+        do {
+            try await currentUser.delete()
+
+            try await continueWithStateChange()
+        } catch let error as NSError {
+            throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
+        } catch {
+            throw FirebaseAccountError.unknown(.internalError)
+        }
+    }
+
+    func updateAccountDetails(_ modifications: AccountModifications) async throws {
+        guard let currentUser = Auth.auth().currentUser else {
+            throw FirebaseAccountError.notSignedIn
+        }
+
+        var changes = false
+
+        do {
+            if let userId = modifications.modifiedDetails.storage[UserIdKey.self] {
+                try await currentUser.updateEmail(to: userId)
+                changes = true
+            }
+
+            if let password = modifications.modifiedDetails.password {
+                try await currentUser.updatePassword(to: password)
+                changes = true
+            }
+
+            if let name = modifications.modifiedDetails.name {
+                let changeRequest = currentUser.createProfileChangeRequest()
+                changeRequest.displayName = name.formatted(.name(style: .long))
+                try await changeRequest.commitChanges()
+
+                changes = true
+            }
+
+            if changes {
+                try await continueWithStateChange()
+            }
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -122,38 +188,71 @@ public actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     }
 
     private func stateDidChangeListener(auth: Auth, user: User?) {
-        Task {
-            if let user {
-                await notifyUserSignIn(user: user)
-            } else {
-                await notifyUserRemoval()
+        // this is called by the FIRAuth framework.
+
+        let result: StateChangeResult
+        if let user {
+            result = .user(user)
+        } else {
+            result = .removed
+        }
+
+        // if we have a current continuation waiting for our result, resume there
+        if let currentContinuation {
+            currentContinuation.resume(returning: result)
+            self.currentContinuation = nil
+        } else {
+            // Otherwise, there might still be cases where changes are triggered externally.
+            // We cannot sensibly display any error messages then, though.
+            Task {
+                do {
+                    try await updateUser(result)
+                } catch {
+                    // currently, this only happens if the storage standard fails to load the additional user record
+                    Self.logger.error("Failed to execute remote user change: \(error)")
+                }
             }
         }
     }
 
-    func notifyUserSignIn(user: User) async {
-        guard let email = user.email,
-              let displayName = user.displayName else {
-            // TODO log
-            return // TODO how to propagate back the error?
+    func continueWithStateChange() async throws {
+        let result: StateChangeResult = await withCheckedContinuation { continuation in
+            self.currentContinuation = continuation
         }
 
-        guard let nameComponents = try? PersonNameComponents(displayName) else {
+        try await updateUser(result)
+    }
+
+    func updateUser(_ state: StateChangeResult) async throws {
+        switch state {
+        case let .user(user):
+            try await notifyUserSignIn(user: user)
+        case .removed:
+            await notifyUserRemoval()
+        }
+    }
+
+    func notifyUserSignIn(user: User) async throws {
+        guard let email = user.email else {
+            throw FirebaseAccountError.invalidEmail
+        }
+
+        let builder = AccountDetails.Builder()
+            .set(\.userId, value: email)
+            .set(\.isEmailVerified, value: user.isEmailVerified)
+
+        if let displayName = user.displayName,
+            let nameComponents = try? PersonNameComponents(displayName) {
             // we wouldn't be here if we couldn't create the person name components from the given string
-            // TODO log (still show error somehow?)
-            return
+            builder.set(\.name, value: nameComponents)
         }
 
-        let details = AccountDetails.Builder()
-            .add(UserIdAccountValueKey.self, value: email)
-            .add(NameAccountValueKey.self, value: nameComponents)
-            .add(FirebaseEmailVerifiedKey.self, value: user.isEmailVerified)
-            .build(owner: self)
 
-        await account.supplyUserInfo(details)
+        let details = builder.build(owner: self)
+        try await account.supplyUserDetails(details)
     }
 
     func notifyUserRemoval() async {
-        await account.removeUserInfo()
+        await account.removeUserDetails()
     }
 }

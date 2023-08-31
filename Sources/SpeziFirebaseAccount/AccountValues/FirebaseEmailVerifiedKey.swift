@@ -6,16 +6,46 @@
 // SPDX-License-Identifier: MIT
 //
 
+import Foundation
 import SpeziAccount
+import SwiftUI
 
-// TODO docs
-public struct FirebaseEmailVerifiedKey: OptionalAccountValueKey {
+
+/// Flag indicating if the firebase account has a verified email address.
+///
+/// - Important: This key is read-only and cannot be modified.
+public struct FirebaseEmailVerifiedKey: AccountKey {
     public typealias Value = Bool
+    public static var name: LocalizedStringResource = "E-Mail Verified"
+    public static var category: AccountKeyCategory = .other
+    public static var initialValue: InitialValue<Bool> = .default(false)
 }
 
-// this property is not supported in SignupRequests
-extension AccountDetails {
-    public var isEmailVerified: Bool? { // swiftlint:disable:this discouraged_optional_boolean
-        storage[FirebaseEmailVerifiedKey.self]
+
+extension AccountKeys {
+    /// The email-verified ``FirebaseEmailVerifiedKey`` metatype.
+    public var isEmailVerified: FirebaseEmailVerifiedKey.Type {
+        FirebaseEmailVerifiedKey.self
+    }
+}
+
+
+extension AccountValues {
+    /// Access if the user's email of their firebase account is verified.
+    public var isEmailVerified: Bool {
+        storage[FirebaseEmailVerifiedKey.self] ?? false
+    }
+}
+
+
+extension FirebaseEmailVerifiedKey {
+    public struct DataEntry: DataEntryView {
+        public typealias Key = FirebaseEmailVerifiedKey
+
+        public var body: some View {
+            Text("The FirebaseEmailVerifiedKey cannot be set!")
+        }
+
+        public init(_ value: Binding<Value>) {}
     }
 }

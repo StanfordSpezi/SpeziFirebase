@@ -40,7 +40,7 @@ public final class FirebaseAccountConfiguration: Component {
     private let emulatorSettings: (host: String, port: Int)?
     private let authenticationMethods: FirebaseAuthAuthenticationMethods
 
-    public let accountService: FirebaseEmailPasswordAccountService // TODO this protocol requirement requires us to make the service public!
+    @Provide var accountServices: [any AccountService]
     
     /// - Parameters:
     ///   - emulatorSettings: The emulator settings. The default value is `nil`, connecting the FirebaseAccount module to the Firebase Auth cloud instance.
@@ -51,10 +51,11 @@ public final class FirebaseAccountConfiguration: Component {
     ) {
         self.emulatorSettings = emulatorSettings
         self.authenticationMethods = authenticationMethods
+        self.accountServices = []
 
-        // TODO at least one authenticationMethod!
-        //  if authenticationMethods.contains(.emailAndPassword)
-        self.accountService = FirebaseEmailPasswordAccountService()
+        if authenticationMethods.contains(.emailAndPassword) {
+            self.accountServices.append(FirebaseEmailPasswordAccountService())
+        }
     }
     
     public func configure() {
@@ -63,7 +64,12 @@ public final class FirebaseAccountConfiguration: Component {
         }
 
         Task {
-            await accountService.configure()
+            // We might be configured above the AccountConfiguration and therfore the `Account` object
+            // might not be injected yet.
+            try? await Task.sleep(for: .milliseconds(10))
+            for accountService in accountServices {
+                await (accountService as? FirebaseEmailPasswordAccountService)?.configure()
+            }
         }
     }
 }
