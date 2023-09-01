@@ -42,23 +42,23 @@ struct FirebaseAccountTestsView: View {
             Button("Account Overview") {
                 showOverview = true
             }
-                .sheet(isPresented: $showSetup) {
-                    NavigationStack {
-                        AccountSetup()
-                            .toolbar {
-                                toolbar(closing: $showSetup)
-                            }
-                    }
-                }
-                .sheet(isPresented: $showOverview) {
-                    NavigationStack {
-                        AccountOverview(isEditing: $isEditing)
-                            .toolbar {
-                                toolbar(closing: $showOverview, isEditing: $isEditing)
-                            }
-                    }
-                }
         }
+            .sheet(isPresented: $showSetup) {
+                NavigationStack {
+                    AccountSetup()
+                        .toolbar {
+                            toolbar(closing: $showSetup)
+                        }
+                }
+            }
+            .sheet(isPresented: $showOverview) {
+                NavigationStack {
+                    AccountOverview(isEditing: $isEditing)
+                        .toolbar {
+                            toolbar(closing: $showOverview, isEditing: $isEditing)
+                        }
+                }
+            }
     }
 
 
