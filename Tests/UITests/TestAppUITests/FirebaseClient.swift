@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import XCTest
 
 
 struct FirestoreAccount: Decodable, Equatable {
@@ -29,11 +30,11 @@ struct FirestoreAccount: Decodable, Equatable {
     }
 
     init(from decoder: Decoder) throws {
-        let container: KeyedDecodingContainer<FirebaseAccountTests.FirestoreAccount.CodingKeys> = try decoder.container(
-            keyedBy: FirebaseAccountTests.FirestoreAccount.CodingKeys.self
+        let container: KeyedDecodingContainer<FirestoreAccount.CodingKeys> = try decoder.container(
+            keyedBy: FirestoreAccount.CodingKeys.self
         )
-        self.email = try container.decode(String.self, forKey: FirebaseAccountTests.FirestoreAccount.CodingKeys.email)
-        self.displayName = try container.decode(String.self, forKey: FirebaseAccountTests.FirestoreAccount.CodingKeys.displayName)
+        self.email = try container.decode(String.self, forKey: FirestoreAccount.CodingKeys.email)
+        self.displayName = try container.decode(String.self, forKey: FirestoreAccount.CodingKeys.displayName)
 
         struct ProviderUserInfo: Decodable {
             let providerId: String
@@ -42,7 +43,7 @@ struct FirestoreAccount: Decodable, Equatable {
         self.providerIds = try container
             .decode(
                 [ProviderUserInfo].self,
-                forKey: FirebaseAccountTests.FirestoreAccount.CodingKeys.providerIds
+                forKey: FirestoreAccount.CodingKeys.providerIds
             )
             .map(\.providerId)
     }
