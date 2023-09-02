@@ -78,6 +78,8 @@ enum FirebaseAccountError: LocalizedError {
 
     
     init(authErrorCode: AuthErrorCode) {
+        FirebaseEmailPasswordAccountService.logger.debug("Received authError with code \(authErrorCode)")
+
         switch authErrorCode.code {
         case .invalidEmail, .invalidRecipientEmail:
             self = .invalidEmail
@@ -85,7 +87,7 @@ enum FirebaseAccountError: LocalizedError {
             self = .accountAlreadyInUse
         case .weakPassword:
             self = .weakPassword
-        case .userDisabled, .wrongPassword:
+        case .userDisabled, .wrongPassword, .userNotFound, .userMismatch:
             self = .invalidCredentials
         case .invalidSender, .invalidMessagePayload:
             self = .internalPasswordResetError

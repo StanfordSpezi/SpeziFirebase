@@ -23,7 +23,7 @@ private struct QueueUpdate {
 
 
 actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
-    private static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "AccountService")
+    static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "AccountService")
 
     private static let supportedKeys = AccountKeyCollection {
         \.userId
@@ -31,14 +31,16 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
         \.name
     }
 
-    static var defaultPasswordValidationRule: ValidationRule {
-        guard let regex = try? Regex(#"[^\s]{8,}"#) else {
-            fatalError("Invalid Password Regex in the FirebaseEmailPasswordAccountService")
+    static var minimumFirebasePassword: ValidationRule {
+        // Firebase as a non-configurable limit of 6 characters for an account password.
+        // Refer to https://stackoverflow.com/questions/38064248/firebase-password-validation-allowed-regex
+        guard let regex = try? Regex(#"(?=.*[0-9a-zA-Z]).{6,}"#) else {
+            fatalError("Invalid minimumFirebasePassword regex at construction.")
         }
-        
+
         return ValidationRule(
             regex: regex,
-            message: "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR",
+            message: "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR \(6)",
             bundle: .module
         )
     }
@@ -51,7 +53,7 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     private var shouldQueue = false
     private var queuedUpdate: QueueUpdate?
 
-    init(passwordValidationRules: [ValidationRule] = [FirebaseEmailPasswordAccountService.defaultPasswordValidationRule]) {
+    init(passwordValidationRules: [ValidationRule] = [minimumFirebasePassword]) {
         self.configuration = AccountServiceConfiguration(
             name: LocalizedStringResource("FIREBASE_EMAIL_AND_PASSWORD", bundle: .atURL(from: .module)),
             supportedKeys: .exactly(Self.supportedKeys)
@@ -147,7 +149,12 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
 
     func logout() async throws {
         guard Auth.auth().currentUser != nil else {
-            throw FirebaseAccountError.notSignedIn
+            if await account.signedIn {
+                await notifyUserRemoval()
+                return
+            } else {
+                throw FirebaseAccountError.notSignedIn
+            }
         }
 
         defer {
@@ -170,6 +177,9 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
 
     func delete() async throws {
         guard let currentUser = Auth.auth().currentUser else {
+            if await account.signedIn {
+                await notifyUserRemoval()
+            }
             throw FirebaseAccountError.notSignedIn
         }
 
@@ -193,17 +203,19 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
 
     func updateAccountDetails(_ modifications: AccountModifications) async throws {
         guard let currentUser = Auth.auth().currentUser else {
+            if await account.signedIn {
+                await notifyUserRemoval()
+            }
             throw FirebaseAccountError.notSignedIn
         }
 
-        defer {
-            cleanupQueuedChanges()
-        }
+        var changes = false
 
         do {
             if let userId = modifications.modifiedDetails.storage[UserIdKey.self] {
                 Self.logger.debug("updateEmail(to:) for user.")
                 try await currentUser.updateEmail(to: userId)
+                changes = true
             }
 
             if let password = modifications.modifiedDetails.password {
@@ -216,9 +228,14 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
                 let changeRequest = currentUser.createProfileChangeRequest()
                 changeRequest.displayName = name.formatted(.name(style: .long))
                 try await changeRequest.commitChanges()
+
+                changes = true
             }
 
-            try await dispatchQueuedChanges()
+            if changes {
+                // non of the above request will trigger our state change listener, therefore just call it manually.
+                try await notifyUserSignIn(user: currentUser)
+            }
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -298,7 +315,7 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
             .set(\.isEmailVerified, value: user.isEmailVerified)
 
         if let displayName = user.displayName,
-            let nameComponents = try? PersonNameComponents(displayName) {
+            let nameComponents = try? PersonNameComponents(displayName, strategy: .name) {
             // we wouldn't be here if we couldn't create the person name components from the given string
             builder.set(\.name, value: nameComponents)
         }

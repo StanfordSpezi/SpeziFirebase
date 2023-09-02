@@ -64,7 +64,7 @@ public final class FirebaseAccountConfiguration: Component {
         }
 
         Task {
-            // We might be configured above the AccountConfiguration and therfore the `Account` object
+            // We might be configured above the AccountConfiguration and therefore the `Account` object
             // might not be injected yet.
             try? await Task.sleep(for: .milliseconds(10))
             for accountService in accountServices {
