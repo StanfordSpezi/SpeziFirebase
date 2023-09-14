@@ -578,7 +578,7 @@
 			repositoryURL = "https://github.com/StanfordSpezi/SpeziViews.git";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.0;
+				minimumVersion = 0.5.0;
 			};
 		};
 		2F746D9D29962B2A00BF54FE /* XCRemoteSwiftPackageReference "XCTestExtensions" */ = {
@@ -586,7 +586,7 @@
 			repositoryURL = "https://github.com/StanfordSpezi/XCTestExtensions";
 			requirement = {
 				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.6;
+				minimumVersion = 0.4.7;
 			};
 		};
 		2FB0758B299DF8F100C0B37F /* XCRemoteSwiftPackageReference "Spezi" */ = {

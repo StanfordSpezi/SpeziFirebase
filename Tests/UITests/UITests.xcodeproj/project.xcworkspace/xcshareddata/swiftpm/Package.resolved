@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/firebase-ios-sdk",
       "state" : {
-        "revision" : "2bfe6abe1014aafe5cf28401708f7d39f9926a76",
-        "version" : "10.14.0"
+        "revision" : "8a8ec57a272e0d31480fb0893dda0cf4f769b57e",
+        "version" : "10.15.0"
       }
     },
     {
@@ -114,7 +114,7 @@
       "location" : "https://github.com/StanfordSpezi/SpeziAccount.git",
       "state" : {
         "branch" : "feature/simple-account-view",
-        "revision" : "7baa04af5d829a762f875f2e729e04ed7a04fbc5"
+        "revision" : "e13b1f22d4b67527a0515f42071e010bf23cb732"
       }
     },
     {
@@ -122,8 +122,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordSpezi/SpeziViews.git",
       "state" : {
-        "revision" : "3131708f262064231751a8963eb263f8648b6879",
-        "version" : "0.4.1"
+        "revision" : "626914fa7554aa2b994257541c0794eb930520ba",
+        "version" : "0.5.0"
       }
     },
     {
@@ -149,8 +149,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordSpezi/XCTestExtensions",
       "state" : {
-        "revision" : "625477e0937294cb3fd6e7bbf72b78f951644b1d",
-        "version" : "0.4.6"
+        "revision" : "388a6d6a5be48eff5d98a2c45e0b50f30ed21dc3",
+        "version" : "0.4.7"
       }
     },
     {

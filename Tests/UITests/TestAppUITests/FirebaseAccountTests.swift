@@ -219,8 +219,8 @@ final class FirebaseAccountTests: XCTestCase {
         app.buttons["Name, Username Test"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["Name"].waitForExistence(timeout: 10.0))
 
-        try app.textFields["Enter your last name ..."].delete(count: 4)
-        app.typeText("Test1")
+        try app.textFields["enter last name"].delete(count: 4)
+        try app.textFields["enter last name"].enter(value: "Test1")
 
         app.buttons["Done"].tap()
         sleep(3)
@@ -231,7 +231,7 @@ final class FirebaseAccountTests: XCTestCase {
         XCTAssertTrue(app.navigationBars.staticTexts["E-Mail Address"].waitForExistence(timeout: 10.0))
 
         try app.textFields["E-Mail Address"].delete(count: 3)
-        app.typeText("de")
+        try app.textFields["E-Mail Address"].enter(value: "de", checkIfTextWasEnteredCorrectly: false)
 
         app.buttons["Done"].tap()
         sleep(3)
@@ -274,10 +274,10 @@ final class FirebaseAccountTests: XCTestCase {
         XCTAssertTrue(app.navigationBars.staticTexts["Change Password"].waitForExistence(timeout: 10.0))
         sleep(2)
 
-        try app.secureTextFields["New Password"].enter(value: "1234567890")
+        try app.secureTextFields["enter password"].enter(value: "1234567890")
         app.dismissKeyboard()
 
-        try app.secureTextFields["Repeat Password"].enter(value: "1234567890")
+        try app.secureTextFields["re-enter password"].enter(value: "1234567890")
         app.dismissKeyboard()
 
         app.buttons["Done"].tap()
@@ -370,11 +370,11 @@ extension XCUIApplication {
         
         swipeUp()
         
-        try textFields["Enter your first name ..."].enter(value: givenName)
+        try textFields["enter first name"].enter(value: givenName)
         extendedDismissKeyboard()
         swipeUp()
         
-        try textFields["Enter your last name ..."].enter(value: familyName)
+        try textFields["enter last name"].enter(value: familyName)
         extendedDismissKeyboard()
         swipeUp()
 
