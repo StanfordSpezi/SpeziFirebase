@@ -118,6 +118,15 @@
       }
     },
     {
+      "identity" : "spezistorage",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/StanfordSpezi/SpeziStorage",
+      "state" : {
+        "revision" : "739ee1eadc5f9b1b5d2e8752ba077243d42fa79f",
+        "version" : "0.4.2"
+      }
+    },
+    {
       "identity" : "speziviews",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordSpezi/SpeziViews.git",

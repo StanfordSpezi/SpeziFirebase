@@ -9,6 +9,7 @@
 import FirebaseAuth
 import OSLog
 import SpeziAccount
+import SpeziSecureStorage
 import SwiftUI
 
 
@@ -46,6 +47,7 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     }
 
     @AccountReference private var account: Account
+    private var secureStorage: SecureStorage?
 
     let configuration: AccountServiceConfiguration
     private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
@@ -71,7 +73,7 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     }
 
 
-    func configure() {
+    func configure(with secureStorage: SecureStorage) {
         authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener(stateDidChangeListener)
 
         // if there is a cached user, we refresh the authentication token
@@ -98,6 +100,8 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
             Self.logger.debug("signIn(withEmail:password:)")
 
             try await dispatchQueuedChanges()
+
+            persistCurrentCredentials(userId: userId, password: password)
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -129,6 +133,8 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
             }
 
             try await dispatchQueuedChanges()
+
+            persistCurrentCredentials(userId: signupDetails.userId, password: signupDetails.password)
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -211,6 +217,13 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
 
         var changes = false
 
+        // if we modify sensitive credentials and require a recent login
+        if modifications.modifiedDetails.storage[UserIdKey.self] != nil || modifications.modifiedDetails.password != nil,
+           let userId = currentUser.email {
+            // with a future version of SpeziAccount we want to get rid of this workaround and request the password from the user on the fly.
+            await reauthenticateUser(userId: userId, user: currentUser)
+        }
+
         do {
             if let userId = modifications.modifiedDetails.storage[UserIdKey.self] {
                 Self.logger.debug("updateEmail(to:) for user.")
@@ -221,6 +234,10 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
             if let password = modifications.modifiedDetails.password {
                 Self.logger.debug("updatePassword(to:) for user.")
                 try await currentUser.updatePassword(to: password)
+
+                if let userId = currentUser.email { // make sure we save the new password
+                    persistCurrentCredentials(userId: userId, password: password)
+                }
             }
 
             if let name = modifications.modifiedDetails.name {
@@ -328,6 +345,51 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
 
     func notifyUserRemoval() async {
         Self.logger.debug("Notifying SpeziAccount of removed user details.")
+        let userId = await account.details?.userId
+
         await account.removeUserDetails()
+
+        if let userId {
+            removeCredentials(userId: userId)
+        }
+    }
+
+    func persistCurrentCredentials(userId: String, password: String) {
+        let passwordCredential = Credentials(username: userId, password: password)
+        do {
+            try secureStorage?.store(credentials: passwordCredential, server: "account.firebase.stanford.edu", storageScope: .keychain)
+        } catch {
+            Self.logger.debug("Failed to persists login credentials: \(error)")
+        }
+    }
+
+    func removeCredentials(userId: String) {
+        do {
+            try secureStorage?.deleteCredentials(userId, server: "account.firebase.stanford.edu")
+        } catch {
+            Self.logger.debug("Failed to remove credentials: \(error)")
+        }
+    }
+
+    func retrieveCredential(userId: String) -> String? {
+        do {
+            return try secureStorage?.retrieveCredentials(userId, server: "account.firebase.stanford.edu")?.password
+        } catch {
+            Self.logger.debug("Failed to retrieve credentials: \(error)")
+        }
+
+        return nil
+    }
+
+    func reauthenticateUser(userId: String, user: User) async {
+        guard let password = retrieveCredential(userId: userId) else {
+            return // nothing we can do
+        }
+
+        do {
+            try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
+        } catch {
+            Self.logger.debug("Credential change might fail. Failed to reauthenticate with firebase.: \(error)")
+        }
     }
 }

@@ -14,6 +14,7 @@ import protocol FirebaseAuth.AuthStateDidChangeListenerHandle
 import FirebaseCore
 import Foundation
 import SpeziFirebaseConfiguration
+import SpeziSecureStorage
 
 
 /// Configures Firebase Auth `AccountService`s that can be used in any views of the `Account` module.
@@ -36,6 +37,7 @@ import SpeziFirebaseConfiguration
 /// ```
 public final class FirebaseAccountConfiguration: Component {
     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
+    @Dependency private var secureStorage: SecureStorage
 
     private let emulatorSettings: (host: String, port: Int)?
     private let authenticationMethods: FirebaseAuthAuthenticationMethods
@@ -68,7 +70,7 @@ public final class FirebaseAccountConfiguration: Component {
             // might not be injected yet.
             try? await Task.sleep(for: .milliseconds(10))
             for accountService in accountServices {
-                await (accountService as? FirebaseEmailPasswordAccountService)?.configure()
+                await (accountService as? FirebaseEmailPasswordAccountService)?.configure(with: secureStorage)
             }
         }
     }
