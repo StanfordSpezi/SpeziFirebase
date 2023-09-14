@@ -14,7 +14,11 @@ enum FirebaseAccountError: LocalizedError {
     case invalidEmail
     case accountAlreadyInUse
     case weakPassword
+    case invalidCredentials
+    case internalPasswordResetError
     case setupError
+    case notSignedIn
+    case requireRecentLogin
     case unknown(AuthErrorCode.Code)
     
     
@@ -26,8 +30,16 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_ALREADY_IN_USE"
         case .weakPassword:
             return "FIREBASE_ACCOUNT_WEAK_PASSWORD"
+        case .invalidCredentials:
+            return "FIREBASE_ACCOUNT_INVALID_CREDENTIALS"
+        case .internalPasswordResetError:
+            return "FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET"
         case .setupError:
             return "FIREBASE_ACCOUNT_SETUP_ERROR"
+        case .notSignedIn:
+            return "FIREBASE_ACCOUNT_SIGN_IN_ERROR"
+        case .requireRecentLogin:
+            return "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR"
         case .unknown:
             return "FIREBASE_ACCOUNT_UNKNOWN"
         }
@@ -35,10 +47,6 @@ enum FirebaseAccountError: LocalizedError {
 
     var errorDescription: String? {
         .init(localized: errorDescriptionValue, bundle: .module)
-    }
-    
-    var failureReason: String? {
-        errorDescription
     }
     
     private var recoverySuggestionValue: String.LocalizationValue {
@@ -49,8 +57,16 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_ALREADY_IN_USE_SUGGESTION"
         case .weakPassword:
             return "FIREBASE_ACCOUNT_WEAK_PASSWORD_SUGGESTION"
+        case .invalidCredentials:
+            return "FIREBASE_ACCOUNT_INVALID_CREDENTIALS_SUGGESTION"
+        case .internalPasswordResetError:
+            return "FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET_SUGGESTION"
         case .setupError:
             return "FIREBASE_ACCOUNT_SETUP_ERROR_SUGGESTION"
+        case .notSignedIn:
+            return "FIREBASE_ACCOUNT_SIGN_IN_ERROR_SUGGESTION"
+        case .requireRecentLogin:
+            return "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR_SUGGESTION"
         case .unknown:
             return "FIREBASE_ACCOUNT_UNKNOWN_SUGGESTION"
         }
@@ -62,15 +78,23 @@ enum FirebaseAccountError: LocalizedError {
 
     
     init(authErrorCode: AuthErrorCode) {
+        FirebaseEmailPasswordAccountService.logger.debug("Received authError with code \(authErrorCode)")
+
         switch authErrorCode.code {
-        case .invalidEmail:
+        case .invalidEmail, .invalidRecipientEmail:
             self = .invalidEmail
         case .emailAlreadyInUse:
             self = .accountAlreadyInUse
         case .weakPassword:
             self = .weakPassword
+        case .userDisabled, .wrongPassword, .userNotFound, .userMismatch:
+            self = .invalidCredentials
+        case .invalidSender, .invalidMessagePayload:
+            self = .internalPasswordResetError
         case .operationNotAllowed, .invalidAPIKey, .appNotAuthorized, .keychainError, .internalError:
             self = .setupError
+        case .requiresRecentLogin:
+            self = .requireRecentLogin
         default:
             self = .unknown(authErrorCode.code)
         }

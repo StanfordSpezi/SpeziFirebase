@@ -15,54 +15,61 @@ import SwiftUI
 
 
 struct FirebaseAccountTestsView: View {
-    @EnvironmentObject var firebaseAccount: FirebaseAccountConfiguration
     @EnvironmentObject var account: Account
-    @State var showLogin = false
-    @State var showSignUp = false
-    
+
+    @State var viewState: ViewState = .idle
+
+    @State var showSetup = false
+    @State var showOverview = false
+    @State var isEditing = false
     
     var body: some View {
         List {
-            if account.signedIn {
+            if let details = account.details {
                 HStack {
-                    if let displayName = firebaseAccount.user?.displayName,
-                       let name = try? PersonNameComponents(displayName) {
-                        UserProfileView(name: name)
-                            .frame(height: 30)
-                    }
-                    if let email = firebaseAccount.user?.email {
-                        Text(email)
-                    }
+                    UserProfileView(name: details.name ?? .init(givenName: "NOT FOUND"))
+                        .frame(height: 30)
+                    Text(details.userId)
+                }
+
+                AsyncButton("Logout", role: .destructive, state: $viewState) {
+                    try await details.accountService.logout()
                 }
             }
-            Button("Login") {
-                showLogin.toggle()
+            Button("Account Setup") {
+                showSetup = true
             }
-                .disabled(account.signedIn)
-            Button("Sign Up") {
-                showSignUp.toggle()
+            Button("Account Overview") {
+                showOverview = true
             }
-                .disabled(account.signedIn)
-            Button("Logout", role: .destructive) {
-                try? Auth.auth().signOut()
-            }
-                .disabled(!account.signedIn)
         }
-            .sheet(isPresented: $showLogin) {
+            .sheet(isPresented: $showSetup) {
                 NavigationStack {
-                    Login()
+                    AccountSetup()
+                        .toolbar {
+                            toolbar(closing: $showSetup)
+                        }
                 }
             }
-            .sheet(isPresented: $showSignUp) {
+            .sheet(isPresented: $showOverview) {
                 NavigationStack {
-                    SignUp()
+                    AccountOverview(isEditing: $isEditing)
+                        .toolbar {
+                            toolbar(closing: $showOverview, isEditing: $isEditing)
+                        }
                 }
             }
-            .onChange(of: account.signedIn) { signedIn in
-                if signedIn {
-                    showLogin = false
-                    showSignUp = false
+    }
+
+
+    @ToolbarContentBuilder
+    func toolbar(closing flag: Binding<Bool>, isEditing: Binding<Bool> = .constant(false)) -> some ToolbarContent {
+        if isEditing.wrappedValue == false {
+            ToolbarItemGroup(placement: .cancellationAction) {
+                Button("Close") {
+                    flag.wrappedValue = false
                 }
             }
+        }
     }
 }

@@ -34,7 +34,9 @@ struct UITestsApp: App {
     }
     
     
-    @UIApplicationDelegateAdaptor(TestAppDelegate.self) var appDelegate
+    @UIApplicationDelegateAdaptor(TestAppDelegate.self)
+    var appDelegate
+
     @State private var path = NavigationPath()
     
     

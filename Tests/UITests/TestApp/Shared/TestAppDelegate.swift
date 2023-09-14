@@ -7,6 +7,7 @@
 //
 
 import Spezi
+import SpeziAccount
 import SpeziFirebaseAccount
 import SpeziFirestore
 import SwiftUI
@@ -15,6 +16,11 @@ import SwiftUI
 class TestAppDelegate: SpeziAppDelegate {
     override var configuration: Configuration {
         Configuration {
+            AccountConfiguration(configuration: [
+                .requires(\.userId),
+                .requires(\.password),
+                .collects(\.name)
+            ])
             Firestore(settings: .emulator)
             FirebaseAccountConfiguration(emulatorSettings: (host: "localhost", port: 9099))
         }
