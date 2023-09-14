@@ -291,6 +291,36 @@ final class FirebaseAccountTests: XCTestCase {
         try app.login(username: "test@username.edu", password: "1234567890", close: false)
         XCTAssertTrue(app.staticTexts["Username Test"].waitForExistence(timeout: 6.0))
     }
+    
+    @MainActor
+    func testPasswordReset() async throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--firebaseAccount"]
+        app.launch()
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        if app.buttons["Logout"].waitForExistence(timeout: 5.0) && app.buttons["Logout"].isHittable {
+            app.buttons["Logout"].tap()
+        }
+
+        app.buttons["Account Setup"].tap()
+
+        XCTAssertTrue(app.buttons["Forgot Password?"].waitForExistence(timeout: 2.0))
+
+        app.buttons["Forgot Password?"].tap()
+
+        XCTAssertTrue(app.buttons["Reset Password"].waitForExistence(timeout: 2.0))
+
+        let fields = app.textFields.matching(identifier: "E-Mail Address").allElementsBoundByIndex
+        try fields.last?.enter(value: "non-existent@username.edu")
+
+        app.buttons["Reset Password"].tap()
+
+        XCTAssertTrue(app.staticTexts["Sent out a link to reset the password."].waitForExistence(timeout: 2.0))
+        app.buttons["Done"].tap()
+    }
 
     @MainActor
     func testInvalidCredentials() async throws {

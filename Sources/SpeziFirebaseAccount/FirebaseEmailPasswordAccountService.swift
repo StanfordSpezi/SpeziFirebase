@@ -23,6 +23,7 @@ private struct QueueUpdate {
 }
 
 
+// swiftlint:disable:next type_body_length
 actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
     static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "AccountService")
 
@@ -147,7 +148,12 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService {
             try await Auth.auth().sendPasswordReset(withEmail: userId)
             Self.logger.debug("sendPasswordReset(withEmail:) for user.")
         } catch let error as NSError {
-            throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
+            let firebaseError = FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
+            if case .invalidCredentials = firebaseError {
+                return // make sure we don't leak any information
+            } else {
+                throw firebaseError
+            }
         } catch {
             throw FirebaseAccountError.unknown(.internalError)
         }
