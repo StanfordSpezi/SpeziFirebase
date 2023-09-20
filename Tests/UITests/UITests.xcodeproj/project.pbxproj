@@ -569,8 +569,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/StanfordSpezi/SpeziAccount.git";
 			requirement = {
-				branch = "feature/signup-sheet-no-navigationstacks";
-				kind = branch;
+				kind = upToNextMinorVersion;
+				minimumVersion = 0.5.1;
 			};
 		};
 		2F2E8EFD29E7369B00D439B7 /* XCRemoteSwiftPackageReference "SpeziViews" */ = {
