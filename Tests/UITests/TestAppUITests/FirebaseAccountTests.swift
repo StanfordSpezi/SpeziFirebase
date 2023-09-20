@@ -392,10 +392,10 @@ extension XCUIApplication {
         XCTAssertTrue(staticTexts["Please fill out the details below to create a new account."].waitForExistence(timeout: 6.0))
         sleep(2)
 
-        try textFields["E-Mail Address"].enter(value: username)
+        try collectionViews.textFields["E-Mail Address"].enter(value: username)
         extendedDismissKeyboard()
         
-        try secureTextFields["Password"].enter(value: password)
+        try collectionViews.secureTextFields["Password"].enter(value: password)
         extendedDismissKeyboard()
         
         swipeUp()
