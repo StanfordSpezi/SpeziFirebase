@@ -19,7 +19,7 @@ final class FirebaseAccountTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         
-        try disablePasswordAutofill()
+        // TODO try disablePasswordAutofill()
 
         try await FirebaseClient.deleteAllAccounts()
         try await Task.sleep(for: .seconds(0.5))
@@ -392,10 +392,10 @@ extension XCUIApplication {
         XCTAssertTrue(staticTexts["Please fill out the details below to create a new account."].waitForExistence(timeout: 6.0))
         sleep(2)
 
-        try textFields["E-Mail Address"].enter(value: username)
+        try collectionViews.textFields["E-Mail Address"].enter(value: username)
         extendedDismissKeyboard()
         
-        try secureTextFields["Password"].enter(value: password)
+        try collectionViews.secureTextFields["Password"].enter(value: password)
         extendedDismissKeyboard()
         
         swipeUp()
