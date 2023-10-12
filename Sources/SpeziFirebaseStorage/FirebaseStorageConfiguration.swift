@@ -30,6 +30,10 @@ public final class FirebaseStorageConfiguration: Component, DefaultInitializable
     private let emulatorSettings: (host: String, port: Int)?
     
     
+    public required convenience init() {
+        self.init(emulatorSettings: nil)
+    }
+    
     /// - Parameters:
     ///   - emulatorSettings: The emulator settings. The default value is `nil`, connecting the FirebaseStorage module to the FirebaseStorage cloud instance.
     public init(
