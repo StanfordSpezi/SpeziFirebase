@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
-import FirebaseCore
 import FirebaseStorage
 import Spezi
+import SpeziFirebaseConfiguration
 
 
 /// Configures the Firebase Storage that can then be used within any application via `Storage.storage()`.
