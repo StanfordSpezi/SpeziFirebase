@@ -20,7 +20,8 @@ let package = Package(
     products: [
         .library(name: "SpeziFirebaseAccount", targets: ["SpeziFirebaseAccount"]),
         .library(name: "SpeziFirebaseConfiguration", targets: ["SpeziFirebaseConfiguration"]),
-        .library(name: "SpeziFirestore", targets: ["SpeziFirestore"])
+        .library(name: "SpeziFirestore", targets: ["SpeziFirestore"]),
+        .library(name: "SpeziFirebaseStorage", targets: ["SpeziFirebaseStorage"])
     ],
     dependencies: [
         .package(url: "https://github.com/StanfordSpezi/Spezi", .upToNextMinor(from: "0.7.0")),
@@ -53,6 +54,14 @@ let package = Package(
                 .product(name: "Spezi", package: "Spezi"),
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
                 .product(name: "FirebaseFirestoreSwift", package: "firebase-ios-sdk")
+            ]
+        ),
+        .target(
+            name: "SpeziFirebaseStorage",
+            dependencies: [
+                .target(name: "SpeziFirebaseConfiguration"),
+                .product(name: "Spezi", package: "Spezi"),
+                .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
             ]
         ),
         .testTarget(
