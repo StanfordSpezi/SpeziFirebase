@@ -12,3 +12,4 @@ Spezi Firebase contributors
 ====================
 
 * [Paul Schmiedmayer](https://github.com/PSchmiedmayer)
+* [Philipp Zagar](https://github.com/philippzagar)
