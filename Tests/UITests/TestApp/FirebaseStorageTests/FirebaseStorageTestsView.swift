@@ -27,13 +27,15 @@ struct FirebaseStorageTestsView: View {
     }
 
 
+    @MainActor
     private func uploadFile() {
         viewState = .processing
         Task {
             do {
                 let metadata = StorageMetadata()
                 metadata.contentType = "text/plain"
-                _ = try await Storage.storage().reference().child("test.txt").putDataAsync("Hello World!".data(using: .utf8) ?? .init(), metadata: metadata)
+                _ = try await Storage.storage().reference().child("test.txt")
+                    .putDataAsync("Hello World!".data(using: .utf8) ?? .init(), metadata: metadata)
                 viewState = .idle
             } catch {
                 viewState = .error(AnyLocalizedError(error: error))
@@ -41,4 +43,3 @@ struct FirebaseStorageTestsView: View {
         }
     }
 }
-
