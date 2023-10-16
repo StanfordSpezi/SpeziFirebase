@@ -20,7 +20,8 @@ final class FirebaseStorageTests: XCTestCase {
         let bucket: String
     }
     
-    
+   
+    @MainActor
     override func setUp() async throws {
         try await super.setUp()
         
@@ -28,6 +29,7 @@ final class FirebaseStorageTests: XCTestCase {
         try await Task.sleep(for: .seconds(0.5))
     }
     
+    @MainActor
     func testFirebaseStorageFileUpload() async throws {
         let app = XCUIApplication()
         app.launch()
