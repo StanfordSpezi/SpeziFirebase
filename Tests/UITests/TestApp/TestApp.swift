@@ -14,6 +14,7 @@ struct UITestsApp: App {
     enum Tests: String, CaseIterable, Identifiable {
         case firebaseAccount = "FirebaseAccount"
         case firestoreDataStorage = "FirestoreDataStorage"
+        case firebaseStorage = "FirebaseStorage"
         
         
         var id: RawValue {
@@ -29,6 +30,8 @@ struct UITestsApp: App {
                 FirebaseAccountTestsView()
             case .firestoreDataStorage:
                 FirestoreDataStorageTestsView()
+            case .firebaseStorage:
+                FirebaseStorageTestsView()
             }
         }
     }
