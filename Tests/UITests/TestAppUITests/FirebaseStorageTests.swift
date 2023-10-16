@@ -28,7 +28,7 @@ final class FirebaseStorageTests: XCTestCase {
         try await Task.sleep(for: .seconds(0.5))
     }
     
-    func testFirestoreAdditions() async throws {
+    func testFirebaseStorageFileUpload() async throws {
         let app = XCUIApplication()
         app.launch()
         XCTAssert(app.buttons["FirebaseStorage"].waitForExistence(timeout: 2.0))
