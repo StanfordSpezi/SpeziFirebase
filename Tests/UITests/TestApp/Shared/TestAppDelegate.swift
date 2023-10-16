@@ -9,6 +9,7 @@
 import Spezi
 import SpeziAccount
 import SpeziFirebaseAccount
+import SpeziFirebaseStorage
 import SpeziFirestore
 import SwiftUI
 
@@ -23,6 +24,7 @@ class TestAppDelegate: SpeziAppDelegate {
             ])
             Firestore(settings: .emulator)
             FirebaseAccountConfiguration(emulatorSettings: (host: "localhost", port: 9099))
+            FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))
         }
     }
 }
