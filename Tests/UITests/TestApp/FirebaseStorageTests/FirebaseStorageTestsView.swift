@@ -32,10 +32,10 @@ struct FirebaseStorageTestsView: View {
         viewState = .processing
         Task {
             do {
+                let ref = Storage.storage().reference().child("test.txt")
                 let metadata = StorageMetadata()
                 metadata.contentType = "text/plain"
-                _ = try await Storage.storage().reference().child("test.txt")
-                    .putDataAsync("Hello World!".data(using: .utf8) ?? .init(), metadata: metadata)
+                _ = try await ref.putDataAsync("Hello World!".data(using: .utf8) ?? .init(), metadata: metadata)
                 viewState = .idle
             } catch {
                 viewState = .error(AnyLocalizedError(error: error))
