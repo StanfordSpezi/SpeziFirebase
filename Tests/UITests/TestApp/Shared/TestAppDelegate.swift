@@ -19,7 +19,7 @@ class TestAppDelegate: SpeziAppDelegate {
         Configuration {
             AccountConfiguration(configuration: [
                 .requires(\.userId),
-                .requires(\.password),
+                .requires(\.password), // TODO how do we solve this, not a necessity right?
                 .collects(\.name)
             ])
             Firestore(settings: .emulator)

@@ -58,6 +58,9 @@ public final class FirebaseAccountConfiguration: Component {
         if authenticationMethods.contains(.emailAndPassword) {
             self.accountServices.append(FirebaseEmailPasswordAccountService())
         }
+        if authenticationMethods.contains(.signInWithApple) {
+            self.accountServices.append(FirebaseIdentityProviderAccountService()) // TODO pass apple in here?
+        }
     }
     
     public func configure() {
