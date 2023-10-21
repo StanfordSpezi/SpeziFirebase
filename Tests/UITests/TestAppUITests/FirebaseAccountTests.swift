@@ -267,8 +267,8 @@ final class FirebaseAccountTests: XCTestCase {
         app.buttons["Account Overview"].tap()
         XCTAssertTrue(app.staticTexts["test@username.edu"].waitForExistence(timeout: 5.0))
 
-        app.buttons["Password & Security"].tap()
-        XCTAssertTrue(app.navigationBars.staticTexts["Password & Security"].waitForExistence(timeout: 10.0))
+        app.buttons["Sign-In & Security"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["Sign-In & Security"].waitForExistence(timeout: 10.0))
 
         app.buttons["Change Password"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["Change Password"].waitForExistence(timeout: 10.0))
