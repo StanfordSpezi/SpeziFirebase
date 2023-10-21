@@ -26,14 +26,17 @@
 "FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET" = "Failed to reset password";
 "FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET_SUGGESTION" = "There was an issue delivering the password reset email. Please try again.";
 
-"FIREBASE_ACCOUNT_SETUP_ERROR" = "Could not create the user account";
-"FIREBASE_ACCOUNT_SETUP_ERROR_SUGGESTION" = "There was an internal error when trying to create your user account. Please try again later.";
+"FIREBASE_ACCOUNT_SETUP_ERROR" = "Could not complete account operation";
+"FIREBASE_ACCOUNT_SETUP_ERROR_SUGGESTION" = "There was an internal error when trying to perform the account operation. Please try again later.";
 
 "FIREBASE_ACCOUNT_SIGN_IN_ERROR" = "Not signed in";
 "FIREBASE_ACCOUNT_SIGN_IN_ERROR_SUGGESTION" = "Couldn't complete this operation as there is no current user account.";
 
 "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR" = "Couldn't complete operation";
 "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR_SUGGESTION" = "This is a security relevant operation that requires a recent login.";
+
+"FIREBASE_APPLE_FAILED" = "Sign in with Apple failed";
+"FIREBASE_APPLE_FAILED_SUGGESTION" = "We had issues completing your Sign in with Apple request. Please try again later.";
 
 "FIREBASE_ACCOUNT_UNKNOWN" = "Failed account operation";
 "FIREBASE_ACCOUNT_UNKNOWN_SUGGESTION" = "Please check your internet connection and try again.";

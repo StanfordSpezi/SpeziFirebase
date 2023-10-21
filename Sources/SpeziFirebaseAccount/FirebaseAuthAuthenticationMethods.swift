@@ -8,7 +8,7 @@
 
 
 /// Definition of the authentication methods supported by the FirebaseAccount module.
-public struct FirebaseAuthAuthenticationMethods: OptionSet {
+public struct FirebaseAuthAuthenticationMethods: OptionSet, Codable {
     // TODO document necessary steps:
     //  email and password: enable in firebase
     //  apple: Xcode project setup (add capabilities) => signing capabilities (account and stuff!)
@@ -18,11 +18,6 @@ public struct FirebaseAuthAuthenticationMethods: OptionSet {
     public static let emailAndPassword = FirebaseAuthAuthenticationMethods(rawValue: 1 << 0)
     /// Sign In With Apple Identity Provider.
     public static let signInWithApple = FirebaseAuthAuthenticationMethods(rawValue: 1 << 1)
-
-
-    /// All authentication methods.
-    public static let all: FirebaseAuthAuthenticationMethods = [.emailAndPassword, .signInWithApple]
-    // TODO all doesn't make sense + we need a way to inejct from the outside (e.g. GoogleSignIn!)
     
     
     public let rawValue: Int

@@ -29,12 +29,11 @@ struct FirebaseIdentityProviderViewStyle: IdentityProviderViewStyle {
 }
 
 
-actor FirebaseIdentityProviderAccountService: IdentityProvider {
+actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountService {
     static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "IdentityProvider")
 
     private static let supportedKeys = AccountKeyCollection {
         \.userId
-        \.password // TODO remove this once we figure out how to support Account Service directed requirement level!
         \.name
     }
 
@@ -44,40 +43,87 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider {
 
     let configuration: AccountServiceConfiguration
 
-    @MainActor @AccountReference private var account: Account // property wrappers cannot be nonisolated, so we isolate it to main actor
+    @MainActor @AccountReference var account: Account // property wrappers cannot be non-isolated, so we isolate it to main actor
     @MainActor private var lastNonce: String?
 
+    @_WeakInjectable var context: FirebaseContext
 
     init() { // TODO provider enum instantiation?
         self.configuration = AccountServiceConfiguration(
             name: "Identity Provider", // TODO source name from type
-            supportedKeys: .exactly(Self.supportedKeys) // TODO SpeziAccount support to automatically collect more!
+            supportedKeys: .exactly(Self.supportedKeys)
         ) {
             RequiredAccountKeys {
-                \.userId // TODO not password right, anything else, does that make sense?
+                \.userId
             }
             UserIdConfiguration(type: .emailAddress, keyboardType: .emailAddress)
-
-            // TODO field validation rules doesn't make sense right?
         }
     }
 
+    // TODO move both somewhere else!
+    private static func randomNonceString(length: Int) -> String {
+        precondition(length > 0, "Nonce length must be non-zero")
+        let nonceCharacters = (0 ..< length).map { _ in
+            // ASCII alphabet goes from 32 (space) to 126 (~)
+            let num = Int.random(in: 32...126) // TODO something better? => crypto graphically!
+            guard let scalar = UnicodeScalar(num) else {
+                preconditionFailure("Failed to generate ASCII character for nonce!")
+            }
+            return Character(scalar)
+        }
+
+        return String(nonceCharacters)
+    }
+
+    private static func sha256(_ input: String) -> String {
+        SHA256.hash(data: Data(input.utf8))
+            .compactMap { byte in
+                String(format: "%02x", byte)
+            }
+            .joined()
+    }
+
+
+    func configure(with context: FirebaseContext) async {
+        self._context.inject(context)
+        await context.share(account: account)
+    }
+
+    func handleAccountRemoval(userId: String?) async {
+        // nothing we are doing here
+    }
+
+    func reauthenticateUser(userId: String, user: User) async {
+        // TODO reauthenticate token https://firebase.google.com/docs/auth/ios/apple
+    }
+
     func signUp(signupDetails: SignupDetails) async throws {
-        // TODO actually check what we plug in! is that used?
-    }
+        guard let credential = signupDetails.oauthCredential else {
+            throw FirebaseAccountError.invalidCredentials
+        }
 
-    func updateAccountDetails(_ modifications: AccountModifications) async throws {
-        // TODO reuse stuff?
-    }
+        try await context.dispatchFirebaseAuthAction(on: self) {
+            let authResult = try await Auth.auth().signIn(with: credential)
+            Self.logger.debug("signIn(with:) credential for user.")
 
-    func logout() async throws {
-        // TODO reuse everything!
+            _ = authResult.additionalUserInfo?.isNewUser
+            // TODO forward isNewUser!
+        }
     }
 
     func delete() async throws {
-        // TODO reuse everything?
+        guard let currentUser = Auth.auth().currentUser else {
+            if await account.signedIn {
+                try await context.notifyUserRemoval(for: self)
+            }
+            throw FirebaseAccountError.notSignedIn
+        }
 
-        // TODO token revocation!!! https://firebase.google.com/docs/auth/ios/apple
+        try await context.dispatchFirebaseAuthAction(on: self) {
+            // TODO token revocation!!! https://firebase.google.com/docs/auth/ios/apple
+            try await currentUser.delete()
+            Self.logger.debug("delete() for user.")
+        }
     }
 
     @MainActor
@@ -87,7 +133,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider {
         var requestedScopes: [ASAuthorization.Scope] = [.email]
 
         let nameRequirement = account.configuration[PersonNameKey.self]?.requirement
-        if nameRequirement == .required || nameRequirement == .collected {
+        if nameRequirement == .required { // .collected names will be collected later-on
             requestedScopes.append(.fullName)
         }
 
@@ -98,12 +144,16 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider {
     }
 
     @MainActor
-    func onAppleSignInCompletion(result: Result<ASAuthorization, Error>) throws {
+    func onAppleSignInCompletion(result: Result<ASAuthorization, Error>) async throws {
+        defer { // cleanup tasks
+            self.lastNonce = nil
+        }
+
         switch result {
         case let .success(authorization):
             guard let appleIdCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
                 Self.logger.error("Unable to obtain credential as ASAuthorizationAppleIDCredential")
-                throw FirebaseAccountError.setupError // TODO it's not just account creation!
+                throw FirebaseAccountError.setupError
             }
 
             guard let lastNonce else {
@@ -124,82 +174,38 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider {
 
             Self.logger.info("onAppleSignInCompletion creating firebase apple credential from authorization credential")
 
-            // the appleIdCredential.fullName is only provided on first contact. After that Apple won't supply that anymore!
-            // TODO we are only getting the name on first call, see https://firebase.google.com/docs/auth/ios/apple
-            let credential = OAuthProvider.appleCredential(
+            // the fullName is only provided on first contact. After that Apple won't supply that anymore!
+            let credential: OAuthCredential = OAuthProvider.appleCredential(
                 withIDToken: identityTokenString,
                 rawNonce: lastNonce,
                 fullName: appleIdCredential.fullName
             )
-            // TODO would be pass this now to our own signup method, or how does that ideally work?
-            // TODO we also might need to source additional information!
-            //  => API support to calculate diffing what is required still!
 
-            print(identityTokenString) // TODO remove!!!
-            print(credential)
+            let signupDetails = SignupDetails.Builder()
+                .set(\.oauthCredential, value: .init(credential: credential))
+                .build()
 
-            Task { // TODO create a task earlier to report error back as well!
-                do {
-                    try await Auth.auth().signIn(with: credential)
 
-                    // TODO we are now signed in and need to query additional data!
-                } catch {
-                    print("ERROR: \(error)") // TODO forward at some point?
-                }
-            }
+            // TODO we are currently bypassing all wrapped standards!
+            try await signUp(signupDetails: signupDetails)
         case let .failure(error):
             guard let authorizationError = error as? ASAuthorizationError else {
                 Self.logger.error("onAppleSignInCompletion received unknown error: \(error)")
-                // TODO forward localized description
-                break
+                throw error
             }
 
             Self.logger.error("Received ASAuthorizationError error: \(authorizationError)")
 
             switch ASAuthorizationError.Code(rawValue: authorizationError.errorCode) {
-            case .unknown, .canceled:
+            case .unknown, .canceled: // 1000, 1001
                 // unknown is thrown if e.g. user is not logged in at all. Apple will show a pop up then!
                 // cancelled is user interaction, no need to show anything
                 break
-            case .invalidResponse:
-                break // TODO The authorization request received an invalid response.
-            case .notHandled:
-                break // TODO The authorization request wasn’t handled.
-            case .failed:
-                break // TODO The authorization attempt failed.
-            case .notInteractive:
-                break // TODO The authorization request isn’t interactive.
+            case .invalidResponse, .notHandled, .failed, .notInteractive: // 1002, 1003, 1004, 1005
+                throw FirebaseAccountError.appleFailed
             default:
-                break
+                throw FirebaseAccountError.setupError
             }
-
-            self.lastNonce = nil
-
-            // TODO render some error back in the UI! (just throw?)
         }
-    }
-
-
-    // TODO move both somewhere else!
-    private static func randomNonceString(length: Int) -> String {
-        precondition(length > 0, "Nonce length must be non-zero")
-        let nonceCharacters = (0 ..< length).map { _ in
-            // ASCII alphabet goes from 32 (space) to 126 (~)
-            let num = Int.random(in: 32...126)
-            guard let scalar = UnicodeScalar(num) else {
-                preconditionFailure("Failed to generate ASCII character for nonce!")
-            }
-            return Character(scalar)
-        }
-
-        return String(nonceCharacters)
-    }
-
-    private static func sha256(_ input: String) -> String {
-        SHA256.hash(data: Data(input.utf8))
-            .compactMap { byte in
-                String(format: "%02x", byte)
-            }
-            .joined()
     }
 }

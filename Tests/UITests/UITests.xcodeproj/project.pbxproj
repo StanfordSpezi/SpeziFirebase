@@ -597,8 +597,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/StanfordSpezi/SpeziAccount.git";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.5.1;
+				branch = "feature/single-sign-on";
+				kind = branch;
 			};
 		};
 		2F2E8EFD29E7369B00D439B7 /* XCRemoteSwiftPackageReference "SpeziViews" */ = {

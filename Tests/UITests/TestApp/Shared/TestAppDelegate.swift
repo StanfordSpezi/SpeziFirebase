@@ -19,11 +19,10 @@ class TestAppDelegate: SpeziAppDelegate {
         Configuration {
             AccountConfiguration(configuration: [
                 .requires(\.userId),
-                .requires(\.password), // TODO how do we solve this, not a necessity right?
                 .collects(\.name)
             ])
             Firestore(settings: .emulator)
-            FirebaseAccountConfiguration(emulatorSettings: (host: "localhost", port: 9099))
+            FirebaseAccountConfiguration(authenticationMethods: [.emailAndPassword, .signInWithApple], emulatorSettings: (host: "localhost", port: 9099))
             FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))
         }
     }

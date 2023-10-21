@@ -25,7 +25,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/StanfordSpezi/Spezi", .upToNextMinor(from: "0.7.0")),
-        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", .upToNextMinor(from: "0.5.1")),
+        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", branch: "feature/single-sign-on"),
         .package(url: "https://github.com/StanfordSpezi/SpeziStorage", .upToNextMinor(from: "0.4.2")),
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.13.0")
     ],
@@ -36,6 +36,7 @@ let package = Package(
                 .target(name: "SpeziFirebaseConfiguration"),
                 .product(name: "Spezi", package: "Spezi"),
                 .product(name: "SpeziAccount", package: "SpeziAccount"),
+                .product(name: "SpeziLocalStorage", package: "SpeziStorage"),
                 .product(name: "SpeziSecureStorage", package: "SpeziStorage"),
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ]

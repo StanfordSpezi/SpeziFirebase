@@ -7,6 +7,7 @@
 //
 
 import AuthenticationServices
+import SpeziViews
 import SwiftUI
 
 
@@ -15,18 +16,37 @@ struct FirebaseSignInWithAppleButton: View {
 
     @Environment(\.colorScheme)
     private var colorScheme
+    @Environment(\.defaultErrorDescription)
+    private var defaultErrorDescription
+
+    @State private var viewState: ViewState = .idle
 
     var body: some View {
-        // TODO do we need to control the label!
+        // TODO do we need to control the label?
         SignInWithAppleButton(onRequest: { request in
             accountService.onAppleSignInRequest(request: request)
         }, onCompletion: { result in
-            // TODO display error!
-            try? accountService.onAppleSignInCompletion(result: result)
+            Task {
+                do {
+                    try await accountService.onAppleSignInCompletion(result: result)
+                } catch {
+                    if let localizedError = error as? LocalizedError {
+                        viewState = .error(localizedError)
+                    } else {
+                        viewState = .error(AnyLocalizedError(
+                            error: error,
+                            defaultErrorDescription: defaultErrorDescription
+                        ))
+                    }
+                }
+            }
         })
             .frame(height: 55)
             .signInWithAppleButtonStyle(colorScheme == .light ? .black : .white)
+            .viewStateAlert(state: $viewState)
+            // TODO should we prompt for existing credentials?
     }
+
 
     init(service: FirebaseIdentityProviderAccountService) {
         self.accountService = service
