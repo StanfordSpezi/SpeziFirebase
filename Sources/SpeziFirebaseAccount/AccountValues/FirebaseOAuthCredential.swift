@@ -15,11 +15,11 @@ struct OAuthCredentialWrapper: Equatable {
 }
 
 
-// TODO show signIn Provider!
-struct FirebaseOAuthCredentialKey: AccountKey { // TODO remove from the account details while building!
+// TODO show signIn Provider in the Overview!
+struct FirebaseOAuthCredentialKey: AccountKey {
     typealias Value = OAuthCredentialWrapper
 
-    static let name = LocalizedStringResource("FIREBASE_OAUTH_CREDENTIAL", bundle: .atURL(from: .module)) // TODO locale
+    static let name: LocalizedStringResource = "OAuth Credential" // not translated as never shown
     static let category: AccountKeyCategory = .credentials
     static var initialValue: InitialValue<Value> {
         preconditionFailure("Cannot enter a new oauth credential manually")

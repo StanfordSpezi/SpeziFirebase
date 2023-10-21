@@ -19,7 +19,7 @@ final class FirebaseAccountTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         
-        // TODO try disablePasswordAutofill()
+        try disablePasswordAutofill()
 
         try await FirebaseClient.deleteAllAccounts()
         try await Task.sleep(for: .seconds(0.5))

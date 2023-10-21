@@ -21,13 +21,19 @@ protocol FirebaseAccountService: AnyActor, AccountService {
     ///
     /// - Important: You must call `FirebaseContext/share(account:)` with your `@AccountReference`-acquired
     ///     `Account` object within this method call.
-    ///     // TODO storage!
-    func configure(with storage: FirebaseContext) async
+    /// - Parameter context: The global firebase context
+    func configure(with context: FirebaseContext) async
 
-    /// This method is called once the account for the given user was removed. This allows for additional cleanup tasks. TODO docs
+    /// This method is called once the account for the given user was removed.
+    ///
+    /// This allows for additional cleanup tasks to be performed.
+    /// - Parameter userId: The userId which was removed, or nil if we couldn't retrieve the last user.
     func handleAccountRemoval(userId: String?) async
 
-    // TODO docs!
+    /// This method is called to re-authenticate the current user credentials.
+    /// - Parameters:
+    ///   - userId: The current userId (email address of the User).
+    ///   - user: The User instance.
     func reauthenticateUser(userId: String, user: User) async
 }
 
@@ -46,6 +52,7 @@ extension FirebaseAccountService {
 
         try await context.dispatchFirebaseAuthAction(on: self) {
             try Auth.auth().signOut()
+            try await Task.sleep(for: .milliseconds(10))
             Self.logger.debug("signOut() for user.")
         }
     }
@@ -78,7 +85,7 @@ extension FirebaseAccountService {
         if modifications.modifiedDetails.storage[UserIdKey.self] != nil || modifications.modifiedDetails.password != nil,
            let userId = currentUser.email {
             // with a future version of SpeziAccount we want to get rid of this workaround and request the password from the user on the fly.
-            await reauthenticateUser(userId: userId, user: currentUser) // TODO just make that a protocol requirement!
+            await reauthenticateUser(userId: userId, user: currentUser)
         }
 
         do {

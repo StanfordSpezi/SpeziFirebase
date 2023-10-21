@@ -19,8 +19,9 @@ private enum UserChange {
 }
 
 private struct UserUpdate {
-    let service: any FirebaseAccountService
+    let service: (any FirebaseAccountService)?
     let change: UserChange
+    var authResult: AuthDataResult?
 }
 
 
@@ -72,9 +73,30 @@ actor FirebaseContext {
         }
     }
 
+    // a overload that just returns void
     func dispatchFirebaseAuthAction<Service: FirebaseAccountService>(
         on service: Service,
         action: () async throws -> Void
+    ) async throws {
+        try await self.dispatchFirebaseAuthAction(on: service) {
+            try await action()
+            return nil
+        }
+    }
+
+    /// Dispatch a firebase auth action.
+    ///
+    /// This method will make sure, that the result of a firebase auth command (e.g. resulting in a call of the state change
+    /// delegate) will be waited for and executed on the same thread. Therefore, any errors thrown in the event handler
+    /// can be forwarded back to the caller.
+    /// - Parameters:
+    ///   - service: The service that is calling this method.
+    ///   - action: The action. If you doing an authentication action, return the auth data result. This way
+    ///     we can forward additional information back to SpeziAccount.
+    @_disfavoredOverload
+    func dispatchFirebaseAuthAction<Service: FirebaseAccountService>(
+        on service: Service,
+        action: () async throws -> AuthDataResult?
     ) async throws {
         defer {
             cleanupQueuedChanges()
@@ -84,9 +106,9 @@ actor FirebaseContext {
         setActiveAccountService(to: service)
 
         do {
-            try await action()
+            let result = try await action()
 
-            try await dispatchQueuedChanges()
+            try await dispatchQueuedChanges(result: result)
         } catch let error as NSError {
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
@@ -138,7 +160,7 @@ actor FirebaseContext {
             id = try localStorage.read(storageKey: StorageKeys.activeAccountService)
         } catch {
             if let cocoaError = error as? CocoaError,
-               cocoaError.isFileError { // TODO does that work?
+               cocoaError.isFileError {
                 return // silence any file errors (e.g. file doesn't exist)
             }
             Self.logger.error("Failed to read last active account service: \(error)")
@@ -170,11 +192,6 @@ actor FirebaseContext {
             change = .removed
         }
 
-        guard let lastActiveAccountService else {
-            // TODO fallback to https://stackoverflow.com/questions/46901153/what-is-the-full-list-of-provider-ids-for-firebase-userinfo-providerid
-            return // TODO we can still remove it!
-        }
-
         let update = UserUpdate(service: lastActiveAccountService, change: change)
 
         if shouldQueue {
@@ -198,14 +215,20 @@ actor FirebaseContext {
         anonymouslyDispatch(update: queuedUpdate)
     }
 
-    private func dispatchQueuedChanges() async throws {
+    private func dispatchQueuedChanges(result: AuthDataResult? = nil) async throws {
         shouldQueue = false
 
-        guard let queuedUpdate else {
+        guard var queuedUpdate else {
+            Self.logger.debug("Didn't find anything to dispatch in the queue!")
             return
         }
 
         self.queuedUpdate = nil
+
+        if let result { // patch the update before we apply it
+            queuedUpdate.authResult = result
+        }
+
         try await apply(update: queuedUpdate)
     }
 
@@ -223,13 +246,18 @@ actor FirebaseContext {
     private func apply(update: UserUpdate) async throws {
         switch update.change {
         case let .user(user):
-            try await notifyUserSignIn(user: user, for: update.service)
+            let isNewUser = update.authResult?.additionalUserInfo?.isNewUser ?? false
+            guard let service = update.service else {
+                throw FirebaseAccountError.setupError
+            }
+
+            try await notifyUserSignIn(user: user, for: service, isNewUser: isNewUser)
         case .removed:
             try await notifyUserRemoval(for: update.service)
         }
     }
 
-    func notifyUserSignIn(user: User, for service: any FirebaseAccountService) async throws {
+    func notifyUserSignIn(user: User, for service: any FirebaseAccountService, isNewUser: Bool = false) async throws {
         guard let email = user.email else {
             throw FirebaseAccountError.invalidEmail
         }
@@ -246,8 +274,8 @@ actor FirebaseContext {
             builder.set(\.name, value: nameComponents)
         }
 
-        let details = builder.build(owner: service) // TODO service is generic???
-        try await account.supplyUserDetails(details)
+        let details = builder.build(owner: service)
+        try await account.supplyUserDetails(details, isNewUser: isNewUser)
     }
 
     func notifyUserRemoval(for service: (any FirebaseAccountService)?) async throws {

@@ -61,7 +61,6 @@
 		97359F652ADB286D0080CB11 /* StorageMetadata+Sendable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StorageMetadata+Sendable.swift"; sourceTree = "<group>"; };
 		978E198D2ADB40A300732324 /* FirebaseStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseStorageTests.swift; sourceTree = "<group>"; };
 		A95D60CF2AA35E2200EB5968 /* FirebaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseClient.swift; sourceTree = "<group>"; };
-		A9B628E82ADF559E00F2BBD8 /* TestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TestApp.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

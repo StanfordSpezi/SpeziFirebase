@@ -106,8 +106,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
             let authResult = try await Auth.auth().signIn(with: credential)
             Self.logger.debug("signIn(with:) credential for user.")
 
-            _ = authResult.additionalUserInfo?.isNewUser
-            // TODO forward isNewUser!
+            return authResult
         }
     }
 

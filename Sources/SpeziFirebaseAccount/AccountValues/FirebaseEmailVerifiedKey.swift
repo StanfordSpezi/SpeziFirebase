@@ -16,7 +16,7 @@ import SwiftUI
 /// - Important: This key is read-only and cannot be modified.
 public struct FirebaseEmailVerifiedKey: AccountKey {
     public typealias Value = Bool
-    public static var name: LocalizedStringResource = "E-Mail Verified"
+    public static var name: LocalizedStringResource = "E-Mail Verified" // not translated as never shown
     public static var category: AccountKeyCategory = .other
     public static var initialValue: InitialValue<Bool> = .default(false)
 }
