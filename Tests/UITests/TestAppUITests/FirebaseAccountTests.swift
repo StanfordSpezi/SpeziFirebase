@@ -63,7 +63,7 @@ final class FirebaseAccountTests: XCTestCase {
         XCTAssert(app.buttons["Logout"].waitForExistence(timeout: 10.0))
         app.buttons["Logout"].tap()
     }
-    
+
     
     @MainActor
     func testAccountLogin() async throws {
@@ -86,7 +86,7 @@ final class FirebaseAccountTests: XCTestCase {
         XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
         app.buttons["FirebaseAccount"].tap()
 
-        if app.buttons["Logout"].waitForExistence(timeout: 10.0) && app.buttons["Logout"].isHittable {
+        if app.buttons["Logout"].waitForExistence(timeout: 3.0) && app.buttons["Logout"].isHittable {
             app.buttons["Logout"].tap()
         }
         
@@ -351,6 +351,33 @@ final class FirebaseAccountTests: XCTestCase {
         try app.login(username: "test@username.edu", password: "HelloWorld", close: false)
         XCTAssertTrue(app.alerts["Invalid Credentials"].waitForExistence(timeout: 6.0))
         app.alerts["Invalid Credentials"].scrollViews.otherElements.buttons["OK"].tap()
+    }
+
+    @MainActor
+    func testBasicSignInWithApple() async throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--firebaseAccount"]
+        app.launch()
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        if app.buttons["Logout"].waitForExistence(timeout: 3.0) && app.buttons["Logout"].isHittable {
+            app.buttons["Logout"].tap()
+        }
+
+        app.buttons["Account Setup"].tap()
+
+        addUIInterruptionMonitor(withDescription: "Apple Sign In") { element in
+            // there will be a dialog that you have to sign in with your apple id. We just close it.
+            element.buttons["Close"].tap()
+            return true
+        }
+
+        XCTAssertTrue(app.buttons["Sign in with Apple"].waitForExistence(timeout: 2.0))
+        app.buttons["Sign in with Apple"].tap()
+
+        app.tap() // that triggers the interruption monitor closure
     }
 }
 
