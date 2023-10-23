@@ -265,6 +265,7 @@ actor FirebaseContext {
         Self.logger.debug("Notifying SpeziAccount with updated user details.")
 
         let builder = AccountDetails.Builder()
+            .set(\.accountId, value: user.uid)
             .set(\.userId, value: email)
             .set(\.isEmailVerified, value: user.isEmailVerified)
 

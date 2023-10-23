@@ -1,4 +1,4 @@
-// swift-tools-version:5.8
+// swift-tools-version:5.9
 
 //
 // This source file is part of the Stanford Spezi open-source project
@@ -15,7 +15,7 @@ let package = Package(
     name: "SpeziFirebase",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v16)
+        .iOS(.v17),
     ],
     products: [
         .library(name: "SpeziFirebaseAccount", targets: ["SpeziFirebaseAccount"]),

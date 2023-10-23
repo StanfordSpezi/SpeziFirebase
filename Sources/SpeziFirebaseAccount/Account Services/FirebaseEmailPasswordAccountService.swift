@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+import AuthenticationServices
 import FirebaseAuth
 import OSLog
 import SpeziAccount
@@ -17,6 +18,7 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
     static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "AccountService")
 
     private static let supportedKeys = AccountKeyCollection {
+        \.accountId
         \.userId
         \.password
         \.name

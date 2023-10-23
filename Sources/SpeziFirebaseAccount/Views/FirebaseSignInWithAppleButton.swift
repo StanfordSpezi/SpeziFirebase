@@ -22,7 +22,6 @@ struct FirebaseSignInWithAppleButton: View {
     @State private var viewState: ViewState = .idle
 
     var body: some View {
-        // TODO do we need to control the label?
         SignInWithAppleButton(onRequest: { request in
             accountService.onAppleSignInRequest(request: request)
         }, onCompletion: { result in
@@ -44,7 +43,6 @@ struct FirebaseSignInWithAppleButton: View {
             .frame(height: 55)
             .signInWithAppleButtonStyle(colorScheme == .light ? .black : .white)
             .viewStateAlert(state: $viewState)
-            // TODO should we prompt for existing credentials?
     }
 
 

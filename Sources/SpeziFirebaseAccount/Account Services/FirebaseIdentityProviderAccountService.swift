@@ -7,7 +7,6 @@
 //
 
 import AuthenticationServices
-import CryptoKit
 import FirebaseAuth
 import OSLog
 import SpeziAccount
@@ -33,6 +32,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
     static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "IdentityProvider")
 
     private static let supportedKeys = AccountKeyCollection {
+        \.accountId
         \.userId
         \.name
     }
@@ -42,6 +42,8 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
     }
 
     let configuration: AccountServiceConfiguration
+
+    private var authorizationController: AuthorizationController?
 
     @MainActor @AccountReference var account: Account // property wrappers cannot be non-isolated, so we isolate it to main actor
     @MainActor private var lastNonce: String?
@@ -60,33 +62,14 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
         }
     }
 
-    // TODO move both somewhere else!
-    private static func randomNonceString(length: Int) -> String {
-        precondition(length > 0, "Nonce length must be non-zero")
-        let nonceCharacters = (0 ..< length).map { _ in
-            // ASCII alphabet goes from 32 (space) to 126 (~)
-            let num = Int.random(in: 32...126) // TODO something better? => crypto graphically!
-            guard let scalar = UnicodeScalar(num) else {
-                preconditionFailure("Failed to generate ASCII character for nonce!")
-            }
-            return Character(scalar)
-        }
-
-        return String(nonceCharacters)
-    }
-
-    private static func sha256(_ input: String) -> String {
-        SHA256.hash(data: Data(input.utf8))
-            .compactMap { byte in
-                String(format: "%02x", byte)
-            }
-            .joined()
-    }
-
 
     func configure(with context: FirebaseContext) async {
         self._context.inject(context)
         await context.share(account: account)
+    }
+
+    func inject(authorizationController: AuthorizationController) {
+        self.authorizationController = authorizationController
     }
 
     func handleAccountRemoval(userId: String?) async {
@@ -94,6 +77,8 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
     }
 
     func reauthenticateUser(userId: String, user: User) async {
+        // TODO how to check if token still valid?
+
         // TODO reauthenticate token https://firebase.google.com/docs/auth/ios/apple
     }
 
@@ -103,7 +88,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
         }
 
         try await context.dispatchFirebaseAuthAction(on: self) {
-            let authResult = try await Auth.auth().signIn(with: credential)
+            let authResult = try await Auth.auth().signIn(with: credential) // TODO review error!
             Self.logger.debug("signIn(with:) credential for user.")
 
             return authResult
@@ -119,15 +104,65 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
         }
 
         try await context.dispatchFirebaseAuthAction(on: self) {
+            let appleIDProvider = ASAuthorizationAppleIDProvider()
+            let request = appleIDProvider.createRequest()
+            await onAppleSignInRequest(request: request)
+
+            // TODO verify that controller is non-nil
+
+            guard let result = try await performRequest(request),
+                  case let .appleID(credential) = result else {
+                return // TODO handle?
+            }
+
+            guard let _ = await lastNonce else {
+                fatalError("Invalid state: A login callback was received, but no login request was sent.")
+            }
+
+            guard let appleAuthCode = credential.authorizationCode else {
+                print("Unable to fetch authorization code")
+                return
+            }
+
+            guard let authCodeString = String(data: appleAuthCode, encoding: .utf8) else {
+                print("Unable to serialize auth code string from data: \(appleAuthCode.debugDescription)")
+                return
+            }
             // TODO token revocation!!! https://firebase.google.com/docs/auth/ios/apple
+            
+            print("Revoking!")
+            do {
+                try await Auth.auth().revokeToken(withAuthorizationCode: authCodeString) // TODO review error!
+            } catch {
+                // TODO token revocation fails on simulator https://github.com/firebase/firebase-tools/pull/6050
+                print(error)
+                throw error
+            }
+
+            print("Deleting")
             try await currentUser.delete()
             Self.logger.debug("delete() for user.")
         }
     }
 
+    private func performRequest(_ request: ASAuthorizationAppleIDRequest) async throws -> ASAuthorizationResult? {
+        guard let authorizationController else {
+            // TODO throw some error!
+            return nil
+        }
+
+        do {
+            return try await authorizationController.performRequest(request)
+        } catch {
+            try await onAppleSignInCompletion(result: .failure(error))
+        }
+
+        return nil
+    }
+
     @MainActor
     func onAppleSignInRequest(request: ASAuthorizationAppleIDRequest) {
-        let nonce = Self.randomNonceString(length: 32)
+        let nonce = CryptoUtils.randomNonceString(length: 32)
         // we configured userId as `required` in the account service
         var requestedScopes: [ASAuthorization.Scope] = [.email]
 
@@ -136,7 +171,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
             requestedScopes.append(.fullName)
         }
 
-        request.nonce = Self.sha256(nonce)
+        request.nonce = CryptoUtils.sha256(nonce)
         request.requestedScopes = requestedScopes
 
         self.lastNonce = nonce // save the nonce for later use to be passed to FirebaseAuth

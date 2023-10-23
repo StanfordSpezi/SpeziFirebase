@@ -6,9 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
+import AuthenticationServices
 import FirebaseAuth
 import OSLog
 import SpeziAccount
+import SwiftUI
 
 
 protocol FirebaseAccountService: AnyActor, AccountService {
@@ -24,6 +26,8 @@ protocol FirebaseAccountService: AnyActor, AccountService {
     /// - Parameter context: The global firebase context
     func configure(with context: FirebaseContext) async
 
+    func inject(authorizationController: AuthorizationController) async
+
     /// This method is called once the account for the given user was removed.
     ///
     /// This allows for additional cleanup tasks to be performed.
@@ -35,6 +39,11 @@ protocol FirebaseAccountService: AnyActor, AccountService {
     ///   - userId: The current userId (email address of the User).
     ///   - user: The User instance.
     func reauthenticateUser(userId: String, user: User) async
+}
+
+
+extension FirebaseAccountService {
+    func inject(authorizationController: AuthorizationController) async {}
 }
 
 
