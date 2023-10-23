@@ -12,28 +12,40 @@ import SwiftUI
 
 
 struct FirebaseAccountModifier: ViewModifier {
+    private let enable: Bool
+
     @EnvironmentObject private var account: Account
 
     @Environment(\.authorizationController)
     private var authorizationController
 
-    func body(content: Content) -> some View {
-        content
-            .task {
-                for service in account.registeredAccountServices {
-                    guard let firebaseService = service as? any FirebaseAccountService else {
-                        continue
-                    }
 
-                    await firebaseService.inject(authorizationController: authorizationController)
+    init(_ enable: Bool) {
+        self.enable = enable
+    }
+
+
+    func body(content: Content) -> some View {
+        if enable {
+            content
+                .task {
+                    for service in account.registeredAccountServices {
+                        guard let firebaseService = service as? any FirebaseAccountService else {
+                            continue
+                        }
+
+                        await firebaseService.inject(authorizationController: authorizationController)
+                    }
                 }
-            }
+        } else {
+            content
+        }
     }
 }
 
 
 extension View {
-    public func firebaseAccount() -> some View {
-        modifier(FirebaseAccountModifier())
+    public func firebaseAccount(_ enable: Bool = true) -> some View {
+        modifier(FirebaseAccountModifier(enable))
     }
 }
