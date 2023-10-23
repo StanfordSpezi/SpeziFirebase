@@ -19,6 +19,7 @@ enum FirebaseAccountError: LocalizedError {
     case setupError
     case notSignedIn
     case requireRecentLogin
+    case appleFailed
     case unknown(AuthErrorCode.Code)
     
     
@@ -40,6 +41,8 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_SIGN_IN_ERROR"
         case .requireRecentLogin:
             return "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR"
+        case .appleFailed:
+            return "FIREBASE_APPLE_FAILED"
         case .unknown:
             return "FIREBASE_ACCOUNT_UNKNOWN"
         }
@@ -67,6 +70,8 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_SIGN_IN_ERROR_SUGGESTION"
         case .requireRecentLogin:
             return "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR_SUGGESTION"
+        case .appleFailed:
+            return "FIREBASE_APPLE_FAILED_SUGGESTION"
         case .unknown:
             return "FIREBASE_ACCOUNT_UNKNOWN_SUGGESTION"
         }

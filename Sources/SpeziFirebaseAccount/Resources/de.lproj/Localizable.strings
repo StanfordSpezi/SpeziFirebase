@@ -7,33 +7,37 @@
 //
 
 "FIREBASE_EMAIL_AND_PASSWORD" = "E-Mail und Password";
+"FIREBASE_IDENTITY_PROVIDER" = "Single Sign-On";
 
 // MARK: ERRORS
 "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR %lld" = "Dein Passwort muss mindestens %lld Zeichen lang sein.";
 
 "FIREBASE_ACCOUNT_ERROR_INVALID_EMAIL" = "Inkorrekte E-Mail Adresse";
-"FIREBASE_ACCOUNT_ERROR_INVALID_EMAIL_SUGGESTION" = "Bitte geben Sie eine korrekte E-Mail Adresse ein.";
+"FIREBASE_ACCOUNT_ERROR_INVALID_EMAIL_SUGGESTION" = "Bitte gebe eine korrekte E-Mail Adresse ein.";
 
 "FIREBASE_ACCOUNT_ALREADY_IN_USE" = "Benutzerkonto existiert bereits";
-"FIREBASE_ACCOUNT_ALREADY_IN_USE_SUGGESTION" = "Ein Benutzerkonto mit dieser E-Mail Adresse existiert bereits. Bitte loggen Sie sich mit dem Account ein.";
+"FIREBASE_ACCOUNT_ALREADY_IN_USE_SUGGESTION" = "Ein Benutzerkonto mit dieser E-Mail Adresse existiert bereits. Bitte loggen dich mit dem Account ein.";
 
 "FIREBASE_ACCOUNT_WEAK_PASSWORD" = "Schwaches Passwort";
-"FIREBASE_ACCOUNT_WEAK_PASSWORD_SUGGESTION" = "Bitte geben Sie ein stärkeres Password ein.";
+"FIREBASE_ACCOUNT_WEAK_PASSWORD_SUGGESTION" = "Bitte gebe ein stärkeres Password ein.";
 
 "FIREBASE_ACCOUNT_INVALID_CREDENTIALS" = "Ungültige Zugangsdaten";
 "FIREBASE_ACCOUNT_INVALID_CREDENTIALS_SUGGESTION" = "Bitte überprüfe die eingegebene E-Mail Adresse und dein Passwort.";
 
 "FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET" = "Zurücksetzten des Passworts fehlgeschlagen";
-"FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET_SUGGESTION" = "Es ist ein Fehler aufgetreten bei dem Versuch Ihr Passwort zurückzusetzen. Bitte versuchen Sie es erneut.";
+"FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET_SUGGESTION" = "Es ist ein Fehler aufgetreten bei dem Versuch Ihr Passwort zurückzusetzen. Bitte versuche es später erneut.";
 
-"FIREBASE_ACCOUNT_SETUP_ERROR" = "Benutzerkonto konnte nicht erstelle werden";
-"FIREBASE_ACCOUNT_SETUP_ERROR_SUGGESTION" = "Es ist ein Fehler aufgetreten beim erstellen deines Benutzerkontos. Bitte versuche Sie es später erneut.";
+"FIREBASE_ACCOUNT_SETUP_ERROR" = "Anfrage fehlgeschlagen";
+"FIREBASE_ACCOUNT_SETUP_ERROR_SUGGESTION" = "Bei der Anfrage für dein Benutzerkonto ist ein Fehler aufgetreten. Bitte versuche es später erneut.";
 
 "FIREBASE_ACCOUNT_SIGN_IN_ERROR" = "Nicht eingeloggt";
 "FIREBASE_ACCOUNT_SIGN_IN_ERROR_SUGGESTION" = "Die Anfrage konnte nicht ausgeführt werden weil kein verknüpftes Benutzerkonto gefunden wurde.";
 
 "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR" = "Anfrage fehlgeschlagen";
 "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR_SUGGESTION" = "Diese Anfrage is sicherheitsrelevant und erfordert einen kürzlichen Login.";
+
+"FIREBASE_APPLE_FAILED" = "Mit Apple anmelden ist fehlgeschlagen";
+"FIREBASE_APPLE_FAILED_SUGGESTION" = "Wir hatten Probleme dich mit Apple anzumelden. Bitte versuche es später erneut.";
 
 "FIREBASE_ACCOUNT_UNKNOWN" = "Anfrage fehlgeschlagen";
 "FIREBASE_ACCOUNT_UNKNOWN_SUGGESTION" = "Bitte überprüfen deine Internet Verbindung und versuche es erneut.";

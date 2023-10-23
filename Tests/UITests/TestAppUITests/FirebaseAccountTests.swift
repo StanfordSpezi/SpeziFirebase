@@ -14,7 +14,7 @@ import XCTestExtensions
 ///
 /// Refer to https://firebase.google.com/docs/emulator-suite/connect_auth about more information about the
 /// Firebase Local Emulator Suite.
-final class FirebaseAccountTests: XCTestCase {
+final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_body_length
     @MainActor
     override func setUp() async throws {
         try await super.setUp()
@@ -63,7 +63,7 @@ final class FirebaseAccountTests: XCTestCase {
         XCTAssert(app.buttons["Logout"].waitForExistence(timeout: 10.0))
         app.buttons["Logout"].tap()
     }
-    
+
     
     @MainActor
     func testAccountLogin() async throws {
@@ -86,7 +86,7 @@ final class FirebaseAccountTests: XCTestCase {
         XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
         app.buttons["FirebaseAccount"].tap()
 
-        if app.buttons["Logout"].waitForExistence(timeout: 10.0) && app.buttons["Logout"].isHittable {
+        if app.buttons["Logout"].waitForExistence(timeout: 3.0) && app.buttons["Logout"].isHittable {
             app.buttons["Logout"].tap()
         }
         
@@ -267,8 +267,8 @@ final class FirebaseAccountTests: XCTestCase {
         app.buttons["Account Overview"].tap()
         XCTAssertTrue(app.staticTexts["test@username.edu"].waitForExistence(timeout: 5.0))
 
-        app.buttons["Password & Security"].tap()
-        XCTAssertTrue(app.navigationBars.staticTexts["Password & Security"].waitForExistence(timeout: 10.0))
+        app.buttons["Sign-In & Security"].tap()
+        XCTAssertTrue(app.navigationBars.staticTexts["Sign-In & Security"].waitForExistence(timeout: 10.0))
 
         app.buttons["Change Password"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["Change Password"].waitForExistence(timeout: 10.0))
@@ -352,6 +352,33 @@ final class FirebaseAccountTests: XCTestCase {
         XCTAssertTrue(app.alerts["Invalid Credentials"].waitForExistence(timeout: 6.0))
         app.alerts["Invalid Credentials"].scrollViews.otherElements.buttons["OK"].tap()
     }
+
+    @MainActor
+    func testBasicSignInWithApple() async throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--firebaseAccount"]
+        app.launch()
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        if app.buttons["Logout"].waitForExistence(timeout: 3.0) && app.buttons["Logout"].isHittable {
+            app.buttons["Logout"].tap()
+        }
+
+        app.buttons["Account Setup"].tap()
+
+        addUIInterruptionMonitor(withDescription: "Apple Sign In") { element in
+            // there will be a dialog that you have to sign in with your apple id. We just close it.
+            element.buttons["Close"].tap()
+            return true
+        }
+
+        XCTAssertTrue(app.buttons["Sign in with Apple"].waitForExistence(timeout: 2.0))
+        app.buttons["Sign in with Apple"].tap()
+
+        app.tap() // that triggers the interruption monitor closure
+    }
 }
 
 
@@ -389,7 +416,7 @@ extension XCUIApplication {
         buttons["Account Setup"].tap()
         buttons["Signup"].tap()
 
-        XCTAssertTrue(staticTexts["Please fill out the details below to create a new account."].waitForExistence(timeout: 6.0))
+        XCTAssertTrue(staticTexts["Please fill out the details below to create your new account."].waitForExistence(timeout: 6.0))
         sleep(2)
 
         try collectionViews.textFields["E-Mail Address"].enter(value: username)

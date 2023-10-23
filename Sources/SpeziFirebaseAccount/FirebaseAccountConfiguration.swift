@@ -14,6 +14,7 @@ import protocol FirebaseAuth.AuthStateDidChangeListenerHandle
 import FirebaseCore
 import Foundation
 import SpeziFirebaseConfiguration
+import SpeziLocalStorage
 import SpeziSecureStorage
 
 
@@ -38,18 +39,22 @@ import SpeziSecureStorage
 public final class FirebaseAccountConfiguration: Component {
     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
     @Dependency private var secureStorage: SecureStorage
+    @Dependency private var localStorage: LocalStorage
 
     private let emulatorSettings: (host: String, port: Int)?
     private let authenticationMethods: FirebaseAuthAuthenticationMethods
 
     @Provide var accountServices: [any AccountService]
+
+    /// Central context management for all account service implementations.
+    private var context: FirebaseContext?
     
     /// - Parameters:
-    ///   - emulatorSettings: The emulator settings. The default value is `nil`, connecting the FirebaseAccount module to the Firebase Auth cloud instance.
     ///   - authenticationMethods: The authentication methods that should be supported.
+    ///   - emulatorSettings: The emulator settings. The default value is `nil`, connecting the FirebaseAccount module to the Firebase Auth cloud instance.
     public init(
-        emulatorSettings: (host: String, port: Int)? = nil,
-        authenticationMethods: FirebaseAuthAuthenticationMethods = .all
+        authenticationMethods: FirebaseAuthAuthenticationMethods,
+        emulatorSettings: (host: String, port: Int)? = nil
     ) {
         self.emulatorSettings = emulatorSettings
         self.authenticationMethods = authenticationMethods
@@ -57,6 +62,9 @@ public final class FirebaseAccountConfiguration: Component {
 
         if authenticationMethods.contains(.emailAndPassword) {
             self.accountServices.append(FirebaseEmailPasswordAccountService())
+        }
+        if authenticationMethods.contains(.signInWithApple) {
+            self.accountServices.append(FirebaseIdentityProviderAccountService())
         }
     }
     
@@ -69,9 +77,18 @@ public final class FirebaseAccountConfiguration: Component {
             // We might be configured above the AccountConfiguration and therefore the `Account` object
             // might not be injected yet.
             try? await Task.sleep(for: .milliseconds(10))
-            for accountService in accountServices {
-                await (accountService as? FirebaseEmailPasswordAccountService)?.configure(with: secureStorage)
+
+            let context = FirebaseContext(local: localStorage, secure: secureStorage)
+            let firebaseServices = accountServices.compactMap { service in
+                service as? any FirebaseAccountService
             }
+
+            for service in firebaseServices {
+                await service.configure(with: context)
+            }
+
+            await context.setup(firebaseServices)
+            self.context = context
         }
     }
 }
