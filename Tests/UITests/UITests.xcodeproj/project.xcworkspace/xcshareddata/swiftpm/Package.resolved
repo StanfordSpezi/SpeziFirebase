@@ -111,10 +111,10 @@
     {
       "identity" : "speziaccount",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/StanfordSpezi/SpeziAccount.git",
+      "location" : "https://github.com/StanfordSpezi/SpeziAccount",
       "state" : {
         "branch" : "feature/single-sign-on",
-        "revision" : "3448b6ddd8449ad283493f67c2b9e3f043d66262"
+        "revision" : "14e12268f18ee78bbb70a99049838cd24821fbb7"
       }
     },
     {
