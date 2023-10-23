@@ -15,7 +15,6 @@ struct OAuthCredentialWrapper: Equatable {
 }
 
 
-// TODO show signIn Provider in the Overview!
 struct FirebaseOAuthCredentialKey: AccountKey {
     typealias Value = OAuthCredentialWrapper
 

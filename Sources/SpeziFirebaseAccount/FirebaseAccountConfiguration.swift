@@ -64,7 +64,7 @@ public final class FirebaseAccountConfiguration: Component {
             self.accountServices.append(FirebaseEmailPasswordAccountService())
         }
         if authenticationMethods.contains(.signInWithApple) {
-            self.accountServices.append(FirebaseIdentityProviderAccountService()) // TODO pass apple in here?
+            self.accountServices.append(FirebaseIdentityProviderAccountService())
         }
     }
     

@@ -38,7 +38,7 @@ protocol FirebaseAccountService: AnyActor, AccountService {
     /// - Parameters:
     ///   - userId: The current userId (email address of the User).
     ///   - user: The User instance.
-    func reauthenticateUser(userId: String, user: User) async
+    func reauthenticateUser(userId: String, user: User) async throws
 }
 
 
@@ -94,7 +94,7 @@ extension FirebaseAccountService {
         if modifications.modifiedDetails.storage[UserIdKey.self] != nil || modifications.modifiedDetails.password != nil,
            let userId = currentUser.email {
             // with a future version of SpeziAccount we want to get rid of this workaround and request the password from the user on the fly.
-            await reauthenticateUser(userId: userId, user: currentUser)
+            try await reauthenticateUser(userId: userId, user: currentUser)
         }
 
         do {

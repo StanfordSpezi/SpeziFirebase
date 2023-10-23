@@ -131,7 +131,7 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
         do {
             try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
         } catch {
-            Self.logger.debug("Credential change might fail. Failed to reauthenticate with firebase.: \(error)")
+            Self.logger.debug("Credential change might fail. Failed to reauthenticate with firebase: \(error)")
         }
     }
 }

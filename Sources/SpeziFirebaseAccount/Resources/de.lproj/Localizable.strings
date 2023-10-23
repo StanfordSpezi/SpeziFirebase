@@ -7,6 +7,7 @@
 //
 
 "FIREBASE_EMAIL_AND_PASSWORD" = "E-Mail und Password";
+"FIREBASE_IDENTITY_PROVIDER" = "Single Sign-On";
 
 // MARK: ERRORS
 "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR %lld" = "Dein Passwort muss mindestens %lld Zeichen lang sein.";

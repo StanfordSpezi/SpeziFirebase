@@ -50,9 +50,9 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
 
     @_WeakInjectable var context: FirebaseContext
 
-    init() { // TODO provider enum instantiation?
+    init() {
         self.configuration = AccountServiceConfiguration(
-            name: "Identity Provider", // TODO source name from type
+            name: LocalizedStringResource(stringLiteral: "FIREBASE_IDENTITY_PROVIDER", bundle: .atURL(from: .module)),
             supportedKeys: .exactly(Self.supportedKeys)
         ) {
             RequiredAccountKeys {
@@ -76,10 +76,14 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
         // nothing we are doing here
     }
 
-    func reauthenticateUser(userId: String, user: User) async {
-        // TODO how to check if token still valid?
+    func reauthenticateUser(userId: String, user: User) async throws {
+        guard let appleIdCredential = try await requestAppleSignInCredential() else {
+            return // user canceled
+        }
+        
+        let credential = try await oAuthCredential(from: appleIdCredential)
 
-        // TODO reauthenticate token https://firebase.google.com/docs/auth/ios/apple
+        try await user.reauthenticate(with: credential)
     }
 
     func signUp(signupDetails: SignupDetails) async throws {
@@ -88,7 +92,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
         }
 
         try await context.dispatchFirebaseAuthAction(on: self) {
-            let authResult = try await Auth.auth().signIn(with: credential) // TODO review error!
+            let authResult = try await Auth.auth().signIn(with: credential)
             Self.logger.debug("signIn(with:) credential for user.")
 
             return authResult
@@ -103,39 +107,35 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
             throw FirebaseAccountError.notSignedIn
         }
 
-        try await context.dispatchFirebaseAuthAction(on: self) {
-            let appleIDProvider = ASAuthorizationAppleIDProvider()
-            let request = appleIDProvider.createRequest()
-            await onAppleSignInRequest(request: request)
-
-            // TODO verify that controller is non-nil
-
-            guard let result = try await performRequest(request),
-                  case let .appleID(credential) = result else {
-                return // TODO handle?
+        try await context.dispatchFirebaseAuthAction(on: self) { () -> Void in
+            guard let credential = try await requestAppleSignInCredential() else {
+                return // user canceled
             }
 
-            guard let _ = await lastNonce else {
-                fatalError("Invalid state: A login callback was received, but no login request was sent.")
+            guard let authorizationCode = credential.authorizationCode else {
+                Self.logger.error("Unable to fetch authorizationCode from ASAuthorizationAppleIDCredential.")
+                throw FirebaseAccountError.setupError
             }
 
-            guard let appleAuthCode = credential.authorizationCode else {
-                print("Unable to fetch authorization code")
-                return
+            guard let authorizationCodeString = String(data: authorizationCode, encoding: .utf8) else {
+                Self.logger.error("Unable to serialize authorizationCode to utf8 string.")
+                throw FirebaseAccountError.setupError
             }
 
-            guard let authCodeString = String(data: appleAuthCode, encoding: .utf8) else {
-                print("Unable to serialize auth code string from data: \(appleAuthCode.debugDescription)")
-                return
-            }
-            // TODO token revocation!!! https://firebase.google.com/docs/auth/ios/apple
-            
-            print("Revoking!")
             do {
-                try await Auth.auth().revokeToken(withAuthorizationCode: authCodeString) // TODO review error!
+                try await Auth.auth().revokeToken(withAuthorizationCode: authorizationCodeString)
+            } catch let error as NSError {
+                #if targetEnvironment(simulator)
+                // token revocation for Sign in with Apple is currently unsupported for Firebase
+                // see https://github.com/firebase/firebase-tools/issues/6028
+                // and https://github.com/firebase/firebase-tools/pull/6050
+                if AuthErrorCode(_nsError: error).code != .invalidCredential {
+                    throw error
+                }
+                #else
+                throw error
+                #endif
             } catch {
-                // TODO token revocation fails on simulator https://github.com/firebase/firebase-tools/pull/6050
-                print(error)
                 throw error
             }
 
@@ -143,21 +143,6 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
             try await currentUser.delete()
             Self.logger.debug("delete() for user.")
         }
-    }
-
-    private func performRequest(_ request: ASAuthorizationAppleIDRequest) async throws -> ASAuthorizationResult? {
-        guard let authorizationController else {
-            // TODO throw some error!
-            return nil
-        }
-
-        do {
-            return try await authorizationController.performRequest(request)
-        } catch {
-            try await onAppleSignInCompletion(result: .failure(error))
-        }
-
-        return nil
     }
 
     @MainActor
@@ -190,37 +175,21 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
                 throw FirebaseAccountError.setupError
             }
 
-            guard let lastNonce else {
-                Self.logger.error("onAppleSignInCompletion was received though no login request was found.")
-                throw FirebaseAccountError.setupError
-            }
-
-            guard let identityToken = appleIdCredential.identityToken else {
-                Self.logger.error("Unable to fetch identityToken from ASAuthorizationAppleIDCredential.")
-                throw FirebaseAccountError.setupError
-            }
-
-            guard let identityTokenString = String(data: identityToken, encoding: .utf8) else {
-                Self.logger.error("Unable to serialize identityToken to utf8 string.")
-                throw FirebaseAccountError.setupError
-            }
-
+            let credential = try oAuthCredential(from: appleIdCredential)
 
             Self.logger.info("onAppleSignInCompletion creating firebase apple credential from authorization credential")
-
-            // the fullName is only provided on first contact. After that Apple won't supply that anymore!
-            let credential: OAuthCredential = OAuthProvider.appleCredential(
-                withIDToken: identityTokenString,
-                rawNonce: lastNonce,
-                fullName: appleIdCredential.fullName
-            )
 
             let signupDetails = SignupDetails.Builder()
                 .set(\.oauthCredential, value: .init(credential: credential))
                 .build()
 
 
-            // TODO we are currently bypassing all wrapped standards!
+            // We are currently calling the signup method directly. This, in theory, makes a difference.
+            // In SpeziAccount, AccountServices might be wrapped by other (so called StandardBacked) account services
+            // that add additional implementation. E.g., if a SignupDetails request contains data that is not storable
+            // by this account service, this would get automatically handled by the wrapping account service.
+            // As we know exactly, that this won't happen, we don't have to bother routing this request to
+            // an potentially encapsulating account service. But this should be a heads up for future development.
             try await signUp(signupDetails: signupDetails)
         case let .failure(error):
             guard let authorizationError = error as? ASAuthorizationError else {
@@ -241,5 +210,64 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
                 throw FirebaseAccountError.setupError
             }
         }
+    }
+
+
+    private func requestAppleSignInCredential() async throws -> ASAuthorizationAppleIDCredential? {
+        let appleIDProvider = ASAuthorizationAppleIDProvider()
+        let request = appleIDProvider.createRequest()
+
+        await onAppleSignInRequest(request: request)
+
+        guard let result = try await performRequest(request),
+              case let .appleID(credential) = result else {
+            return nil
+        }
+
+        guard await lastNonce != nil else {
+            Self.logger.error("onAppleSignInCompletion was received though no login request was found.")
+            throw FirebaseAccountError.setupError
+        }
+
+        return credential
+    }
+
+    private func performRequest(_ request: ASAuthorizationAppleIDRequest) async throws -> ASAuthorizationResult? {
+        guard let authorizationController else {
+            throw FirebaseAccountError.setupError
+        }
+
+        do {
+            return try await authorizationController.performRequest(request)
+        } catch {
+            try await onAppleSignInCompletion(result: .failure(error))
+        }
+
+        return nil
+    }
+
+    @MainActor
+    private func oAuthCredential(from credential: ASAuthorizationAppleIDCredential) throws -> OAuthCredential {
+        guard let lastNonce else {
+            Self.logger.error("AppleIdCredential was received though no login request was found.")
+            throw FirebaseAccountError.setupError
+        }
+
+        guard let identityToken = credential.identityToken else {
+            Self.logger.error("Unable to fetch identityToken from ASAuthorizationAppleIDCredential.")
+            throw FirebaseAccountError.setupError
+        }
+
+        guard let identityTokenString = String(data: identityToken, encoding: .utf8) else {
+            Self.logger.error("Unable to serialize identityToken to utf8 string.")
+            throw FirebaseAccountError.setupError
+        }
+
+        // the fullName is only provided on first contact. After that Apple won't supply that anymore!
+        return OAuthProvider.appleCredential(
+            withIDToken: identityTokenString,
+            rawNonce: lastNonce,
+            fullName: credential.fullName
+        )
     }
 }
