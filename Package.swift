@@ -15,7 +15,7 @@ let package = Package(
     name: "SpeziFirebase",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v17),
+        .iOS(.v17)
     ],
     products: [
         .library(name: "SpeziFirebaseAccount", targets: ["SpeziFirebaseAccount"]),

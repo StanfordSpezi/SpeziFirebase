@@ -22,7 +22,10 @@ class TestAppDelegate: SpeziAppDelegate {
                 .collects(\.name)
             ])
             Firestore(settings: .emulator)
-            FirebaseAccountConfiguration(authenticationMethods: [.emailAndPassword, .signInWithApple], emulatorSettings: (host: "localhost", port: 9099))
+            FirebaseAccountConfiguration(
+                authenticationMethods: [.emailAndPassword, .signInWithApple],
+                emulatorSettings: (host: "localhost", port: 9099)
+            )
             FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))
         }
     }

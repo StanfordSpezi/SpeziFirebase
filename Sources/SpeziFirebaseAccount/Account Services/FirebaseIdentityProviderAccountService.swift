@@ -52,7 +52,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
 
     init() {
         self.configuration = AccountServiceConfiguration(
-            name: LocalizedStringResource(stringLiteral: "FIREBASE_IDENTITY_PROVIDER", bundle: .atURL(from: .module)),
+            name: LocalizedStringResource("FIREBASE_IDENTITY_PROVIDER", bundle: .atURL(from: .module)),
             supportedKeys: .exactly(Self.supportedKeys)
         ) {
             RequiredAccountKeys {

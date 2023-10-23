@@ -45,6 +45,13 @@ struct FirebaseAccountModifier: ViewModifier {
 
 
 extension View {
+    /// Configure FirebaseAccount for your App.
+    ///
+    /// This modifier is currently required to be placed on the global App level, such that FirebaseAccount can
+    /// access the SwiftUI environment.
+    ///
+    /// - Note: If not used, this will affect the functionality of the Firebase Single Sign-On Provider.
+    /// - Parameter enable: Flag indicating if the account module is enabled.
     public func firebaseAccount(_ enable: Bool = true) -> some View {
         modifier(FirebaseAccountModifier(enable))
     }
