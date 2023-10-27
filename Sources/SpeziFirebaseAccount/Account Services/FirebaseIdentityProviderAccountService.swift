@@ -77,7 +77,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
         // nothing we are doing here
     }
 
-    func reauthenticateUser(userId: String, user: User) async throws {
+    func reauthenticateUser(user: User) async throws {
         guard let appleIdCredential = try await requestAppleSignInCredential() else {
             return // user canceled
         }
@@ -122,6 +122,10 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
                 Self.logger.error("Unable to serialize authorizationCode to utf8 string.")
                 throw FirebaseAccountError.setupError
             }
+
+            Self.logger.debug("Re-Authenticating Apple Credential before deleting user account ...")
+            let authCredential = try await oAuthCredential(from: credential)
+            try await currentUser.reauthenticate(with: authCredential)
 
             do {
                 Self.logger.debug("Revoking Apple Id Token ...")

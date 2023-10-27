@@ -36,9 +36,8 @@ protocol FirebaseAccountService: AnyActor, AccountService {
 
     /// This method is called to re-authenticate the current user credentials.
     /// - Parameters:
-    ///   - userId: The current userId (email address of the User).
     ///   - user: The User instance.
-    func reauthenticateUser(userId: String, user: User) async throws
+    func reauthenticateUser(user: User) async throws
 }
 
 
@@ -75,6 +74,7 @@ extension FirebaseAccountService {
         }
 
         try await context.dispatchFirebaseAuthAction(on: self) {
+            try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
             try await currentUser.delete()
             Self.logger.debug("delete() for user.")
         }
@@ -91,10 +91,8 @@ extension FirebaseAccountService {
         var changes = false
 
         // if we modify sensitive credentials and require a recent login
-        if modifications.modifiedDetails.storage[UserIdKey.self] != nil || modifications.modifiedDetails.password != nil,
-           let userId = currentUser.email {
-            // with a future version of SpeziAccount we want to get rid of this workaround and request the password from the user on the fly.
-            try await reauthenticateUser(userId: userId, user: currentUser)
+        if modifications.modifiedDetails.storage[UserIdKey.self] != nil || modifications.modifiedDetails.password != nil {
+            try await reauthenticateUser(user: currentUser)
         }
 
         do {
