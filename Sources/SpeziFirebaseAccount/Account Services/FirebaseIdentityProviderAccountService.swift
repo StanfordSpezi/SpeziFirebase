@@ -235,7 +235,10 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
 
     private func performRequest(_ request: ASAuthorizationAppleIDRequest) async throws -> ASAuthorizationResult? {
         guard let authorizationController else {
-            Self.logger.error("Failed to perform AppleID request. We are missing access to the AuthorizationController. Did you set up the .firebaseAccount() modifier?")
+            Self.logger.error("""
+                              Failed to perform AppleID request. We are missing access to the AuthorizationController. \
+                              Did you set up the .firebaseAccount() modifier?
+                              """)
             throw FirebaseAccountError.setupError
         }
 
