@@ -53,15 +53,12 @@ extension AccountService {
     fileprivate func castFirebaseAccountService() -> (any FirebaseAccountService)? {
         if let firebaseService = self as? any FirebaseAccountService {
             return firebaseService
-        }
-
-        let mirror = Mirror(reflecting: self) // checking if its a StandardBacked account service
-        if let accountService = mirror.children.first(where: { $0.label == "accountService" }),
-           let firebaseService = accountService as? any FirebaseAccountService {
+        } else if let standardBacked = self as? any _StandardBacked,
+                  let firebaseService = standardBacked.underlyingService as? any FirebaseAccountService {
             return firebaseService
+        } else {
+            return nil
         }
-
-        return nil
     }
 }
 
