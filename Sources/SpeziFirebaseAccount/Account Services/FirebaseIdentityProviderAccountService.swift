@@ -123,6 +123,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
             }
 
             do {
+                Self.logger.debug("Revoking Apple Id Token ...")
                 try await Auth.auth().revokeToken(withAuthorizationCode: authorizationCodeString)
             } catch let error as NSError {
                 #if targetEnvironment(simulator)
@@ -139,7 +140,6 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
                 throw error
             }
 
-            print("Deleting")
             try await currentUser.delete()
             Self.logger.debug("delete() for user.")
         }
@@ -214,6 +214,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
 
 
     private func requestAppleSignInCredential() async throws -> ASAuthorizationAppleIDCredential? {
+        Self.logger.debug("Requesting on the fly Sign in with Apple")
         let appleIDProvider = ASAuthorizationAppleIDProvider()
         let request = appleIDProvider.createRequest()
 
@@ -234,6 +235,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
 
     private func performRequest(_ request: ASAuthorizationAppleIDRequest) async throws -> ASAuthorizationResult? {
         guard let authorizationController else {
+            Self.logger.error("Failed to perform AppleID request. We are missing access to the AuthorizationController. Did you set up the .firebaseAccount() modifier?")
             throw FirebaseAccountError.setupError
         }
 
