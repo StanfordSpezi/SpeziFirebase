@@ -7,11 +7,14 @@
 //
 
 import AuthenticationServices
+import OSLog
 import SpeziAccount
 import SwiftUI
 
 
 struct FirebaseAccountModifier: ViewModifier {
+    static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "FirebaseAccount")
+
     private let enable: Bool
 
     @EnvironmentObject private var account: Account
@@ -29,16 +32,32 @@ struct FirebaseAccountModifier: ViewModifier {
         if enable {
             content
                 .task {
+                    Self.logger.debug("Looking at \(account.registeredAccountServices.count) account services to inject authorization controller ...")
                     for service in account.registeredAccountServices {
-                        guard let firebaseService = service as? any FirebaseAccountService else {
+                        guard let firebaseService = service.castFirebaseAccountService() else {
                             continue
                         }
 
+                        Self.logger.debug("Injecting authorization controller into \(type(of: firebaseService))")
                         await firebaseService.inject(authorizationController: authorizationController)
                     }
                 }
         } else {
             content
+        }
+    }
+}
+
+
+extension AccountService {
+    fileprivate func castFirebaseAccountService() -> (any FirebaseAccountService)? {
+        if let firebaseService = self as? any FirebaseAccountService {
+            return firebaseService
+        } else if let standardBacked = self as? any _StandardBacked,
+                  let firebaseService = standardBacked.underlyingService as? any FirebaseAccountService {
+            return firebaseService
+        } else {
+            return nil
         }
     }
 }

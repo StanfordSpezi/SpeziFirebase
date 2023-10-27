@@ -110,8 +110,10 @@ actor FirebaseContext {
 
             try await dispatchQueuedChanges(result: result)
         } catch let error as NSError {
+            Self.logger.error("Received NSError on firebase dispatch: \(error)")
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
+            Self.logger.error("Received error on firebase dispatch: \(error)")
             throw FirebaseAccountError.unknown(.internalError)
         }
     }
@@ -248,6 +250,7 @@ actor FirebaseContext {
         case let .user(user):
             let isNewUser = update.authResult?.additionalUserInfo?.isNewUser ?? false
             guard let service = update.service else {
+                Self.logger.error("Failed to dispatch user update due to missing account service!")
                 throw FirebaseAccountError.setupError
             }
 
@@ -259,6 +262,7 @@ actor FirebaseContext {
 
     func notifyUserSignIn(user: User, for service: any FirebaseAccountService, isNewUser: Bool = false) async throws {
         guard let email = user.email else {
+            Self.logger.error("Failed to associate firebase account due to missing email address.")
             throw FirebaseAccountError.invalidEmail
         }
 

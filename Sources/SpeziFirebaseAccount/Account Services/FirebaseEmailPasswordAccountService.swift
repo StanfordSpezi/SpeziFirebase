@@ -123,7 +123,12 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
         }
     }
 
-    func reauthenticateUser(userId: String, user: User) async {
+    func reauthenticateUser(user: User) async {
+        guard let userId = user.email else {
+            return
+        }
+
+        // with a future version of SpeziAccount we want to get rid of this workaround and request the password from the user on the fly.
         guard let password = context.retrieveCredential(userId: userId, server: StorageKeys.emailPasswordCredentials) else {
             return // nothing we can do
         }

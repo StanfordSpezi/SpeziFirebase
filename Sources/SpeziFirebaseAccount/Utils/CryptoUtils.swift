@@ -14,8 +14,8 @@ enum CryptoUtils {
     static func randomNonceString(length: Int) -> String {
         precondition(length > 0, "Nonce length must be non-zero")
         let nonceCharacters = (0 ..< length).map { _ in
-            // ASCII alphabet goes from 32 (space) to 126 (~)
-            let num = Int.random(in: 32...126) // .random(in:) is secure, see https://stackoverflow.com/a/76722233
+            // ASCII alphabet goes from 32 (space) to 126 (~); Firebase seems to have problems with some special characters!
+            let num = Int.random(in: 48...122) // .random(in:) is secure, see https://stackoverflow.com/a/76722233
             guard let scalar = UnicodeScalar(num) else {
                 preconditionFailure("Failed to generate ASCII character for nonce!")
             }
