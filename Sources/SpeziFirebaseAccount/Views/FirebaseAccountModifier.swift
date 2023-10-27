@@ -34,7 +34,7 @@ struct FirebaseAccountModifier: ViewModifier {
                 .task {
                     Self.logger.debug("Looking at \(account.registeredAccountServices.count) account services to inject authorization controller ...")
                     for service in account.registeredAccountServices {
-                        guard let firebaseService = service as? any FirebaseAccountService else {
+                        guard let firebaseService = service.castFirebaseAccountService() else {
                             continue
                         }
 
@@ -45,6 +45,23 @@ struct FirebaseAccountModifier: ViewModifier {
         } else {
             content
         }
+    }
+}
+
+
+extension AccountService {
+    fileprivate func castFirebaseAccountService() -> (any FirebaseAccountService)? {
+        if let firebaseService = self as? any FirebaseAccountService {
+            return firebaseService
+        }
+
+        let mirror = Mirror(reflecting: self) // checking if its a StandardBacked account service
+        if let accountService = mirror.children["accountService"],
+           let firebaseService = accountService as? any FirebaseAccountService {
+            return firebaseService
+        }
+
+        return nil
     }
 }
 
