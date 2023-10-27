@@ -69,6 +69,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
     }
 
     func inject(authorizationController: AuthorizationController) {
+        Self.logger.debug("Received authorization controller injection ...")
         self.authorizationController = authorizationController
     }
 
