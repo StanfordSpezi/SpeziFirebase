@@ -56,7 +56,7 @@ extension AccountService {
         }
 
         let mirror = Mirror(reflecting: self) // checking if its a StandardBacked account service
-        if let accountService = mirror.children["accountService"],
+        if let accountService = mirror.children.first(where: { $0.label == "accountService" }),
            let firebaseService = accountService as? any FirebaseAccountService {
             return firebaseService
         }
