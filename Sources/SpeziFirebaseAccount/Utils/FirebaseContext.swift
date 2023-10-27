@@ -110,8 +110,10 @@ actor FirebaseContext {
 
             try await dispatchQueuedChanges(result: result)
         } catch let error as NSError {
+            Self.logger.error("Received NSError on firebase dispatch: \(error)")
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
+            Self.logger.error("Received error on firebase dispatch: \(error)")
             throw FirebaseAccountError.unknown(.internalError)
         }
     }
