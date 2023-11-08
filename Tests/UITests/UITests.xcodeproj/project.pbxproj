@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		2F148C00298BB15900031B7F /* FirebaseAccountTestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F148BFF298BB15900031B7F /* FirebaseAccountTestsView.swift */; };
 		2F2E4B8429749C5900FF710F /* FirestoreDataStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F2E4B8329749C5900FF710F /* FirestoreDataStorageTests.swift */; };
-		2F2E8EFC29E7366200D439B7 /* SpeziAccount in Frameworks */ = {isa = PBXBuildFile; productRef = 2F2E8EFB29E7366200D439B7 /* SpeziAccount */; };
-		2F2E8EFF29E7369B00D439B7 /* SpeziViews in Frameworks */ = {isa = PBXBuildFile; productRef = 2F2E8EFE29E7369B00D439B7 /* SpeziViews */; };
 		2F6D139A28F5F386007C25D6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2F6D139928F5F386007C25D6 /* Assets.xcassets */; };
 		2F746D9F29962B2A00BF54FE /* XCTestExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 2F746D9E29962B2A00BF54FE /* XCTestExtensions */; };
 		2F87F9F12953EEB400810247 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2F87F9F02953EEB400810247 /* GoogleService-Info.plist */; };
@@ -21,7 +19,6 @@
 		2FB07593299DF96E00C0B37F /* SpeziFirebaseAccount in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07592299DF96E00C0B37F /* SpeziFirebaseAccount */; };
 		2FB07595299DF96E00C0B37F /* SpeziFirebaseConfiguration in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07594299DF96E00C0B37F /* SpeziFirebaseConfiguration */; };
 		2FB07597299DF96E00C0B37F /* SpeziFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07596299DF96E00C0B37F /* SpeziFirestore */; };
-		2FB0759D299DF96E00C0B37F /* Spezi in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB0759C299DF96E00C0B37F /* Spezi */; };
 		2FE62C3D2966074F00FCBE7F /* FirestoreDataStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FE62C3C2966074F00FCBE7F /* FirestoreDataStorageTests.swift */; };
 		97359F642ADB27500080CB11 /* FirebaseStorageTestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97359F632ADB27500080CB11 /* FirebaseStorageTestsView.swift */; };
 		97359F662ADB286D0080CB11 /* StorageMetadata+Sendable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97359F652ADB286D0080CB11 /* StorageMetadata+Sendable.swift */; };
@@ -70,10 +67,7 @@
 			files = (
 				2FB07595299DF96E00C0B37F /* SpeziFirebaseConfiguration in Frameworks */,
 				2FB07597299DF96E00C0B37F /* SpeziFirestore in Frameworks */,
-				2F2E8EFF29E7369B00D439B7 /* SpeziViews in Frameworks */,
-				2F2E8EFC29E7366200D439B7 /* SpeziAccount in Frameworks */,
 				978DFE922ADB1E1600E2B9B5 /* SpeziFirebaseStorage in Frameworks */,
-				2FB0759D299DF96E00C0B37F /* Spezi in Frameworks */,
 				2FB07593299DF96E00C0B37F /* SpeziFirebaseAccount in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -199,9 +193,6 @@
 				2FB07592299DF96E00C0B37F /* SpeziFirebaseAccount */,
 				2FB07594299DF96E00C0B37F /* SpeziFirebaseConfiguration */,
 				2FB07596299DF96E00C0B37F /* SpeziFirestore */,
-				2FB0759C299DF96E00C0B37F /* Spezi */,
-				2F2E8EFB29E7366200D439B7 /* SpeziAccount */,
-				2F2E8EFE29E7369B00D439B7 /* SpeziViews */,
 				978DFE912ADB1E1600E2B9B5 /* SpeziFirebaseStorage */,
 			);
 			productName = Example;
@@ -259,9 +250,6 @@
 			mainGroup = 2F6D138928F5F384007C25D6;
 			packageReferences = (
 				2F746D9D29962B2A00BF54FE /* XCRemoteSwiftPackageReference "XCTestExtensions" */,
-				2FB0758B299DF8F100C0B37F /* XCRemoteSwiftPackageReference "Spezi" */,
-				2F2E8EFA29E7363A00D439B7 /* XCRemoteSwiftPackageReference "SpeziAccount" */,
-				2F2E8EFD29E7369B00D439B7 /* XCRemoteSwiftPackageReference "SpeziViews" */,
 			);
 			productRefGroup = 2F6D139328F5F384007C25D6 /* Products */;
 			projectDirPath = "";
@@ -561,6 +549,125 @@
 			};
 			name = Release;
 		};
+		A94FDCE42AFC4B4C008026CE /* Test */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = TEST;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Test;
+		};
+		A94FDCE52AFC4B4C008026CE /* Test */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = TestApp/TestApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 637867499T;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TestApp/Info.plist;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "The TestApp accesses your HealthKit data to run the tests.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.stanford.spezi.firebase.testapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Test;
+		};
+		A94FDCE62AFC4B4C008026CE /* Test */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 637867499T;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TestAppUITests/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.stanford.spezi.firebase.testappuitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TestApp;
+			};
+			name = Test;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -568,6 +675,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2F6D13B428F5F386007C25D6 /* Debug */,
+				A94FDCE42AFC4B4C008026CE /* Test */,
 				2F6D13B528F5F386007C25D6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -577,6 +685,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2F6D13B728F5F386007C25D6 /* Debug */,
+				A94FDCE52AFC4B4C008026CE /* Test */,
 				2F6D13B828F5F386007C25D6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -586,6 +695,7 @@
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2F6D13BD28F5F386007C25D6 /* Debug */,
+				A94FDCE62AFC4B4C008026CE /* Test */,
 				2F6D13BE28F5F386007C25D6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
@@ -594,22 +704,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		2F2E8EFA29E7363A00D439B7 /* XCRemoteSwiftPackageReference "SpeziAccount" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/StanfordSpezi/SpeziAccount.git";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.6.1;
-			};
-		};
-		2F2E8EFD29E7369B00D439B7 /* XCRemoteSwiftPackageReference "SpeziViews" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/StanfordSpezi/SpeziViews.git";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.5.0;
-			};
-		};
 		2F746D9D29962B2A00BF54FE /* XCRemoteSwiftPackageReference "XCTestExtensions" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/StanfordSpezi/XCTestExtensions";
@@ -618,27 +712,9 @@
 				minimumVersion = 0.4.7;
 			};
 		};
-		2FB0758B299DF8F100C0B37F /* XCRemoteSwiftPackageReference "Spezi" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/StanfordSpezi/Spezi";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.7.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		2F2E8EFB29E7366200D439B7 /* SpeziAccount */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2F2E8EFA29E7363A00D439B7 /* XCRemoteSwiftPackageReference "SpeziAccount" */;
-			productName = SpeziAccount;
-		};
-		2F2E8EFE29E7369B00D439B7 /* SpeziViews */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2F2E8EFD29E7369B00D439B7 /* XCRemoteSwiftPackageReference "SpeziViews" */;
-			productName = SpeziViews;
-		};
 		2F746D9E29962B2A00BF54FE /* XCTestExtensions */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2F746D9D29962B2A00BF54FE /* XCRemoteSwiftPackageReference "XCTestExtensions" */;
@@ -655,11 +731,6 @@
 		2FB07596299DF96E00C0B37F /* SpeziFirestore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SpeziFirestore;
-		};
-		2FB0759C299DF96E00C0B37F /* Spezi */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 2FB0758B299DF8F100C0B37F /* XCRemoteSwiftPackageReference "Spezi" */;
-			productName = Spezi;
 		};
 		978DFE912ADB1E1600E2B9B5 /* SpeziFirebaseStorage */ = {
 			isa = XCSwiftPackageProductDependency;

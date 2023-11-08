@@ -10,12 +10,14 @@ import FirebaseAuth
 import Spezi
 import SpeziAccount
 import SpeziFirebaseAccount
+import SpeziPersonalInfo
 import SpeziViews
 import SwiftUI
 
 
 struct FirebaseAccountTestsView: View {
-    @EnvironmentObject var account: Account
+    @Environment(Account.self)
+    var account
 
     @State var viewState: ViewState = .idle
 
@@ -59,7 +61,6 @@ struct FirebaseAccountTestsView: View {
                         }
                 }
             }
-            .firebaseAccount()
     }
 
 

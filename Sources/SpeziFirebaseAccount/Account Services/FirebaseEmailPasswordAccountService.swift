@@ -11,6 +11,7 @@ import FirebaseAuth
 import OSLog
 import SpeziAccount
 import SpeziSecureStorage
+import SpeziValidation
 import SwiftUI
 
 
@@ -24,26 +25,14 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
         \.name
     }
 
-    static var minimumFirebasePassword: ValidationRule {
-        // Firebase as a non-configurable limit of 6 characters for an account password.
-        // Refer to https://stackoverflow.com/questions/38064248/firebase-password-validation-allowed-regex
-        guard let regex = try? Regex(#"(?=.*[0-9a-zA-Z]).{6,}"#) else {
-            fatalError("Invalid minimumFirebasePassword regex at construction.")
-        }
-
-        return ValidationRule(
-            regex: regex,
-            message: "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR \(6)",
-            bundle: .module
-        )
-    }
 
     @AccountReference var account: Account
     @_WeakInjectable var context: FirebaseContext
 
     let configuration: AccountServiceConfiguration
 
-    init(passwordValidationRules: [ValidationRule] = [minimumFirebasePassword]) {
+
+    init(passwordValidationRules: [ValidationRule] = [.minimumFirebasePassword]) {
         self.configuration = AccountServiceConfiguration(
             name: LocalizedStringResource("FIREBASE_EMAIL_AND_PASSWORD", bundle: .atURL(from: .module)),
             supportedKeys: .exactly(Self.supportedKeys)
@@ -59,6 +48,7 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
             FieldValidationRules(for: \.password, rules: passwordValidationRules)
         }
     }
+
 
     func configure(with context: FirebaseContext) async {
         self._context.inject(context)
@@ -138,5 +128,22 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
         } catch {
             Self.logger.debug("Credential change might fail. Failed to reauthenticate with firebase: \(error)")
         }
+    }
+}
+
+
+extension ValidationRule {
+    static var minimumFirebasePassword: ValidationRule {
+        // Firebase as a non-configurable limit of 6 characters for an account password.
+        // Refer to https://stackoverflow.com/questions/38064248/firebase-password-validation-allowed-regex
+        guard let regex = try? Regex(#"(?=.*[0-9a-zA-Z]).{6,}"#) else {
+            fatalError("Invalid minimumFirebasePassword regex at construction.")
+        }
+
+        return ValidationRule(
+            regex: regex,
+            message: "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR \(6)",
+            bundle: .module
+        )
     }
 }

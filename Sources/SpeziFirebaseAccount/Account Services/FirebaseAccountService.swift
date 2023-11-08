@@ -26,8 +26,6 @@ protocol FirebaseAccountService: AnyActor, AccountService {
     /// - Parameter context: The global firebase context
     func configure(with context: FirebaseContext) async
 
-    func inject(authorizationController: AuthorizationController) async
-
     /// This method is called once the account for the given user was removed.
     ///
     /// This allows for additional cleanup tasks to be performed.

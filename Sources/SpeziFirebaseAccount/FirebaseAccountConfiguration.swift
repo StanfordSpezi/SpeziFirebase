@@ -36,15 +36,20 @@ import SpeziSecureStorage
 ///     }
 /// }
 /// ```
-public final class FirebaseAccountConfiguration: Component {
+public final class FirebaseAccountConfiguration: Module {
     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
     @Dependency private var secureStorage: SecureStorage
     @Dependency private var localStorage: LocalStorage
+    @Dependency private var speziAccount: AccountConfiguration?
+
+    @Provide private var accountServices: [any AccountService]
+
+    @Model private var accountModel = FirebaseAccountModel()
+    @Modifier private var firebaseModifier = FirebaseAccountModifier()
 
     private let emulatorSettings: (host: String, port: Int)?
     private let authenticationMethods: FirebaseAuthAuthenticationMethods
 
-    @Provide var accountServices: [any AccountService]
 
     /// Central context management for all account service implementations.
     private var context: FirebaseContext?
@@ -64,7 +69,7 @@ public final class FirebaseAccountConfiguration: Component {
             self.accountServices.append(FirebaseEmailPasswordAccountService())
         }
         if authenticationMethods.contains(.signInWithApple) {
-            self.accountServices.append(FirebaseIdentityProviderAccountService())
+            self.accountServices.append(FirebaseIdentityProviderAccountService(accountModel))
         }
     }
     
@@ -73,11 +78,16 @@ public final class FirebaseAccountConfiguration: Component {
             Auth.auth().useEmulator(withHost: emulatorSettings.host, port: emulatorSettings.port)
         }
 
-        Task {
-            // We might be configured above the AccountConfiguration and therefore the `Account` object
-            // might not be injected yet.
-            try? await Task.sleep(for: .milliseconds(10))
 
+        guard speziAccount != nil else {
+            preconditionFailure("""
+                                Missing Account Configuration!
+                                FirebaseAccount was configured but no \(AccountConfiguration.self) was provided. Please \
+                                refer to the initial setup instructions of SpeziAccount: https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/initial-setup
+                                """)
+        }
+
+        Task {
             let context = FirebaseContext(local: localStorage, secure: secureStorage)
             let firebaseServices = accountServices.compactMap { service in
                 service as? any FirebaseAccountService
@@ -88,7 +98,7 @@ public final class FirebaseAccountConfiguration: Component {
             }
 
             await context.setup(firebaseServices)
-            self.context = context
+            self.context = context // we inject as weak, so ensure to keep the reference here!
         }
     }
 }

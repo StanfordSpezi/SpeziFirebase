@@ -42,15 +42,14 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
     }
 
     let configuration: AccountServiceConfiguration
-
-    private var authorizationController: AuthorizationController?
+    let firebaseModel: FirebaseAccountModel
 
     @MainActor @AccountReference var account: Account // property wrappers cannot be non-isolated, so we isolate it to main actor
     @MainActor private var lastNonce: String?
 
     @_WeakInjectable var context: FirebaseContext
 
-    init() {
+    init(_ model: FirebaseAccountModel) {
         self.configuration = AccountServiceConfiguration(
             name: LocalizedStringResource("FIREBASE_IDENTITY_PROVIDER", bundle: .atURL(from: .module)),
             supportedKeys: .exactly(Self.supportedKeys)
@@ -60,17 +59,13 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
             }
             UserIdConfiguration(type: .emailAddress, keyboardType: .emailAddress)
         }
+        self.firebaseModel = model
     }
 
 
     func configure(with context: FirebaseContext) async {
         self._context.inject(context)
         await context.share(account: account)
-    }
-
-    func inject(authorizationController: AuthorizationController) {
-        Self.logger.debug("Received authorization controller injection ...")
-        self.authorizationController = authorizationController
     }
 
     func handleAccountRemoval(userId: String?) async {
@@ -239,11 +234,8 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
     }
 
     private func performRequest(_ request: ASAuthorizationAppleIDRequest) async throws -> ASAuthorizationResult? {
-        guard let authorizationController else {
-            Self.logger.error("""
-                              Failed to perform AppleID request. We are missing access to the AuthorizationController. \
-                              Did you set up the .firebaseAccount() modifier?
-                              """)
+        guard let authorizationController = firebaseModel.authorizationController else {
+            Self.logger.error("Failed to perform AppleID request. We are missing access to the AuthorizationController.")
             throw FirebaseAccountError.setupError
         }
 
