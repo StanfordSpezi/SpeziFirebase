@@ -103,7 +103,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
             throw FirebaseAccountError.notSignedIn
         }
 
-        try await context.dispatchFirebaseAuthAction(on: self) { () -> Void in
+        try await context.dispatchFirebaseAuthAction(on: self) {
             guard let credential = try await requestAppleSignInCredential() else {
                 return // user canceled
             }

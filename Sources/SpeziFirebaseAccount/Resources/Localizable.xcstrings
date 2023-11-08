@@ -1,0 +1,400 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "E-Mail Verified" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Mail verifiziert"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_ALREADY_IN_USE" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Benutzerkonto existiert bereits"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account already exists"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_ALREADY_IN_USE_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Benutzerkonto mit dieser E-Mail Adresse existiert bereits. Bitte loggen dich mit dem Account ein."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An account with this email already exists. Please login using your email and password."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dein Passwort muss mindestens %lld Zeichen lang sein."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your password must be at least %lld characters long."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_ERROR_INVALID_EMAIL" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inkorrekte E-Mail Adresse"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid email address"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_ERROR_INVALID_EMAIL_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte gebe eine korrekte E-Mail Adresse ein."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter a valid email address."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zurücksetzten des Passworts fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to reset password"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_FAILED_PASSWORD_RESET_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es ist ein Fehler aufgetreten bei dem Versuch Ihr Passwort zurückzusetzen. Bitte versuche es später erneut."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was an issue delivering the password reset email. Please try again."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_INVALID_CREDENTIALS" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ungültige Zugangsdaten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid Credentials"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_INVALID_CREDENTIALS_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte überprüfe die eingegebene E-Mail Adresse und dein Passwort."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please verify that your email and password are correct."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfrage fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't complete operation"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Anfrage is sicherheitsrelevant und erfordert einen kürzlichen Login."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is a security relevant operation that requires a recent login."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_SETUP_ERROR" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfrage fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not complete account operation"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_SETUP_ERROR_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei der Anfrage für dein Benutzerkonto ist ein Fehler aufgetreten. Bitte versuche es später erneut."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was an internal error when trying to perform the account operation. Please try again later."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_SIGN_IN_ERROR" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nicht eingeloggt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not signed in"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_SIGN_IN_ERROR_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anfrage konnte nicht ausgeführt werden weil kein verknüpftes Benutzerkonto gefunden wurde."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't complete this operation as there is no current user account."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_UNKNOWN" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anfrage fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed account operation"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_UNKNOWN_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte überprüfen deine Internet Verbindung und versuche es erneut."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please check your internet connection and try again."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_WEAK_PASSWORD" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schwaches Passwort"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weak Password"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_WEAK_PASSWORD_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte gebe ein stärkeres Password ein."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please choose a safer password."
+          }
+        }
+      }
+    },
+    "FIREBASE_APPLE_FAILED" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Apple anmelden ist fehlgeschlagen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with Apple failed"
+          }
+        }
+      }
+    },
+    "FIREBASE_APPLE_FAILED_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wir hatten Probleme dich mit Apple anzumelden. Bitte versuche es später erneut."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We had issues completing your Sign in with Apple request. Please try again later."
+          }
+        }
+      }
+    },
+    "FIREBASE_EMAIL_AND_PASSWORD" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Mail und Password"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Mail and Password"
+          }
+        }
+      }
+    },
+    "FIREBASE_IDENTITY_PROVIDER" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Single Sign-On"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Single Sign-On"
+          }
+        }
+      }
+    },
+    "OAuth Credential" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth Berechtigung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth Credential"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
