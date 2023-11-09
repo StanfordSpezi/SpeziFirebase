@@ -18,7 +18,9 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
     @MainActor
     override func setUp() async throws {
         try await super.setUp()
-        
+
+        continueAfterFailure = false
+
         try disablePasswordAutofill()
 
         try await FirebaseClient.deleteAllAccounts()
