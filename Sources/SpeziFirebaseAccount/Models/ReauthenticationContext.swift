@@ -18,5 +18,5 @@ struct ReauthenticationContext {
     let userId: String
 
     /// A continuation that accepts the password the user, once retrieved!
-    let continuation: CheckedContinuation<ReauthenticationResult, Never> // TODO: can we test for a wrong password, this should work!
+    let continuation: CheckedContinuation<ReauthenticationResult, Never>
 }

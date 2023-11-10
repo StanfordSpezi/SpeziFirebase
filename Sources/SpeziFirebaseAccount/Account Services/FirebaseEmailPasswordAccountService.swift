@@ -118,20 +118,20 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
         }
     }
 
-    func reauthenticateUser(user: User) async throws -> Bool {
+    func reauthenticateUser(user: User) async throws -> ReauthenticationOperationResult {
         guard let userId = user.email else {
-            return false
+            return .cancelled
         }
 
         Self.logger.debug("Requesting credentials for re-authentication...")
         let passwordQuery = await firebaseModel.reauthenticateUser(userId: userId)
         guard case let .password(password) = passwordQuery else {
-            return false
+            return .cancelled
         }
 
         Self.logger.debug("Re-authenticating password-based user now ...")
         try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
-        return true
+        return .success
     }
 }
 

@@ -22,13 +22,16 @@ struct ReauthenticationAlertModifier: ViewModifier {
     @State private var password: String = ""
 
 
-    var isPresented: Binding<Bool> {
+    private var isPresented: Binding<Bool> {
         Binding {
             firebaseModel.isPresentingReauthentication
         } set: { newValue in
             firebaseModel.isPresentingReauthentication = newValue
         }
+    }
 
+    private var context: ReauthenticationContext? {
+        firebaseModel.reauthenticationContext
     }
 
 
@@ -37,11 +40,7 @@ struct ReauthenticationAlertModifier: ViewModifier {
             .onAppear(perform: {
                 print("We are getting displayed!")
             })
-            .alert(
-                Text("Authentication Required", bundle: .module),
-                isPresented: isPresented,
-                presenting: firebaseModel.reauthenticationContext
-            ) { context in
+            .alert(Text("Authentication Required", bundle: .module), isPresented: isPresented, presenting: context) { context in
                 PasswordKey.DataEntry($password)
                     .validate(input: password, rules: .nonEmpty)
                     .receiveValidation(in: $validation)
@@ -68,6 +67,7 @@ struct ReauthenticationAlertModifier: ViewModifier {
 }
 
 
+#if DEBUG
 #Preview {
     let model = FirebaseAccountModel()
 
@@ -79,3 +79,4 @@ struct ReauthenticationAlertModifier: ViewModifier {
             print("Password: \(password)")
         }
 }
+#endif

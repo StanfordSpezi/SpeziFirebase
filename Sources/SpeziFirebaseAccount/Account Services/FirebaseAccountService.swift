@@ -12,6 +12,11 @@ import OSLog
 import SpeziAccount
 import SwiftUI
 
+enum ReauthenticationOperationResult {
+    case cancelled
+    case success
+}
+
 
 protocol FirebaseAccountService: AnyActor, AccountService {
     static var logger: Logger { get }
@@ -31,7 +36,7 @@ protocol FirebaseAccountService: AnyActor, AccountService {
     /// - Parameter user: The user instance to reauthenticate.
     /// - Returns: `true` if authentication was successful, `false` if authentication was cancelled by the user.
     /// - Throws: If authentication failed.
-    func reauthenticateUser(user: User) async throws -> Bool // TODO: properly type?
+    func reauthenticateUser(user: User) async throws -> ReauthenticationOperationResult
 }
 
 
@@ -68,8 +73,8 @@ extension FirebaseAccountService {
         }
 
         try await context.dispatchFirebaseAuthAction(on: self) {
-            let valid = try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
-            guard valid else {
+            let result = try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
+            guard case .success = result else {
                 Self.logger.debug("Re-authentication was cancelled. Not deleting the account.")
                 return // cancelled
             }
@@ -79,7 +84,6 @@ extension FirebaseAccountService {
         }
     }
 
-    // swiftlint:disable:next cyclomatic_complexity
     func updateAccountDetails(_ modifications: AccountModifications) async throws {
         guard let currentUser = Auth.auth().currentUser else {
             if await account.signedIn {
@@ -93,8 +97,8 @@ extension FirebaseAccountService {
         do {
             // if we modify sensitive credentials and require a recent login
             if modifications.modifiedDetails.storage[UserIdKey.self] != nil || modifications.modifiedDetails.password != nil {
-                let valid = try await reauthenticateUser(user: currentUser)
-                guard valid else {
+                let result = try await reauthenticateUser(user: currentUser)
+                guard case .success = result else {
                     Self.logger.debug("Re-authentication was cancelled. Not deleting the account.")
                     return // got cancelled!
                 }
