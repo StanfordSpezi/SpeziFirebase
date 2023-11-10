@@ -26,7 +26,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/StanfordSpezi/Spezi", .upToNextMinor(from: "0.8.0")),
         .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", .upToNextMinor(from: "0.6.1")),
-        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", .upToNextMinor(from: "0.7.0")),
+        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", branch: "fix/security-related-modifier"),
         .package(url: "https://github.com/StanfordSpezi/SpeziStorage", .upToNextMinor(from: "0.5.0")),
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.13.0")
     ],

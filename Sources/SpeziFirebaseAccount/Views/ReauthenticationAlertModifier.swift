@@ -37,11 +37,13 @@ struct ReauthenticationAlertModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onAppear(perform: {
-                print("We are getting displayed!")
-            })
             .alert(Text("Authentication Required", bundle: .module), isPresented: isPresented, presenting: context) { context in
-                PasswordKey.DataEntry($password)
+                SecureField(text: $password) {
+                    Text(PasswordFieldType.password.localizedStringResource)
+                }
+                    .textContentType(.newPassword)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
                     .validate(input: password, rules: .nonEmpty)
                     .receiveValidation(in: $validation)
 
