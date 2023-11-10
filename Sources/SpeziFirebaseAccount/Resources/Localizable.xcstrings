@@ -1,6 +1,12 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Authentication Required" : {
+
+    },
+    "Cancel" : {
+
+    },
     "E-Mail Verified" : {
       "localizations" : {
         "de" : {
@@ -379,6 +385,9 @@
         }
       }
     },
+    "Login" : {
+
+    },
     "OAuth Credential" : {
       "localizations" : {
         "de" : {
@@ -394,6 +403,9 @@
           }
         }
       }
+    },
+    "Please enter your password for %@." : {
+
     }
   },
   "version" : "1.0"

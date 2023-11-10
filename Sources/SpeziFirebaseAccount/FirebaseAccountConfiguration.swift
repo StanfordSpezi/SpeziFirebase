@@ -66,7 +66,7 @@ public final class FirebaseAccountConfiguration: Module {
         self.accountServices = []
 
         if authenticationMethods.contains(.emailAndPassword) {
-            self.accountServices.append(FirebaseEmailPasswordAccountService())
+            self.accountServices.append(FirebaseEmailPasswordAccountService(accountModel))
         }
         if authenticationMethods.contains(.signInWithApple) {
             self.accountServices.append(FirebaseIdentityProviderAccountService(accountModel))

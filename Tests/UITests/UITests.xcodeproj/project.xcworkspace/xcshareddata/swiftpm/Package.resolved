@@ -111,10 +111,10 @@
     {
       "identity" : "speziaccount",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/StanfordSpezi/SpeziAccount.git",
+      "location" : "https://github.com/StanfordSpezi/SpeziAccount",
       "state" : {
-        "branch" : "feature/ios17-spezi-upgrade",
-        "revision" : "57cb47e2dd7e489d8a02d23f6189e991ab5d617d"
+        "revision" : "e6b2670daa8fa17d6cc6fa44b3d08ded3a69d3e5",
+        "version" : "0.7.0"
       }
     },
     {

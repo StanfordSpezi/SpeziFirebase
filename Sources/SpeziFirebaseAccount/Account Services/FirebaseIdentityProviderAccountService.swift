@@ -68,18 +68,15 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
         await context.share(account: account)
     }
 
-    func handleAccountRemoval(userId: String?) async {
-        // nothing we are doing here
-    }
-
-    func reauthenticateUser(user: User) async throws {
+    func reauthenticateUser(user: User) async throws -> Bool {
         guard let appleIdCredential = try await requestAppleSignInCredential() else {
-            return // user canceled
+            return false // user canceled
         }
         
         let credential = try await oAuthCredential(from: appleIdCredential)
 
         try await user.reauthenticate(with: credential)
+        return true
     }
 
     func signUp(signupDetails: SignupDetails) async throws {

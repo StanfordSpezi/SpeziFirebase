@@ -283,6 +283,9 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.dismissKeyboard()
 
         app.buttons["Done"].tap()
+
+        // TODO: handle alert + test alert cancel + test alert wrong password
+
         sleep(1)
         app.navigationBars.buttons["Account Overview"].tap() // back button
         sleep(1)

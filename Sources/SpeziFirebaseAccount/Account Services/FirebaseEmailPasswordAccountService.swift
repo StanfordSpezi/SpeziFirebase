@@ -15,6 +15,15 @@ import SpeziValidation
 import SwiftUI
 
 
+struct EmailPasswordViewStyle: UserIdPasswordAccountSetupViewStyle {
+    let service: FirebaseEmailPasswordAccountService
+
+    var securityRelatedViewModifier: any ViewModifier {
+        ReauthenticationAlertModifier()
+    }
+}
+
+
 actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, FirebaseAccountService {
     static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "AccountService")
 
@@ -30,9 +39,14 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
     @_WeakInjectable var context: FirebaseContext
 
     let configuration: AccountServiceConfiguration
+    let firebaseModel: FirebaseAccountModel
+
+    nonisolated var viewStyle: EmailPasswordViewStyle {
+        EmailPasswordViewStyle(service: self)
+    }
 
 
-    init(passwordValidationRules: [ValidationRule] = [.minimumFirebasePassword]) {
+    init(_ model: FirebaseAccountModel, passwordValidationRules: [ValidationRule] = [.minimumFirebasePassword]) {
         self.configuration = AccountServiceConfiguration(
             name: LocalizedStringResource("FIREBASE_EMAIL_AND_PASSWORD", bundle: .atURL(from: .module)),
             supportedKeys: .exactly(Self.supportedKeys)
@@ -47,18 +61,13 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
             FieldValidationRules(for: \.userId, rules: .minimalEmail)
             FieldValidationRules(for: \.password, rules: passwordValidationRules)
         }
+        self.firebaseModel = model
     }
 
 
     func configure(with context: FirebaseContext) async {
         self._context.inject(context)
         await context.share(account: account)
-    }
-
-    func handleAccountRemoval(userId: String?) {
-        if let userId {
-            context.removeCredentials(userId: userId, server: StorageKeys.emailPasswordCredentials)
-        }
     }
 
     func login(userId: String, password: String) async throws {
@@ -68,8 +77,6 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
             try await Auth.auth().signIn(withEmail: userId, password: password)
             Self.logger.debug("signIn(withEmail:password:)")
         }
-
-        context.persistCurrentCredentials(userId: userId, password: password, server: StorageKeys.emailPasswordCredentials)
     }
 
     func signUp(signupDetails: SignupDetails) async throws {
@@ -93,8 +100,6 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
                 try await changeRequest.commitChanges()
             }
         }
-
-        context.persistCurrentCredentials(userId: signupDetails.userId, password: password, server: StorageKeys.emailPasswordCredentials)
     }
 
     func resetPassword(userId: String) async throws {
@@ -113,21 +118,20 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
         }
     }
 
-    func reauthenticateUser(user: User) async {
+    func reauthenticateUser(user: User) async throws -> Bool {
         guard let userId = user.email else {
-            return
+            return false
         }
 
-        // with a future version of SpeziAccount we want to get rid of this workaround and request the password from the user on the fly.
-        guard let password = context.retrieveCredential(userId: userId, server: StorageKeys.emailPasswordCredentials) else {
-            return // nothing we can do
+        Self.logger.debug("Requesting credentials for re-authentication...")
+        let passwordQuery = await firebaseModel.reauthenticateUser(userId: userId)
+        guard case let .password(password) = passwordQuery else {
+            return false
         }
 
-        do {
-            try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
-        } catch {
-            Self.logger.debug("Credential change might fail. Failed to reauthenticate with firebase: \(error)")
-        }
+        Self.logger.debug("Re-authenticating password-based user now ...")
+        try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
+        return true
     }
 }
 
