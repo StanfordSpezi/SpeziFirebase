@@ -113,8 +113,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordSpezi/SpeziAccount",
       "state" : {
-        "branch" : "fix/security-related-modifier",
-        "revision" : "f67d04e045827ba0d3e4c3b3bcbb5a5da4d77c31"
+        "revision" : "3de5633e3bdaa2bdb19f478587d7df528299477a",
+        "version" : "0.7.1"
       }
     },
     {
