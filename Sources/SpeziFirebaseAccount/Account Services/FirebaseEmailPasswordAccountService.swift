@@ -11,7 +11,17 @@ import FirebaseAuth
 import OSLog
 import SpeziAccount
 import SpeziSecureStorage
+import SpeziValidation
 import SwiftUI
+
+
+struct EmailPasswordViewStyle: UserIdPasswordAccountSetupViewStyle {
+    let service: FirebaseEmailPasswordAccountService
+
+    var securityRelatedViewModifier: any ViewModifier {
+        ReauthenticationAlertModifier()
+    }
+}
 
 
 actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, FirebaseAccountService {
@@ -24,26 +34,19 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
         \.name
     }
 
-    static var minimumFirebasePassword: ValidationRule {
-        // Firebase as a non-configurable limit of 6 characters for an account password.
-        // Refer to https://stackoverflow.com/questions/38064248/firebase-password-validation-allowed-regex
-        guard let regex = try? Regex(#"(?=.*[0-9a-zA-Z]).{6,}"#) else {
-            fatalError("Invalid minimumFirebasePassword regex at construction.")
-        }
-
-        return ValidationRule(
-            regex: regex,
-            message: "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR \(6)",
-            bundle: .module
-        )
-    }
 
     @AccountReference var account: Account
     @_WeakInjectable var context: FirebaseContext
 
     let configuration: AccountServiceConfiguration
+    let firebaseModel: FirebaseAccountModel
 
-    init(passwordValidationRules: [ValidationRule] = [minimumFirebasePassword]) {
+    nonisolated var viewStyle: EmailPasswordViewStyle {
+        EmailPasswordViewStyle(service: self)
+    }
+
+
+    init(_ model: FirebaseAccountModel, passwordValidationRules: [ValidationRule] = [.minimumFirebasePassword]) {
         self.configuration = AccountServiceConfiguration(
             name: LocalizedStringResource("FIREBASE_EMAIL_AND_PASSWORD", bundle: .atURL(from: .module)),
             supportedKeys: .exactly(Self.supportedKeys)
@@ -58,17 +61,13 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
             FieldValidationRules(for: \.userId, rules: .minimalEmail)
             FieldValidationRules(for: \.password, rules: passwordValidationRules)
         }
+        self.firebaseModel = model
     }
+
 
     func configure(with context: FirebaseContext) async {
         self._context.inject(context)
         await context.share(account: account)
-    }
-
-    func handleAccountRemoval(userId: String?) {
-        if let userId {
-            context.removeCredentials(userId: userId, server: StorageKeys.emailPasswordCredentials)
-        }
     }
 
     func login(userId: String, password: String) async throws {
@@ -78,8 +77,6 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
             try await Auth.auth().signIn(withEmail: userId, password: password)
             Self.logger.debug("signIn(withEmail:password:)")
         }
-
-        context.persistCurrentCredentials(userId: userId, password: password, server: StorageKeys.emailPasswordCredentials)
     }
 
     func signUp(signupDetails: SignupDetails) async throws {
@@ -103,8 +100,6 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
                 try await changeRequest.commitChanges()
             }
         }
-
-        context.persistCurrentCredentials(userId: signupDetails.userId, password: password, server: StorageKeys.emailPasswordCredentials)
     }
 
     func resetPassword(userId: String) async throws {
@@ -123,20 +118,36 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
         }
     }
 
-    func reauthenticateUser(user: User) async {
+    func reauthenticateUser(user: User) async throws -> ReauthenticationOperationResult {
         guard let userId = user.email else {
-            return
+            return .cancelled
         }
 
-        // with a future version of SpeziAccount we want to get rid of this workaround and request the password from the user on the fly.
-        guard let password = context.retrieveCredential(userId: userId, server: StorageKeys.emailPasswordCredentials) else {
-            return // nothing we can do
+        Self.logger.debug("Requesting credentials for re-authentication...")
+        let passwordQuery = await firebaseModel.reauthenticateUser(userId: userId)
+        guard case let .password(password) = passwordQuery else {
+            return .cancelled
         }
 
-        do {
-            try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
-        } catch {
-            Self.logger.debug("Credential change might fail. Failed to reauthenticate with firebase: \(error)")
+        Self.logger.debug("Re-authenticating password-based user now ...")
+        try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
+        return .success
+    }
+}
+
+
+extension ValidationRule {
+    static var minimumFirebasePassword: ValidationRule {
+        // Firebase as a non-configurable limit of 6 characters for an account password.
+        // Refer to https://stackoverflow.com/questions/38064248/firebase-password-validation-allowed-regex
+        guard let regex = try? Regex(#"(?=.*[0-9a-zA-Z]).{6,}"#) else {
+            fatalError("Invalid minimumFirebasePassword regex at construction.")
         }
+
+        return ValidationRule(
+            regex: regex,
+            message: "FIREBASE_ACCOUNT_DEFAULT_PASSWORD_RULE_ERROR \(6)",
+            bundle: .module
+        )
     }
 }

@@ -18,7 +18,9 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
     @MainActor
     override func setUp() async throws {
         try await super.setUp()
-        
+
+        continueAfterFailure = false
+
         try disablePasswordAutofill()
 
         try await FirebaseClient.deleteAllAccounts()
@@ -183,6 +185,12 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssertTrue(XCUIApplication().alerts[alert].waitForExistence(timeout: 6.0))
         XCUIApplication().alerts[alert].scrollViews.otherElements.buttons["Delete"].tap()
 
+        XCTAssertTrue(app.alerts["Authentication Required"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.alerts["Authentication Required"].secureTextFields["Password"].waitForExistence(timeout: 0.5))
+        app.typeText("TestPassword") // the password field has focus already
+        XCTAssertTrue(app.alerts["Authentication Required"].buttons["Login"].waitForExistence(timeout: 0.5))
+        app.alerts["Authentication Required"].buttons["Login"].tap()
+
         sleep(2)
         let accountsNew = try await FirebaseClient.getAllAccounts()
         XCTAssertEqual(accountsNew, [])
@@ -234,6 +242,13 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         try app.textFields["E-Mail Address"].enter(value: "de", checkIfTextWasEnteredCorrectly: false)
 
         app.buttons["Done"].tap()
+
+        XCTAssertTrue(app.alerts["Authentication Required"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.alerts["Authentication Required"].secureTextFields["Password"].waitForExistence(timeout: 0.5))
+        app.typeText("TestPassword") // the password field has focus already
+        XCTAssertTrue(app.alerts["Authentication Required"].buttons["Login"].waitForExistence(timeout: 0.5))
+        app.alerts["Authentication Required"].buttons["Login"].tap()
+
         sleep(3)
         XCTAssertTrue(app.staticTexts["test@username.de"].waitForExistence(timeout: 5.0))
 
@@ -242,9 +257,8 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssertEqual(newAccounts, [FirestoreAccount(email: "test@username.de", displayName: "Username Test1")])
     }
 
-
     @MainActor
-    func testPasswordChange() async throws {
+    private func passwordChangeBase() async throws {
         try await FirebaseClient.createAccount(email: "test@username.edu", password: "TestPassword", displayName: "Username Test")
 
         let accounts = try await FirebaseClient.getAllAccounts()
@@ -281,6 +295,21 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.dismissKeyboard()
 
         app.buttons["Done"].tap()
+    }
+
+    @MainActor
+    func testPasswordChange() async throws {
+        try await passwordChangeBase()
+
+        let app = XCUIApplication()
+
+        
+        XCTAssertTrue(app.alerts["Authentication Required"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.alerts["Authentication Required"].secureTextFields["Password"].waitForExistence(timeout: 0.5))
+        app.typeText("TestPassword") // the password field has focus already
+        XCTAssertTrue(app.alerts["Authentication Required"].buttons["Login"].waitForExistence(timeout: 0.5))
+        app.alerts["Authentication Required"].buttons["Login"].tap()
+
         sleep(1)
         app.navigationBars.buttons["Account Overview"].tap() // back button
         sleep(1)
@@ -291,7 +320,46 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         try app.login(username: "test@username.edu", password: "1234567890", close: false)
         XCTAssertTrue(app.staticTexts["Username Test"].waitForExistence(timeout: 6.0))
     }
-    
+
+    @MainActor
+    func testPasswordChangeWrong() async throws {
+        try await passwordChangeBase()
+
+        let app = XCUIApplication()
+
+
+        XCTAssertTrue(app.alerts["Authentication Required"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.alerts["Authentication Required"].secureTextFields["Password"].waitForExistence(timeout: 0.5))
+        app.typeText("Wrong!") // the password field has focus already
+        XCTAssertTrue(app.alerts["Authentication Required"].buttons["Login"].waitForExistence(timeout: 0.5))
+        app.alerts["Authentication Required"].buttons["Login"].tap()
+
+
+        XCTAssertTrue(app.alerts["Invalid Credentials"].waitForExistence(timeout: 2.0))
+    }
+
+    @MainActor
+    func testPasswordChangeCancel() async throws {
+        try await passwordChangeBase()
+
+        let app = XCUIApplication()
+
+
+        XCTAssertTrue(app.alerts["Authentication Required"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.alerts["Authentication Required"].buttons["Cancel"].waitForExistence(timeout: 0.5))
+        app.alerts["Authentication Required"].buttons["Cancel"].tap()
+
+        sleep(1)
+        app.navigationBars.buttons["Account Overview"].tap() // back button
+        sleep(1)
+        app.buttons["Close"].tap()
+        sleep(1)
+        app.buttons["Logout"].tap() // we tap the custom button to be lest dependent on the other tests and not deal with the alert
+
+        try app.login(username: "test@username.edu", password: "TestPassword", close: false) // login with previous password!
+        XCTAssertTrue(app.staticTexts["Username Test"].waitForExistence(timeout: 6.0))
+    }
+
     @MainActor
     func testPasswordReset() async throws {
         let app = XCUIApplication()
@@ -440,4 +508,4 @@ extension XCUIApplication {
         sleep(3)
         buttons["Close"].tap()
     }
-}
+} // swiftlint:disable:this file_length

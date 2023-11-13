@@ -118,31 +118,12 @@ actor FirebaseContext {
         }
     }
 
-    nonisolated func persistCurrentCredentials(userId: String, password: String, server: String) {
-        let passwordCredential = Credentials(username: userId, password: password)
-        do {
-            try secureStorage.store(credentials: passwordCredential, server: server, storageScope: .keychain)
-        } catch {
-            Self.logger.error("Failed to persists login credentials: \(error)")
-        }
-    }
-
-    nonisolated func removeCredentials(userId: String, server: String) {
+    private nonisolated func removeCredentials(userId: String, server: String) {
         do {
             try secureStorage.deleteCredentials(userId, server: server)
         } catch {
             Self.logger.error("Failed to remove credentials: \(error)")
         }
-    }
-
-    nonisolated func retrieveCredential(userId: String, server: String) -> String? {
-        do {
-            return try secureStorage.retrieveCredentials(userId, server: server)?.password
-        } catch {
-            Self.logger.error("Failed to retrieve credentials: \(error)")
-        }
-
-        return nil
     }
 
     private func setActiveAccountService(to service: any FirebaseAccountService) {
@@ -280,17 +261,19 @@ actor FirebaseContext {
         }
 
         let details = builder.build(owner: service)
+
+        // Previous SpeziFirebase releases used to store the password within the keychain.
+        // We keep this for now, to clear the keychain of all users.
+        removeCredentials(userId: details.userId, server: StorageKeys.emailPasswordCredentials)
+
         try await account.supplyUserDetails(details, isNewUser: isNewUser)
     }
 
     func notifyUserRemoval(for service: (any FirebaseAccountService)?) async throws {
         Self.logger.debug("Notifying SpeziAccount of removed user details.")
 
-        let userId = await account.details?.userId
         await account.removeUserDetails()
 
         resetActiveAccountService()
-
-        await service?.handleAccountRemoval(userId: userId)
     }
 }

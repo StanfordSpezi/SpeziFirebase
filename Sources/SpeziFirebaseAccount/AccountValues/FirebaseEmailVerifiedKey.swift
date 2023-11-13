@@ -43,7 +43,7 @@ extension FirebaseEmailVerifiedKey {
         public typealias Key = FirebaseEmailVerifiedKey
 
         public var body: some View {
-            Text("The FirebaseEmailVerifiedKey cannot be set!")
+            Text(verbatim: "The FirebaseEmailVerifiedKey cannot be set!")
         }
 
         public init(_ value: Binding<Value>) {}

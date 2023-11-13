@@ -59,7 +59,7 @@ extension FirebaseOAuthCredentialKey {
         public typealias Key = FirebaseOAuthCredentialKey
 
         public var body: some View {
-            Text("The FirebaseOAuthCredentialKey cannot be set!")
+            Text(verbatim: "The FirebaseOAuthCredentialKey cannot be set!")
         }
 
         public init(_ value: Binding<Value>) {}
@@ -69,7 +69,7 @@ extension FirebaseOAuthCredentialKey {
         public typealias Key = FirebaseOAuthCredentialKey
 
         public var body: some View {
-            Text("The FirebaseOAuthCredentialKey cannot be displayed!")
+            Text(verbatim: "The FirebaseOAuthCredentialKey cannot be displayed!")
         }
 
         public init(_ value: Value) {}
