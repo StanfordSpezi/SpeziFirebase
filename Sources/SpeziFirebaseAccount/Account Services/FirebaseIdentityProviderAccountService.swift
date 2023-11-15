@@ -14,16 +14,15 @@ import SwiftUI
 
 
 struct FirebaseIdentityProviderViewStyle: IdentityProviderViewStyle {
-    let service: FirebaseIdentityProviderAccountService
-
-
-    init(service: FirebaseIdentityProviderAccountService) {
-        self.service = service
-    }
-
-
-    func makeSignInButton() -> some View {
-        FirebaseSignInWithAppleButton(service: service)
+    func makeSignInButton(_ provider: any IdentityProvider) -> some View {
+        if let backed = provider as? any _StandardBacked,
+           let underlyingService = backed.underlyingService as? FirebaseIdentityProviderAccountService {
+            FirebaseSignInWithAppleButton(service: underlyingService)
+        } else if let service = provider as? FirebaseIdentityProviderAccountService {
+            FirebaseSignInWithAppleButton(service: service)
+        } else {
+            preconditionFailure("Unexpected account service found: \(provider)")
+        }
     }
 }
 
@@ -37,9 +36,7 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
         \.name
     }
 
-    nonisolated var viewStyle: FirebaseIdentityProviderViewStyle {
-        FirebaseIdentityProviderViewStyle(service: self)
-    }
+    let viewStyle = FirebaseIdentityProviderViewStyle()
 
     let configuration: AccountServiceConfiguration
     let firebaseModel: FirebaseAccountModel

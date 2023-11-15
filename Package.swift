@@ -21,12 +21,13 @@ let package = Package(
         .library(name: "SpeziFirebaseAccount", targets: ["SpeziFirebaseAccount"]),
         .library(name: "SpeziFirebaseConfiguration", targets: ["SpeziFirebaseConfiguration"]),
         .library(name: "SpeziFirestore", targets: ["SpeziFirestore"]),
-        .library(name: "SpeziFirebaseStorage", targets: ["SpeziFirebaseStorage"])
+        .library(name: "SpeziFirebaseStorage", targets: ["SpeziFirebaseStorage"]),
+        .library(name: "SpeziFirebaseAccountStorage", targets: ["SpeziFirebaseAccountStorage"])
     ],
     dependencies: [
         .package(url: "https://github.com/StanfordSpezi/Spezi", .upToNextMinor(from: "0.8.0")),
         .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", .upToNextMinor(from: "0.6.1")),
-        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", .upToNextMinor(from: "0.7.1")),
+        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", branch: "fix/storage-standard"),
         .package(url: "https://github.com/StanfordSpezi/SpeziStorage", .upToNextMinor(from: "0.5.0")),
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.13.0")
     ],
@@ -65,6 +66,15 @@ let package = Package(
                 .target(name: "SpeziFirebaseConfiguration"),
                 .product(name: "Spezi", package: "Spezi"),
                 .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
+            ]
+        ),
+        .target(
+            name: "SpeziFirebaseAccountStorage",
+            dependencies: [
+                .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
+                .product(name: "Spezi", package: "Spezi"),
+                .product(name: "SpeziAccount", package: "SpeziAccount"),
+                .target(name: "SpeziFirestore")
             ]
         ),
         .testTarget(
