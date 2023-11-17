@@ -37,16 +37,16 @@ import SpeziFirestore
 ///
 ///
 /// actor ExampleStandard: Standard, AccountStorageStandard {
-///     // define the collection where you want to store your additional user data
+///     // Define the collection where you want to store your additional user data, ...
 ///     static var collection: CollectionReference {
 ///         Firestore.firestore().collection("users")
 ///     }
 ///
-///     // define and initialize the `FirestoreAccountStorage` dependency
+///     // ... define and initialize the `FirestoreAccountStorage` dependency ...
 ///     @Dependency private var accountStorage = FirestoreAccountStorage(storedIn: Self.collection)
 ///
 ///
-///     // and forward all implementations of `AccountStorageStandard` to the `FirestoreAccountStorage`
+///     // ... and forward all implementations of `AccountStorageStandard` to the `FirestoreAccountStorage`.
 ///
 ///     public func create(_ identifier: AdditionalRecordId, _ details: SignupDetails) async throws {
 ///         try await accountStorage.create(identifier, details)
