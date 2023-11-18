@@ -72,15 +72,15 @@ import SpeziFirestore
 public actor FirestoreAccountStorage: Module, AccountStorageStandard {
     @Dependency private var firestore: SpeziFirestore.Firestore // ensure firestore is configured
 
-    private let collection: CollectionReference
+    private let collection: () -> CollectionReference
 
 
-    public init(storeIn collection: CollectionReference) {
+    public init(storeIn collection: @autoclosure @escaping () -> CollectionReference) {
         self.collection = collection
     }
 
     private func userDocument(for accountId: String) -> DocumentReference {
-        collection.document(accountId)
+        collection().document(accountId)
     }
 
     public func create(_ identifier: AdditionalRecordId, _ details: SignupDetails) async throws {
