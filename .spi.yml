@@ -12,6 +12,7 @@ builder:
     - platform: ios
       documentation_targets:
       - SpeziFirebaseAccount
+      - SpeziFirebaseAccountStorage
       - SpeziFirebaseConfiguration
+      - SpeziFirebaseStorage
       - SpeziFirestore
-      - SpeziFirestorePrefixUserIdAdapter

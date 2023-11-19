@@ -24,7 +24,7 @@ import SpeziFirebaseConfiguration
 ///     }
 /// }
 /// ```
-public final class FirebaseStorageConfiguration: Component, DefaultInitializable {
+public final class FirebaseStorageConfiguration: Module, DefaultInitializable {
     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
     
     private let emulatorSettings: (host: String, port: Int)?

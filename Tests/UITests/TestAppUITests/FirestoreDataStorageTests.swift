@@ -49,7 +49,9 @@ final class FirestoreDataStorageTests: XCTestCase {
     @MainActor
     override func setUp() async throws {
         try await super.setUp()
-        
+
+        continueAfterFailure = false
+
         try await deleteAllDocuments()
         try await Task.sleep(for: .seconds(0.5))
     }
