@@ -119,7 +119,7 @@ extension FirebaseAccountService {
                 try await changeRequest.commitChanges()
             }
 
-            // non of the above request will trigger our state change listener, therefore just call it manually.
+            // None of the above requests will trigger our state change listener, therefore, we just call it manually.
             try await context.notifyUserSignIn(user: currentUser, for: self)
         } catch let error as NSError {
             Self.logger.error("Received NSError on firebase dispatch: \(error)")

@@ -8,6 +8,7 @@
 
 import Foundation
 
+
 enum FeatureFlags {
     static let accountStorageTests = ProcessInfo.processInfo.arguments.contains("--account-storage")
 }

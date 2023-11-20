@@ -14,6 +14,7 @@ import SwiftUI
 struct BiographyKey: AccountKey {
     typealias Value = String
 
+
     static let name: LocalizedStringResource = "Biography" // we don't bother to translate
     static let category: AccountKeyCategory = .personalDetails
 }
@@ -36,6 +37,7 @@ extension AccountValues {
 extension BiographyKey {
     public struct DataEntry: DataEntryView {
         public typealias Key = BiographyKey
+
 
         @Binding private var biography: Value
 

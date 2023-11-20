@@ -51,7 +51,7 @@ final class FirebaseAccountStorageTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Biography, Hello Stanford"].waitForExistence(timeout: 2.0))
 
 
-        // NOW TEST ACCOUNT EDIT
+        // TEST ACCOUNT EDIT
         XCTAssertTrue(app.navigationBars.buttons["Edit"].exists)
         app.navigationBars.buttons["Edit"].tap()
 
