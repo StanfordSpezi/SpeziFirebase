@@ -74,8 +74,7 @@ public actor FirestoreAccountStorage: Module, AccountStorageStandard {
 
     private let collection: () -> CollectionReference
 
-
-    public init(storeIn collection: @autoclosure @escaping () -> CollectionReference) {
+    public init(storeIn collection: @Sendable @autoclosure @escaping () -> CollectionReference) {
         self.collection = collection
     }
 

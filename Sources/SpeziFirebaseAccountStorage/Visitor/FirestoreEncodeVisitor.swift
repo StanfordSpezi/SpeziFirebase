@@ -8,8 +8,8 @@
 
 
 import FirebaseFirestore
-import SpeziAccount
 import OSLog
+import SpeziAccount
 
 
 private struct SingleKeyContainer<Value: Codable>: Codable {
@@ -18,9 +18,9 @@ private struct SingleKeyContainer<Value: Codable>: Codable {
 
 
 class FirestoreEncodeVisitor: AccountValueVisitor {
-    private let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "FirestoreEncode")
-
     typealias Data = [String: Any]
+
+    private let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "FirestoreEncode")
 
     private var values: Data = [:]
     private var errors: [String: Error] = [:]

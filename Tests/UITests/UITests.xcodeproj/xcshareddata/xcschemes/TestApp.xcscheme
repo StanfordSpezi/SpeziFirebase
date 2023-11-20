@@ -109,6 +109,12 @@
             ReferencedContainer = "container:UITests.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "--account-storage"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <LocationScenarioReference
          identifier = "com.apple.dt.IDEFoundation.CurrentLocationScenarioIdentifier"
          referenceType = "1">
