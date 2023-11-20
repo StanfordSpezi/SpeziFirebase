@@ -37,7 +37,13 @@ final class FirebaseAccountStorageTests: XCTestCase {
         }
 
 
-        try app.signup(username: "test@username1.edu", password: "TestPassword1", givenName: "Test1", familyName: "Username1", biography: "Hello Stanford")
+        try app.signup(
+            username: "test@username1.edu",
+            password: "TestPassword1",
+            givenName: "Test1",
+            familyName: "Username1",
+            biography: "Hello Stanford"
+        )
 
 
         XCTAssertTrue(app.buttons["Account Overview"].waitForExistence(timeout: 2.0))
