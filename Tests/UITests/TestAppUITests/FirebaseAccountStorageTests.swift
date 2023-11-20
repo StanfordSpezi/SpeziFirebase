@@ -61,5 +61,26 @@ final class FirebaseAccountStorageTests: XCTestCase {
         app.navigationBars.buttons["Done"].tap()
 
         XCTAssertTrue(app.staticTexts["Biography, Hello Stanford2"].waitForExistence(timeout: 2.0))
+
+        // TEST ACCOUNT DELETION
+        XCTAssertTrue(app.navigationBars.buttons["Edit"].exists)
+        app.navigationBars.buttons["Edit"].tap()
+
+        XCTAssertTrue(app.buttons["Delete Account"].waitForExistence(timeout: 4.0))
+        app.buttons["Delete Account"].tap()
+
+        let alert = "Are you sure you want to delete your account?"
+        XCTAssertTrue(XCUIApplication().alerts[alert].waitForExistence(timeout: 6.0))
+        XCUIApplication().alerts[alert].scrollViews.otherElements.buttons["Delete"].tap()
+
+        XCTAssertTrue(app.alerts["Authentication Required"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.alerts["Authentication Required"].secureTextFields["Password"].waitForExistence(timeout: 0.5))
+        app.typeText("TestPassword1") // the password field has focus already
+        XCTAssertTrue(app.alerts["Authentication Required"].buttons["Login"].waitForExistence(timeout: 0.5))
+        app.alerts["Authentication Required"].buttons["Login"].tap()
+
+        sleep(2)
+        let accountsNew = try await FirebaseClient.getAllAccounts()
+        XCTAssertTrue(accountsNew.isEmpty)
     }
 }
