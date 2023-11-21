@@ -451,23 +451,12 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
 
 extension XCUIApplication {
-    func extendedDismissKeyboard() {
-        let keyboard = keyboards.firstMatch
-
-        if keyboard.waitForExistence(timeout: 1.0) && keyboard.buttons["Done"].isHittable {
-            keyboard.buttons["Done"].tap()
-        }
-    }
-
-    fileprivate func login(username: String, password: String, close: Bool = true) throws {
+    func login(username: String, password: String, close: Bool = true) throws {
         buttons["Account Setup"].tap()
         XCTAssertTrue(self.buttons["Login"].waitForExistence(timeout: 2.0))
         
         try textFields["E-Mail Address"].enter(value: username)
-        extendedDismissKeyboard()
-        
         try secureTextFields["Password"].enter(value: password)
-        extendedDismissKeyboard()
         
         swipeUp()
 
@@ -478,9 +467,8 @@ extension XCUIApplication {
             self.buttons["Close"].tap()
         }
     }
-    
-    
-    fileprivate func signup(username: String, password: String, givenName: String, familyName: String) throws {
+
+    func signup(username: String, password: String, givenName: String, familyName: String, biography: String? = nil) throws {
         buttons["Account Setup"].tap()
         buttons["Signup"].tap()
 
@@ -488,24 +476,23 @@ extension XCUIApplication {
         sleep(2)
 
         try collectionViews.textFields["E-Mail Address"].enter(value: username)
-        extendedDismissKeyboard()
-        
         try collectionViews.secureTextFields["Password"].enter(value: password)
-        extendedDismissKeyboard()
         
         swipeUp()
         
         try textFields["enter first name"].enter(value: givenName)
-        extendedDismissKeyboard()
         swipeUp()
         
         try textFields["enter last name"].enter(value: familyName)
-        extendedDismissKeyboard()
         swipeUp()
+
+        if let biography {
+            try textFields["Biography"].enter(value: biography)
+        }
 
         collectionViews.buttons["Signup"].tap()
 
         sleep(3)
         buttons["Close"].tap()
     }
-} // swiftlint:disable:this file_length
+}

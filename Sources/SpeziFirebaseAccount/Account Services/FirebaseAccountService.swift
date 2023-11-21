@@ -92,8 +92,6 @@ extension FirebaseAccountService {
             throw FirebaseAccountError.notSignedIn
         }
 
-        var changes = false
-
         do {
             // if we modify sensitive credentials and require a recent login
             if modifications.modifiedDetails.storage[UserIdKey.self] != nil || modifications.modifiedDetails.password != nil {
@@ -107,7 +105,6 @@ extension FirebaseAccountService {
             if let userId = modifications.modifiedDetails.storage[UserIdKey.self] {
                 Self.logger.debug("updateEmail(to:) for user.")
                 try await currentUser.updateEmail(to: userId)
-                changes = true
             }
 
             if let password = modifications.modifiedDetails.password {
@@ -120,14 +117,10 @@ extension FirebaseAccountService {
                 let changeRequest = currentUser.createProfileChangeRequest()
                 changeRequest.displayName = name.formatted(.name(style: .long))
                 try await changeRequest.commitChanges()
-
-                changes = true
             }
 
-            if changes {
-                // non of the above request will trigger our state change listener, therefore just call it manually.
-                try await context.notifyUserSignIn(user: currentUser, for: self)
-            }
+            // None of the above requests will trigger our state change listener, therefore, we just call it manually.
+            try await context.notifyUserSignIn(user: currentUser, for: self)
         } catch let error as NSError {
             Self.logger.error("Received NSError on firebase dispatch: \(error)")
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
