@@ -16,17 +16,37 @@ import SwiftUI
 
 class TestAppDelegate: SpeziAppDelegate {
     override var configuration: Configuration {
-        Configuration {
+        if FeatureFlags.accountStorageTests {
+            return Configuration(standard: AccountStorageTestStandard(), configurationsClosure)
+        } else {
+            return Configuration(configurationsClosure)
+        }
+    }
+
+    var configurationsClosure: () -> ModuleCollection {
+        {
+            self.configurations
+        }
+    }
+
+    @ModuleBuilder var configurations: ModuleCollection {
+        if FeatureFlags.accountStorageTests {
+            AccountConfiguration(configuration: [
+                .requires(\.userId),
+                .requires(\.name),
+                .requires(\.biography)
+            ])
+        } else {
             AccountConfiguration(configuration: [
                 .requires(\.userId),
                 .collects(\.name)
             ])
-            Firestore(settings: .emulator)
-            FirebaseAccountConfiguration(
-                authenticationMethods: [.emailAndPassword, .signInWithApple],
-                emulatorSettings: (host: "localhost", port: 9099)
-            )
-            FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))
         }
+        Firestore(settings: .emulator)
+        FirebaseAccountConfiguration(
+            authenticationMethods: [.emailAndPassword, .signInWithApple],
+            emulatorSettings: (host: "localhost", port: 9099)
+        )
+        FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))
     }
 }

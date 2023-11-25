@@ -8,11 +8,19 @@
 
 
 import FirebaseFirestore
+import OSLog
 import SpeziAccount
+
+
+private struct SingleKeyContainer<Value: Codable>: Codable {
+    let value: Value
+}
 
 
 class FirestoreEncodeVisitor: AccountValueVisitor {
     typealias Data = [String: Any]
+
+    private let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "FirestoreEncode")
 
     private var values: Data = [:]
     private var errors: [String: Error] = [:]
@@ -21,9 +29,19 @@ class FirestoreEncodeVisitor: AccountValueVisitor {
 
     func visit<Key: AccountKey>(_ key: Key.Type, _ value: Key.Value) {
         let encoder = Firestore.Encoder()
+
+        // the firestore encode method expects a container type!
+        let container = SingleKeyContainer(value: value)
+
         do {
-            values["\(Key.self)"] = try encoder.encode(value)
+            let result = try encoder.encode(container)
+            guard let encoded = result["value"] else {
+                preconditionFailure("Layout of SingleKeyContainer changed. Does not contain value anymore: \(result)")
+            }
+
+            values["\(Key.self)"] = encoded
         } catch {
+            logger.error("Failed to encode \("\(value)") for key \(key): \(error)")
             errors["\(Key.self)"] = error
         }
     }

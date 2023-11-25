@@ -122,8 +122,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordSpezi/SpeziAccount",
       "state" : {
-        "revision" : "901cf9d11cc3e4ea3704c65982866fc278e50790",
-        "version" : "0.8.0"
+        "revision" : "a9d37971e78fbdce02b0f8b57edfd2eecd4bb22e",
+        "version" : "0.8.1"
       }
     },
     {
