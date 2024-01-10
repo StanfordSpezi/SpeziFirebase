@@ -9,14 +9,16 @@
 import FirebaseCore
 import Spezi
 
+// TODO: find and replace all "components"
 
-/// Shared component to serve as a single point to configure the Firebase set of dependencies.
+
+/// Module to configure the Firebase set of dependencies.
 ///
 /// The ``configure()`` method calls `FirebaseApp.configure()`.
 /// Use the `@Dependency` property wrapper to define a dependency on this component and ensure that `FirebaseApp.configure()` is called before any
 /// other Firebase-related components:
 /// ```swift
-/// public final class YourFirebaseComponent<ComponentStandard: Standard>: Component {
+/// public final class YourFirebaseModule: Module {
 ///     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
 ///
 ///     // ...

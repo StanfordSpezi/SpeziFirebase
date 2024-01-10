@@ -18,18 +18,13 @@ import SpeziLocalStorage
 import SpeziSecureStorage
 
 
-/// Configures Firebase Auth `AccountService`s that can be used in any views of the `Account` module.
+/// Configures an `AccountService` to interact with Firebase Auth.
 ///
-/// The ``FirebaseAccountConfiguration`` offers a ``user`` property to access the current Firebase Auth user from, e.g., a SwiftUI view's environment:
-/// ```
-/// @EnvironmentObject var firebaseAccountConfiguration: FirebaseAccountConfiguration</* ... */>
-/// ```
-///
-/// The ``FirebaseAccountConfiguration`` can, e.g., be used to to connect to the Firebase Auth emulator:
+/// The `FirebaseAccountConfiguration` can, e.g., be used to to connect to the Firebase Auth emulator:
 /// ```
 /// class ExampleAppDelegate: SpeziAppDelegate {
 ///     override var configuration: Configuration {
-///         Configuration(standard: /* ... */) {
+///         Configuration {
 ///             FirebaseAccountConfiguration(emulatorSettings: (host: "localhost", port: 9099))
 ///             // ...
 ///         }

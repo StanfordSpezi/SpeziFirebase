@@ -12,7 +12,7 @@ import SpeziAccount
 import SpeziFirebaseAccountStorage
 
 
-actor AccountStorageTestStandard: Standard, AccountStorageStandard {
+actor AccountStorageTestStandard: Standard, AccountStorageConstraint {
     static var collection: CollectionReference {
         Firestore.firestore().collection("users")
     }

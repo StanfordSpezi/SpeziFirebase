@@ -1,4 +1,4 @@
-# ``FirebaseConfiguration``
+# ``SpeziFirebaseConfiguration``
 
 <!--
                   
@@ -10,17 +10,17 @@ SPDX-License-Identifier: MIT
              
 -->
 
-Shared component to serve as a single point to configure the Firebase set of dependencies.
+Module to configure the Firebase set of dependencies.
 
 ## Overview
 
-The `configure()` method calls `FirebaseApp.configure()`.
+The ``ConfigureFirebaseApp/configure()`` method calls `FirebaseApp.configure()`.
 
 Use the `@Dependency` property wrapper to define a dependency on this component and ensure that `FirebaseApp.configure()` is called before any
 other Firebase-related components:
 
 ```swift
-public final class YourFirebaseComponent<ComponentStandard: Standard>: Component {
+public final class YourFirebaseModule: Module {
     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
 
     // ...

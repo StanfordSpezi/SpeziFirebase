@@ -66,6 +66,7 @@ actor FirebaseContext {
         // if there is a cached user, we refresh the authentication token
         Auth.auth().currentUser?.getIDTokenForcingRefresh(true) { _, error in
             if error != nil {
+                // TODO: this is an issue in flight mode!
                 Task {
                     try await self.notifyUserRemoval(for: self.lastActiveAccountService)
                 }
