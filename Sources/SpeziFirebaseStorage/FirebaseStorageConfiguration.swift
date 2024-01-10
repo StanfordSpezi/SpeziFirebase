@@ -17,7 +17,7 @@ import SpeziFirebaseConfiguration
 /// ```
 /// class ExampleAppDelegate: SpeziAppDelegate {
 ///     override var configuration: Configuration {
-///         Configuration(standard: /* ... */) {
+///         Configuration {
 ///             FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))
 ///             // ...
 ///         }

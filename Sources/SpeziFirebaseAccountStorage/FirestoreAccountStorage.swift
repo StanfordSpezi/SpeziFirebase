@@ -12,7 +12,7 @@ import SpeziAccount
 import SpeziFirestore
 
 
-/// Store additional account details directly in firestore.
+/// Store additional account details directly in Firestore.
 ///
 /// Certain account services, like the account services provided by Firebase, can only store certain account details.
 /// The `FirestoreAccountStorage` can be used to store additional account details, that are not supported out of the box by your account services,
@@ -23,7 +23,7 @@ import SpeziFirestore
 ///
 /// Once you have [AccountConfiguration](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/initial-setup#Account-Configuration)
 /// and the [FirebaseAccountConfiguration](https://swiftpackageindex.com/stanfordspezi/spezifirebase/documentation/spezifirebaseaccount/firebaseaccountconfiguration)
-/// set up, you can adopt the [AccountStorageStandard](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountstoragestandard)
+/// set up, you can adopt the [AccountStorageConstraint](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountstorageconstraint)
 /// protocol to provide a custom storage for SpeziAccount.
 ///
 /// - Important: In order to use the `FirestoreAccountStorage`, you must have [Firestore](https://swiftpackageindex.com/stanfordspezi/spezifirebase/main/documentation/spezifirestore/firestore)
@@ -36,7 +36,7 @@ import SpeziFirestore
 /// import SpeziFirebaseAccountStorage
 ///
 ///
-/// actor ExampleStandard: Standard, AccountStorageStandard {
+/// actor ExampleStandard: Standard, AccountStorageConstraint {
 ///     // Define the collection where you want to store your additional user data, ...
 ///     static var collection: CollectionReference {
 ///         Firestore.firestore().collection("users")
@@ -46,7 +46,7 @@ import SpeziFirestore
 ///     @Dependency private var accountStorage = FirestoreAccountStorage(storedIn: Self.collection)
 ///
 ///
-///     // ... and forward all implementations of `AccountStorageStandard` to the `FirestoreAccountStorage`.
+///     // ... and forward all implementations of `AccountStorageConstraint` to the `FirestoreAccountStorage`.
 ///
 ///     public func create(_ identifier: AdditionalRecordId, _ details: SignupDetails) async throws {
 ///         try await accountStorage.create(identifier, details)
@@ -69,7 +69,7 @@ import SpeziFirestore
 ///     }
 /// }
 /// ```
-public actor FirestoreAccountStorage: Module, AccountStorageStandard {
+public actor FirestoreAccountStorage: Module, AccountStorageConstraint {
     @Dependency private var firestore: SpeziFirestore.Firestore // ensure firestore is configured
 
     private let collection: () -> CollectionReference

@@ -11,7 +11,7 @@ import FirebaseFirestoreSwift
 import Foundation
 
 
-// swiftlint:disable cyclomatic_complexity function_body_length
+/// Mapping of Firestore error codes to a localized error.
 public enum FirestoreError: LocalizedError {
     case cancelled
     case invalidArgument
@@ -82,7 +82,7 @@ public enum FirestoreError: LocalizedError {
     }
 
     
-    public init<E: Error>(_ error: E) {
+    public init<E: Error>(_ error: E) { // swiftlint:disable:this cyclomatic_complexity function_body_length
         if let firestoreError = error as? Self {
             self = firestoreError
             return
