@@ -8,7 +8,7 @@
 
 
 /// Definition of the authentication methods supported by the FirebaseAccount module.
-public struct FirebaseAuthAuthenticationMethods: OptionSet, Codable {
+public struct FirebaseAuthAuthenticationMethods: OptionSet, Codable, Sendable {
     /// E-Mail and password-based authentication.
     /// 
     /// Please follow the necessary setup steps at [Password Authentication](https://firebase.google.com/docs/auth/ios/password-auth).

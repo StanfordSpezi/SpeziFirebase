@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/firebase-ios-sdk",
       "state" : {
-        "revision" : "5de0369ee79ad096c164eb3afeb7921d92a43b58",
-        "version" : "10.18.0"
+        "revision" : "b880ec8ec927a838c51c12862c6222c30d7097d7",
+        "version" : "10.20.0"
       }
     },
     {
@@ -32,8 +32,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleAppMeasurement.git",
       "state" : {
-        "revision" : "6b332152355c372ace9966d8ee76ed191f97025e",
-        "version" : "10.17.0"
+        "revision" : "ceec9f28dea12b7cf3dabf18b5ed7621c88fd4aa",
+        "version" : "10.20.0"
       }
     },
     {
@@ -41,8 +41,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleDataTransport.git",
       "state" : {
-        "revision" : "aae45a320fd0d11811820335b1eabc8753902a40",
-        "version" : "9.2.5"
+        "revision" : "a732a4b47f59e4f725a2ea10f0c77e93a7131117",
+        "version" : "9.3.0"
       }
     },
     {
@@ -113,8 +113,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordSpezi/Spezi",
       "state" : {
-        "revision" : "092eabc50a3600d8a03b43ad0d2dcd02914b223f",
-        "version" : "0.8.1"
+        "revision" : "bf2f55be72d7ab901aee009dacfab5abf7ad2103",
+        "version" : "1.0.0"
       }
     },
     {
@@ -122,8 +122,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordSpezi/SpeziAccount",
       "state" : {
-        "revision" : "a9d37971e78fbdce02b0f8b57edfd2eecd4bb22e",
-        "version" : "0.8.1"
+        "revision" : "f1d92627b8e5053050c48502ccb09a827e5057f1",
+        "version" : "1.0.0"
       }
     },
     {
@@ -132,7 +132,7 @@
       "location" : "https://github.com/StanfordSpezi/SpeziFoundation.git",
       "state" : {
         "revision" : "683c66f922a4cfe0882c4a86a43854f613b48541",
-        "version" : "0.1.0"
+        "version" : "1.0.0"
       }
     },
     {
@@ -140,17 +140,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordSpezi/SpeziStorage",
       "state" : {
-        "revision" : "e9be3c2743e462894bf56d41339b040f4060b567",
-        "version" : "0.5.0"
+        "revision" : "eaed2220375c35400aa69d1f96a8d32b7e66b1c7",
+        "version" : "1.0.0"
       }
     },
     {
       "identity" : "speziviews",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/StanfordSpezi/SpeziViews",
+      "location" : "https://github.com/StanfordSpezi/SpeziViews.git",
       "state" : {
-        "revision" : "eac443080926649d09a703483a6dd6f5a8bb7d51",
-        "version" : "0.6.2"
+        "revision" : "d49f716e4a4d634604bb0dcd6d53df679b6c1358",
+        "version" : "1.3.0"
       }
     },
     {
@@ -172,21 +172,12 @@
       }
     },
     {
-      "identity" : "xctestextensions",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/StanfordSpezi/XCTestExtensions",
-      "state" : {
-        "revision" : "388a6d6a5be48eff5d98a2c45e0b50f30ed21dc3",
-        "version" : "0.4.7"
-      }
-    },
-    {
       "identity" : "xctruntimeassertions",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/StanfordBDHG/XCTRuntimeAssertions",
       "state" : {
-        "revision" : "9226052589b8faece98861bc3d7b33b3ebfe4f5a",
-        "version" : "0.2.5"
+        "revision" : "bb2a287c2544aa846e53670d1ece35e5949567be",
+        "version" : "1.0.0"
       }
     }
   ],
