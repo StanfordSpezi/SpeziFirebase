@@ -17,8 +17,6 @@ final class FirebaseAccountStorageTests: XCTestCase {
 
         continueAfterFailure = false
 
-        try disablePasswordAutofill()
-
         try await FirebaseClient.deleteAllAccounts()
         try await Task.sleep(for: .seconds(0.5))
     }

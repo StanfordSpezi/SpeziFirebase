@@ -21,8 +21,6 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
         continueAfterFailure = false
 
-        try disablePasswordAutofill()
-
         try await FirebaseClient.deleteAllAccounts()
         try await Task.sleep(for: .seconds(0.5))
     }
