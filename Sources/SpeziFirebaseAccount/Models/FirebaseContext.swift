@@ -58,6 +58,7 @@ actor FirebaseContext {
         if let lastActiveAccountServiceId,
            let service = registeredServices.first(where: { $0.id == lastActiveAccountServiceId }) {
             self.lastActiveAccountService = service
+            Self.logger.debug("Last active account service is \(service.id)")
         }
 
         // get notified about changes of the User reference
@@ -127,11 +128,9 @@ actor FirebaseContext {
     private nonisolated func removeCredentials(userId: String, server: String) {
         do {
             try secureStorage.deleteCredentials(userId, server: server)
+        } catch SecureStorageError.notFound {
+            // we don't care if we want to delete something that doesn't exist
         } catch {
-            if let cocoaError = error as? CocoaError,
-               cocoaError.isFileError {
-                return // silence any file errors (e.g. file doesn't exist)
-            }
             Self.logger.error("Failed to remove credentials: \(error)")
         }
     }
@@ -185,6 +184,8 @@ actor FirebaseContext {
 
         do {
             try secureStorage.deleteCredentials("_", server: StorageKeys.activeAccountService)
+        } catch SecureStorageError.notFound {
+            // we don't care if we want to delete something that doesn't exist
         } catch {
             Self.logger.error("Failed to remove active account service: \(error)")
         }
