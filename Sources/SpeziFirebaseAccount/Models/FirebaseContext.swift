@@ -58,6 +58,7 @@ actor FirebaseContext {
         if let lastActiveAccountServiceId,
            let service = registeredServices.first(where: { $0.id == lastActiveAccountServiceId }) {
             self.lastActiveAccountService = service
+            Self.logger.debug("Last active account service is \(service.id)")
         }
 
         // get notified about changes of the User reference
@@ -127,6 +128,8 @@ actor FirebaseContext {
     private nonisolated func removeCredentials(userId: String, server: String) {
         do {
             try secureStorage.deleteCredentials(userId, server: server)
+        } catch SecureStorageError.notFound {
+            // we don't care if we want to delete something that doesn't exist
         } catch {
             Self.logger.error("Failed to remove credentials: \(error)")
         }
@@ -136,8 +139,13 @@ actor FirebaseContext {
         self.lastActiveAccountServiceId = service.id
         self.lastActiveAccountService = service
 
+
         do {
-            try localStorage.store(service.id, storageKey: StorageKeys.activeAccountService)
+            try secureStorage.store(
+                credentials: Credentials(username: "_", password: service.id),
+                server: StorageKeys.activeAccountService,
+                removeDuplicate: true
+            )
         } catch {
             Self.logger.error("Failed to store active account service: \(error)")
         }
@@ -146,13 +154,24 @@ actor FirebaseContext {
     private func loadLastActiveAccountService() {
         let id: String
         do {
-            id = try localStorage.read(storageKey: StorageKeys.activeAccountService)
-        } catch {
-            if let cocoaError = error as? CocoaError,
-               cocoaError.isFileError {
-                return // silence any file errors (e.g. file doesn't exist)
+            let credential = try secureStorage.retrieveCredentials("_", server: StorageKeys.activeAccountService)
+            if let credential {
+                id = credential.password
+            } else {
+                // In previous versions we used the plain local storage for the active key.
+                do {
+                    id = try localStorage.read(storageKey: StorageKeys.activeAccountService)
+                } catch {
+                    if let cocoaError = error as? CocoaError,
+                       cocoaError.isFileError {
+                        return // silence any file errors (e.g. file doesn't exist)
+                    }
+                    Self.logger.error("Failed to read last active account service from local storage: \(error)")
+                    return
+                }
             }
-            Self.logger.error("Failed to read last active account service: \(error)")
+        } catch {
+            Self.logger.error("Failed to retrieve last active account service from secure storage: \(error)")
             return
         }
 
@@ -161,13 +180,18 @@ actor FirebaseContext {
 
     private func resetActiveAccountService() {
         self.lastActiveAccountService = nil
-        self.lastActiveAccountService = nil
+        self.lastActiveAccountServiceId = nil
 
         do {
-            try localStorage.delete(storageKey: StorageKeys.activeAccountService)
+            try secureStorage.deleteCredentials("_", server: StorageKeys.activeAccountService)
+        } catch SecureStorageError.notFound {
+            // we don't care if we want to delete something that doesn't exist
         } catch {
             Self.logger.error("Failed to remove active account service: \(error)")
         }
+
+        // we don't care if removal of the legacy item fails
+        try? localStorage.delete(storageKey: StorageKeys.activeAccountService)
     }
 
 
@@ -237,7 +261,14 @@ actor FirebaseContext {
         case let .user(user):
             let isNewUser = update.authResult?.additionalUserInfo?.isNewUser ?? false
             guard let service = update.service else {
-                Self.logger.error("Failed to dispatch user update due to missing account service!")
+                Self.logger.error("Failed to dispatch user update due to missing account service identifier on disk!")
+                do {
+                    // This typically happens if there still is a Account associated in the Keychain but the App was recently deleted.
+                    // Therefore, we reset the user account to allow for easily re-authenticating with firebase.
+                    try Auth.auth().signOut()
+                } catch {
+                    Self.logger.warning("Tried to remove local user. But Firebase signOut failed with \(error)")
+                }
                 throw FirebaseAccountError.setupError
             }
 
