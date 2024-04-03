@@ -263,7 +263,6 @@ actor FirebaseContext {
             if user.isAnonymous {
                 // We explicitly handle anonymous users on every signup and call our state change handler ourselves.
                 // But generally, we don't care about anonymous users.
-                // TODO: what if they login?
                 return
             }
 
