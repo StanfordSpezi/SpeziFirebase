@@ -83,16 +83,15 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
 
         try await context.dispatchFirebaseAuthAction(on: self) {
             if let currentUser = Auth.auth().currentUser,
-               let password = signupDetails.password {
-                // User is already signed in; prepare credentials for linking.
-                let credential = EmailAuthProvider.credential(withEmail: signupDetails.userId, password: password)
-                let authResult = try await currentUser.link(with: credential)
-                Self.logger.debug("Existing user linked with email and password credentials.")
-                
-                return authResult
+               currentUser.isAnonymous {
+                Self.logger.debug("Linking oauth credentials with current anonymous user account ...")
+                let result = try await currentUser.link(with: credential)
+
+                try await context.notifyUserSignIn(user: currentUser, for: self, isNewUser: true)
+
+                return result
             }
-            
-            // Otherwise, no user is signed in; create a new user.
+
             let authResult = try await Auth.auth().signIn(with: credential)
             Self.logger.debug("signIn(with:) credential for user.")
 

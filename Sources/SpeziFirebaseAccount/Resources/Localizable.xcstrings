@@ -2,10 +2,24 @@
   "sourceLanguage" : "en",
   "strings" : {
     "Authentication Required" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authentication Required"
+          }
+        }
+      }
     },
     "Cancel" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        }
+      }
     },
     "E-Mail Verified" : {
       "localizations" : {
@@ -13,6 +27,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "E-Mail verifiziert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E-Mail Verified"
           }
         }
       }
@@ -157,6 +177,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Please verify that your email and password are correct."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_LINK_FAILED_ALREADY_IN_USE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to link account"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_LINK_FAILED_ALREADY_IN_USE_SUGGESTION" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The credentials are already used with a different account."
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_LINK_FAILED_DUPLICATE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to link account"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_LINK_FAILED_DUPLICATE_SUGGESTION" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This type of account provider is already linked to this account."
           }
         }
       }

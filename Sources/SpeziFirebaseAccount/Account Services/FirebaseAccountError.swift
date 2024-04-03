@@ -20,6 +20,8 @@ enum FirebaseAccountError: LocalizedError {
     case notSignedIn
     case requireRecentLogin
     case appleFailed
+    case linkFailedDuplicate
+    case linkFailedAlreadyInUse
     case unknown(AuthErrorCode.Code)
     
     
@@ -43,6 +45,10 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR"
         case .appleFailed:
             return "FIREBASE_APPLE_FAILED"
+        case .linkFailedDuplicate:
+            return "FIREBASE_ACCOUNT_LINK_FAILED_DUPLICATE"
+        case .linkFailedAlreadyInUse:
+            return "FIREBASE_ACCOUNT_LINK_FAILED_ALREADY_IN_USE"
         case .unknown:
             return "FIREBASE_ACCOUNT_UNKNOWN"
         }
@@ -72,6 +78,10 @@ enum FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR_SUGGESTION"
         case .appleFailed:
             return "FIREBASE_APPLE_FAILED_SUGGESTION"
+        case .linkFailedDuplicate:
+            return "FIREBASE_ACCOUNT_LINK_FAILED_DUPLICATE_SUGGESTION"
+        case .linkFailedAlreadyInUse:
+            return "FIREBASE_ACCOUNT_LINK_FAILED_ALREADY_IN_USE_SUGGESTION"
         case .unknown:
             return "FIREBASE_ACCOUNT_UNKNOWN_SUGGESTION"
         }
@@ -100,6 +110,10 @@ enum FirebaseAccountError: LocalizedError {
             self = .setupError
         case .requiresRecentLogin:
             self = .requireRecentLogin
+        case .providerAlreadyLinked:
+            self = .linkFailedDuplicate
+        case .credentialAlreadyInUse:
+            self = .linkFailedAlreadyInUse
         default:
             self = .unknown(authErrorCode.code)
         }
