@@ -260,6 +260,12 @@ actor FirebaseContext {
         switch update.change {
         case let .user(user):
             let isNewUser = update.authResult?.additionalUserInfo?.isNewUser ?? false
+            if user.isAnonymous {
+                // We explicitly handle anonymous users on every signup and call our state change handler ourselves.
+                // But generally, we don't care about anonymous users.
+                return
+            }
+
             guard let service = update.service else {
                 Self.logger.error("Failed to dispatch user update due to missing account service identifier on disk!")
                 do {

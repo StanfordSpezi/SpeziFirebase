@@ -82,6 +82,16 @@ actor FirebaseIdentityProviderAccountService: IdentityProvider, FirebaseAccountS
         }
 
         try await context.dispatchFirebaseAuthAction(on: self) {
+            if let currentUser = Auth.auth().currentUser,
+               currentUser.isAnonymous {
+                Self.logger.debug("Linking oauth credentials with current anonymous user account ...")
+                let result = try await currentUser.link(with: credential)
+
+                try await context.notifyUserSignIn(user: currentUser, for: self, isNewUser: true)
+
+                return result
+            }
+
             let authResult = try await Auth.auth().signIn(with: credential)
             Self.logger.debug("signIn(with:) credential for user.")
 

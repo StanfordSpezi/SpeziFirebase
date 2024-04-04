@@ -20,11 +20,12 @@ struct ReauthenticationAlertModifier: ViewModifier {
     @ValidationState private var validation
 
     @State private var password: String = ""
+    @State private var isActive = false
 
 
     private var isPresented: Binding<Bool> {
         Binding {
-            firebaseModel.isPresentingReauthentication
+            firebaseModel.isPresentingReauthentication && isActive
         } set: { newValue in
             firebaseModel.isPresentingReauthentication = newValue
         }
@@ -37,6 +38,12 @@ struct ReauthenticationAlertModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .onAppear {
+                isActive = true
+            }
+            .onDisappear {
+                isActive = false
+            }
             .alert(Text("Authentication Required", bundle: .module), isPresented: isPresented, presenting: context) { context in
                 SecureField(text: $password) {
                     Text(PasswordFieldType.password.localizedStringResource)
@@ -46,6 +53,9 @@ struct ReauthenticationAlertModifier: ViewModifier {
                     .textInputAutocapitalization(.never)
                     .validate(input: password, rules: .nonEmpty)
                     .receiveValidation(in: $validation)
+                    .onDisappear {
+                        password = "" // make sure we don't hold onto passwords
+                    }
 
                 Button(role: .cancel, action: {
                     context.continuation.resume(returning: .cancelled)
