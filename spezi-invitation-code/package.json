@@ -1,0 +1,11 @@
+{
+  "name": "spezi-invitation-code",
+  "version": "1.0.0",
+  "description": "Invitation code verifier for Spezi Firebase",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
+}
