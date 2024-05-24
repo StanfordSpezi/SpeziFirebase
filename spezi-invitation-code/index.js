@@ -34,7 +34,7 @@ class InvitationCodeVerifier {
       transaction.set(userStudyRef, {
         invitationCode: invitationCode,
         dateOfEnrollment: FieldValue.serverTimestamp(),
-      });
+      }, { merge: true });
 
       transaction.update(invitationCodeRef, {
         used: true,
