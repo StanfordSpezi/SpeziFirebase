@@ -1,7 +1,7 @@
 //
-// This source file is part of the StudyApplication based on the Stanford Spezi Template Application project
+// This source file is part of the Stanford Spezi open-source project
 //
-// SPDX-FileCopyrightText: 2023 Stanford University
+// SPDX-FileCopyrightText: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 //
 // SPDX-License-Identifier: MIT
 //
@@ -18,6 +18,20 @@ class InvitationCodeVerifier {
   }
 
   async enrollUserInStudy(userId, invitationCode) {
+    if (!userId || typeof userId !== 'string') {
+      throw new https.HttpsError(
+        "invalid-argument",
+        "The function must be called with a valid 'userId'.",
+      );
+    }
+
+    if (!invitationCode || typeof invitationCode !== 'string') {
+      throw new https.HttpsError(
+        "invalid-argument",
+        "The function must be called with a valid 'invitationCode'.",
+      );
+    }
+
     const invitationCodeRef = this.firestore.doc(`${this.invitationCodePath}/${invitationCode}`);
     const invitationCodeDoc = await invitationCodeRef.get();
 
