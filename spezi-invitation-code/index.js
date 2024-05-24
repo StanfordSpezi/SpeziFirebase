@@ -16,35 +16,31 @@ class InvitationCodeVerifier {
   }
 
   async verifyInvitationCode(invitationCode, userId) {
-    try {
-      const invitationCodeRef = this.firestore.doc(`invitationCodes/${invitationCode}`);
-      const invitationCodeDoc = await invitationCodeRef.get();
+    const invitationCodeRef = this.firestore.doc(`invitationCodes/${invitationCode}`);
+    const invitationCodeDoc = await invitationCodeRef.get();
 
-      if (!invitationCodeDoc.exists || invitationCodeDoc.data().used) {
-        throw new https.HttpsError("not-found", "Invitation code not found or already used.");
-      }
-
-      const userStudyRef = this.firestore.doc(`users/${userId}`);
-      const userStudyDoc = await userStudyRef.get();
-
-      if (userStudyDoc.exists) {
-        throw new https.HttpsError("already-exists", "User is already enrolled in the study.");
-      }
-
-      await this.firestore.runTransaction(async (transaction) => {
-        transaction.set(userStudyRef, {
-          invitationCode: invitationCode,
-          dateOfEnrollment: FieldValue.serverTimestamp(),
-        });
-
-        transaction.update(invitationCodeRef, {
-          used: true,
-          usedBy: userId,
-        });
-      });
-    } catch (error) {
-      throw error;
+    if (!invitationCodeDoc.exists || invitationCodeDoc.data().used) {
+      throw new https.HttpsError("not-found", "Invitation code not found or already used.");
     }
+
+    const userStudyRef = this.firestore.doc(`users/${userId}`);
+    const userStudyDoc = await userStudyRef.get();
+
+    if (userStudyDoc.exists) {
+      throw new https.HttpsError("already-exists", "User is already enrolled in the study.");
+    }
+
+    await this.firestore.runTransaction(async (transaction) => {
+      transaction.set(userStudyRef, {
+        invitationCode: invitationCode,
+        dateOfEnrollment: FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(invitationCodeRef, {
+        used: true,
+        usedBy: userId,
+      });
+    });
   }
 
   async validateUserInvitationCode(userId) {
