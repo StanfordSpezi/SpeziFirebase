@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+const admin = require("firebase-admin");
 const {https} = require("firebase-functions/v2");
 const {FieldValue} = require("firebase-admin/firestore");
 
@@ -15,13 +16,12 @@ const {FieldValue} = require("firebase-admin/firestore");
 class InvitationCodeVerifier {
   /**
    * Create an Invitation Code Verifier.
-   * @param {Object} firestore - The Firestore instance to use.
    * @param {string} [invitationCodePath="invitationCodes"] - The path in Firestore where invitation codes are stored.
    * @param {string} [userPath="users"] - The path in Firestore where user data is stored.
    * @param {RegExp} [invitationCodeRegex=null] - The regex to validate invitation codes. If null, no validation is performed.
    */
-  constructor(firestore, invitationCodePath = "invitationCodes", userPath = "users", invitationCodeRegex = null) {
-    this.firestore = firestore;
+  constructor(invitationCodePath = "invitationCodes", userPath = "users", invitationCodeRegex = null) {
+    this.firestore = admin.firestore();
     this.invitationCodePath = invitationCodePath;
     this.userPath = userPath;
     this.invitationCodeRegex = invitationCodeRegex;
@@ -38,13 +38,6 @@ class InvitationCodeVerifier {
       throw new https.HttpsError(
           "invalid-argument",
           "The function must be called with a valid 'userId' input.",
-      );
-    }
-
-    if (!invitationCode) {
-      throw new https.HttpsError(
-          "invalid-argument",
-          "The function must be called with a valid 'invitationCode' input.",
       );
     }
 
