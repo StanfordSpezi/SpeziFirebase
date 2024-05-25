@@ -11,24 +11,32 @@ const {https} = require("firebase-functions/v2");
 const {FieldValue} = require("firebase-admin/firestore");
 
 class InvitationCodeVerifier {
-  constructor(firestore, invitationCodePath = "invitationCodes", userPath = "users") {
+  constructor(firestore, invitationCodePath = "invitationCodes", userPath = "users", invitationCodeRegex = null) {
     this.firestore = firestore;
     this.invitationCodePath = invitationCodePath;
     this.userPath = userPath;
+    this.invitationCodeRegex = invitationCodeRegex;
   }
 
   async enrollUserInStudy(userId, invitationCode) {
-    if (!userId || typeof userId !== 'string') {
+    if (!userId || typeof userId !== "string") {
       throw new https.HttpsError(
         "invalid-argument",
-        "The function must be called with a valid 'userId'.",
+        "The function must be called with a valid 'userId' input.",
       );
     }
 
-    if (!invitationCode || typeof invitationCode !== 'string') {
+    if (!invitationCode || typeof invitationCode !== "string") {
       throw new https.HttpsError(
         "invalid-argument",
-        "The function must be called with a valid 'invitationCode'.",
+        "The function must be called with a valid 'invitationCode' input.",
+      );
+    }
+
+    if (this.invitationCodeRegex && !this.invitationCodeRegex.test(invitationCode)) {
+      throw new https.HttpsError(
+        "invalid-argument",
+        "The function must be called with a 'invitationCode' that matches the configured regex.",
       );
     }
 
