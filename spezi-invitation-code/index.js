@@ -10,7 +10,17 @@ const admin = require("firebase-admin");
 const {https} = require("firebase-functions/v2");
 const {FieldValue} = require("firebase-admin/firestore");
 
+/**
+ * Invitation code verifier for Spezi Firebase.
+ */
 class InvitationCodeVerifier {
+  /**
+   * Create an Invitation Code Verifier.
+   * @param {Object} firestore - The Firestore instance to use.
+   * @param {string} [invitationCodePath="invitationCodes"] - The path in Firestore where invitation codes are stored.
+   * @param {string} [userPath="users"] - The path in Firestore where user data is stored.
+   * @param {RegExp} [invitationCodeRegex=null] - The regex to validate invitation codes. If null, no validation is performed.
+   */
   constructor(firestore, invitationCodePath = "invitationCodes", userPath = "users", invitationCodeRegex = null) {
     this.firestore = firestore;
     this.invitationCodePath = invitationCodePath;
@@ -18,25 +28,31 @@ class InvitationCodeVerifier {
     this.invitationCodeRegex = invitationCodeRegex;
   }
 
+  /**
+   * Enroll a user in a study using an invitation code.
+   * @param {string} userId - The ID of the user to enroll.
+   * @param {string} invitationCode - The invitation code to use for enrollment.
+   * @throws Will throw an error if the userId or invitationCode is invalid, not found or already used, or if the user is already enrolled.
+   */
   async enrollUserInStudy(userId, invitationCode) {
     if (!userId || typeof userId !== "string") {
       throw new https.HttpsError(
-        "invalid-argument",
-        "The function must be called with a valid 'userId' input.",
+          "invalid-argument",
+          "The function must be called with a valid 'userId' input.",
       );
     }
 
     if (!invitationCode || typeof invitationCode !== "string") {
       throw new https.HttpsError(
-        "invalid-argument",
-        "The function must be called with a valid 'invitationCode' input.",
+          "invalid-argument",
+          "The function must be called with a valid 'invitationCode' input.",
       );
     }
 
     if (this.invitationCodeRegex && !this.invitationCodeRegex.test(invitationCode)) {
       throw new https.HttpsError(
-        "invalid-argument",
-        "The function must be called with a 'invitationCode' that matches the configured regex.",
+          "invalid-argument",
+          "The function must be called with a 'invitationCode' that matches the configured regex.",
       );
     }
 
@@ -58,7 +74,7 @@ class InvitationCodeVerifier {
       transaction.set(userStudyRef, {
         invitationCode: invitationCode,
         dateOfEnrollment: FieldValue.serverTimestamp(),
-      }, { merge: true });
+      }, {merge: true});
 
       transaction.update(invitationCodeRef, {
         used: true,
@@ -67,11 +83,16 @@ class InvitationCodeVerifier {
     });
   }
 
+  /**
+   * Validate a user's invitation code.
+   * @param {string} userId - The ID of the user whose invitation code is to be validated.
+   * @throws Will throw an error if no valid invitation code is found for the user, or if user document does not exist or contains an incorrect code.
+   */
   async validateUserInvitationCode(userId) {
     const invitationQuerySnapshot = await this.firestore.collection("invitationCodes")
-      .where("usedBy", "==", userId)
-      .limit(1)
-      .get();
+        .where("usedBy", "==", userId)
+        .limit(1)
+        .get();
 
     if (invitationQuerySnapshot.empty) {
       throw new https.HttpsError("not-found", `No valid invitation code found for user ${userId}.`);

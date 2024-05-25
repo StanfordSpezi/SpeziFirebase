@@ -14,7 +14,7 @@ module.exports = {
   },
   extends: [
     "eslint:recommended",
-    // "google",
+    "google",
   ],
   rules: {
     "quotes": ["error", "double"],
