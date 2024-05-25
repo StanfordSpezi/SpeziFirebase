@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-const admin = require("firebase-admin");
 const {https} = require("firebase-functions/v2");
 const {FieldValue} = require("firebase-admin/firestore");
 
@@ -35,14 +34,14 @@ class InvitationCodeVerifier {
    * @throws Will throw an error if the userId or invitationCode is invalid, not found or already used, or if the user is already enrolled.
    */
   async enrollUserInStudy(userId, invitationCode) {
-    if (!userId || typeof userId !== "string") {
+    if (!userId) {
       throw new https.HttpsError(
           "invalid-argument",
           "The function must be called with a valid 'userId' input.",
       );
     }
 
-    if (!invitationCode || typeof invitationCode !== "string") {
+    if (!invitationCode) {
       throw new https.HttpsError(
           "invalid-argument",
           "The function must be called with a valid 'invitationCode' input.",
