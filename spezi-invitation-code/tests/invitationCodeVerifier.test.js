@@ -42,28 +42,14 @@ describe("InvitationCodeVerifier", () => {
   });
 
   describe("enrollUserInStudy", () => {
-    // test("should throw an error if userId is invalid", async () => {
-    //   await expect(verifier.enrollUserInStudy("", "validCode")).rejects.toThrow(
-    //       new https.HttpsError(
-    //           "invalid-argument",
-    //           "The function must be called with a valid 'userId' input.",
-    //       ),
-    //   );
-    // });
-
-    // test("should throw an error if invitationCode does not match regex", async () => {
-    //   verifier = new InvitationCodeVerifier(
-    //       "invitationCodes",
-    //       "users",
-    //       /^[A-Z0-9]+$/,
-    //   );
-    //   await expect(verifier.enrollUserInStudy("user123", "invalid_code")).rejects.toThrow(
-    //       new https.HttpsError(
-    //           "invalid-argument",
-    //           "The function must be called with a 'invitationCode' that matches the configured regex.",
-    //       ),
-    //   );
-    // });
+    test("should throw an error if userId is invalid", async () => {
+      await expect(verifier.enrollUserInStudy("", "validCode")).rejects.toThrow(
+          new https.HttpsError(
+              "invalid-argument",
+              "The function must be called with a valid 'userId' input.",
+          ),
+      );
+    });
 
     test("should enroll user successfully", async () => {
       firestore.doc.mockReturnValueOnce({
@@ -102,31 +88,18 @@ describe("InvitationCodeVerifier", () => {
     await expect(verifier.validateUserInvitationCode("HNzc8VN8maeT1uUnABgWozWMPT6x")).resolves.toBeUndefined();
   });
 
-  // test("should throw an error if invitationCode does not exist or already used", async () => {
-  //   firestore.doc.mockReturnValueOnce({
-  //     get: jest.fn().mockResolvedValue({exists: false}),
-  //   });
+  test("should throw an error if invitationCode does not exist or already used", async () => {
+    firestore.doc.mockReturnValueOnce({
+      get: jest.fn().mockResolvedValue({exists: false}),
+    });
 
-  //   await expect(verifier.enrollUserInStudy("user123", "validCode")).rejects.toThrow(
-  //       new https.HttpsError(
-  //           "not-found",
-  //           "Invitation code not found or already used.",
-  //       ),
-  //   );
-  // });
-
-  // test("should throw an error if user is already enrolled", async () => {
-  //   firestore.doc.mockReturnValueOnce({
-  //     get: jest.fn().mockResolvedValue({exists: true, data: () => ({})}),
-  //   });
-
-  //   await expect(verifier.enrollUserInStudy("HNzc8VN8maeT1uUnABgWozWMPT6x", "3Op7vweq")).rejects.toThrow(
-  //       new https.HttpsError(
-  //           "already-exists",
-  //           "User is already enrolled in the study.",
-  //       ),
-  //   );
-  // });
+    await expect(verifier.enrollUserInStudy("HNzc8VN8maeT1uUnABgWozWMPT6x", "3Op7vweq")).rejects.toThrow(
+        new https.HttpsError(
+            "not-found",
+            "Invitation code not found or already used.",
+        ),
+    );
+  });
 
   describe("validateUserInvitationCode", () => {
     test("should throw an error if no valid invitation code found for the user", async () => {
@@ -158,5 +131,19 @@ describe("InvitationCodeVerifier", () => {
           new https.HttpsError("failed-precondition", "User document does not exist or contains incorrect invitation code."),
       );
     });
+  });
+
+  test("should throw an error if invitationCode does not match regex", async () => {
+    verifier = new InvitationCodeVerifier(
+        "invitationCodes",
+        "users",
+        /^[A-Z0-9]+$/,
+    );
+    await expect(verifier.enrollUserInStudy("user123", "invalid_code")).rejects.toThrow(
+        new https.HttpsError(
+            "invalid-argument",
+            "The function must be called with a 'invitationCode' that matches the configured regex.",
+        ),
+    );
   });
 });
