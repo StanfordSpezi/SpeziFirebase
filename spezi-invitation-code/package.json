@@ -8,10 +8,6 @@
   ],
   "main": "index.js",
   "scripts": {
-    "dev": "next dev",
-    "prebuild": "npm run build",
-    "build": "next build",
-    "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix & prettier --write .",
     "lint:ci": "eslint --output-file eslint_report.json --format json .",
