@@ -7,11 +7,9 @@
 //
 
 const admin = require("firebase-admin");
-const firebaseTest = require("firebase-functions-test")(); // Renamed from 'test' to 'firebaseTest'
+const firebaseTest = require("firebase-functions-test")();
 const InvitationCodeVerifier = require("../index.js");
 const {https} = require("firebase-functions/v2");
-
-// Rest of your code...
 
 jest.mock("firebase-admin", () => {
   const firestore = {
@@ -131,34 +129,34 @@ describe("InvitationCodeVerifier", () => {
   // });
 
   describe("validateUserInvitationCode", () => {
-    // test("should throw an error if no valid invitation code found for the user", async () => {
-    //   firestore.collection.mockReturnValue({
-    //     where: jest.fn().mockReturnThis(),
-    //     limit: jest.fn().mockReturnThis(),
-    //     get: jest.fn().mockResolvedValue({empty: true}),
-    //   });
+    test("should throw an error if no valid invitation code found for the user", async () => {
+      firestore.collection.mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        get: jest.fn().mockResolvedValue({empty: true}),
+      });
 
-    //   await expect(verifier.validateUserInvitationCode("user123")).rejects.toThrow(
-    //       new https.HttpsError("not-found", "No valid invitation code found for user user123."),
-    //   );
-    // });
+      await expect(verifier.validateUserInvitationCode("user123")).rejects.toThrow(
+          new https.HttpsError("not-found", "No valid invitation code found for user user123."),
+      );
+    });
 
-    // test("should throw an error if user document does not exist or contains incorrect invitation code", async () => {
-    //   firestore.collection.mockReturnValue({
-    //     where: jest.fn().mockReturnThis(),
-    //     limit: jest.fn().mockReturnThis(),
-    //     get: jest.fn().mockResolvedValue({
-    //       empty: false,
-    //       docs: [{id: "validCode"}],
-    //     }),
-    //   });
-    //   firestore.doc.mockReturnValueOnce({
-    //     get: jest.fn().mockResolvedValue({exists: false}),
-    //   });
+    test("should throw an error if user document does not exist or contains incorrect invitation code", async () => {
+      firestore.collection.mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        get: jest.fn().mockResolvedValue({
+          empty: false,
+          docs: [{id: "validCode"}],
+        }),
+      });
+      firestore.doc.mockReturnValueOnce({
+        get: jest.fn().mockResolvedValue({exists: false}),
+      });
 
-    //   await expect(verifier.validateUserInvitationCode("user123")).rejects.toThrow(
-    //       new https.HttpsError("failed-precondition", "User document does not exist or contains incorrect invitation code."),
-    //   );
-    // });
+      await expect(verifier.validateUserInvitationCode("user123")).rejects.toThrow(
+          new https.HttpsError("failed-precondition", "User document does not exist or contains incorrect invitation code."),
+      );
+    });
   });
 });
