@@ -8,13 +8,16 @@
   ],
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"next dev\" \"npm --prefix packages/example-package run watch\"",
-    "prebuild": "npm --prefix packages/example-package run build",
+    "dev": "next dev",
+    "prebuild": "npm run build",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix & prettier --write .",
     "lint:ci": "eslint --output-file eslint_report.json --format json .",
-    "pretest": "npm --prefix packages/example-package run build",
-    "test": "jest",
+    "test": "firebase emulators:exec --import=./firebase jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "docs": "typedoc",
     "docs:ci": "typedoc --out ./out/docs --githubPages true"
   },
@@ -22,7 +25,8 @@
   "license": "MIT",
   "dependencies": {
     "firebase-admin": "^12.1.1",
-    "firebase-functions": "^5.0.1"
+    "firebase-functions": "^5.0.1",
+    "firebase-functions-test": "^3.2.0"
   },
   "devDependencies": {
     "eslint": "^8",
