@@ -11,11 +11,13 @@ module.exports = {
   env: {
     es2020: true,
     node: true,
+    jest: true,
   },
   extends: [
     "eslint:recommended",
     "google",
   ],
+  plugins: ["jest"],
   rules: {
     "quotes": ["error", "double"],
     "max-len": ["error", {"code": 150}],

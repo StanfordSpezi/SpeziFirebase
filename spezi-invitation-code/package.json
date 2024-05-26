@@ -8,7 +8,15 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently \"next dev\" \"npm --prefix packages/example-package run watch\"",
+    "prebuild": "npm --prefix packages/example-package run build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix & prettier --write .",
+    "lint:ci": "eslint --output-file eslint_report.json --format json .",
+    "pretest": "npm --prefix packages/example-package run build",
+    "test": "jest",
+    "docs": "typedoc",
+    "docs:ci": "typedoc --out ./out/docs --githubPages true"
   },
   "author": "",
   "license": "MIT",
