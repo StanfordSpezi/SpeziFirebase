@@ -2,9 +2,6 @@
   "firestore": {
     "rules": "firestore.rules"
   },
-  "storage": {
-    "rules": "firebasestorage.rules"
-  },
   "functions": [
     {
       "codebase": "spezi-invitation-code",
