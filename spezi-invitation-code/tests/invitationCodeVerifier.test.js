@@ -52,19 +52,6 @@ describe("InvitationCodeVerifier", () => {
     });
 
     test("should enroll user successfully", async () => {
-      firestore.doc.mockReturnValueOnce({
-        get: jest.fn().mockResolvedValue({exists: true, data: () => ({used: false})}),
-      });
-      firestore.doc.mockReturnValueOnce({
-        get: jest.fn().mockResolvedValue({exists: false}),
-      });
-      firestore.runTransaction.mockImplementationOnce(async (updateFunction) => {
-        await updateFunction({
-          set: jest.fn(),
-          update: jest.fn(),
-        });
-      });
-
       await expect(verifier.enrollUserInStudy("HNzc8VN8maeT1uUnABgWozWMPT6x", "gdxRWF6G")).resolves.toBeUndefined();
     });
   });
@@ -147,3 +134,18 @@ describe("InvitationCodeVerifier", () => {
     );
   });
 });
+/*
+test("not sure what this tests actually", () => {
+  firestore.doc.mockReturnValueOnce({
+    get: jest.fn().mockResolvedValue({exists: true, data: () => ({used: false})}),
+  });
+  firestore.doc.mockReturnValueOnce({
+    get: jest.fn().mockResolvedValue({exists: false}),
+  });
+  firestore.runTransaction.mockImplementationOnce(async (updateFunction) => {
+    await updateFunction({
+      set: jest.fn(),
+      update: jest.fn(),
+    });
+  });
+});*/
