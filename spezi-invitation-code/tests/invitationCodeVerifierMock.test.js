@@ -87,4 +87,19 @@ describe("InvitationCodeVerifier", () => {
       });
     });
   });
+
+  test("should not overwrite existing info?", () => {
+    firestore.doc.mockReturnValueOnce({
+      get: jest.fn().mockResolvedValue({exists: true, data: () => ({used: false})}),
+    });
+    firestore.doc.mockReturnValueOnce({
+      get: jest.fn().mockResolvedValue({exists: false}),
+    });
+    firestore.runTransaction.mockImplementationOnce(async (updateFunction) => {
+      await updateFunction({
+        set: jest.fn(),
+        update: jest.fn(),
+      });
+    });
+  });
 });

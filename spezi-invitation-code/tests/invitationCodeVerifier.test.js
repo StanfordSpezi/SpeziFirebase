@@ -13,12 +13,10 @@ const {https} = require("firebase-functions/v2");
 
 describe("InvitationCodeVerifier", () => {
   let verifier;
-  let firestore;
 
   beforeAll(() => {
     admin.initializeApp();
     verifier = new InvitationCodeVerifier();
-    firestore = admin.firestore();
   });
 
   afterAll(() => {
@@ -80,20 +78,5 @@ describe("InvitationCodeVerifier", () => {
             "The function must be called with a 'invitationCode' that matches the configured regex.",
         ),
     );
-  });
-
-  test("should not overwrite existing info?", () => {
-    firestore.doc.mockReturnValueOnce({
-      get: jest.fn().mockResolvedValue({exists: true, data: () => ({used: false})}),
-    });
-    firestore.doc.mockReturnValueOnce({
-      get: jest.fn().mockResolvedValue({exists: false}),
-    });
-    firestore.runTransaction.mockImplementationOnce(async (updateFunction) => {
-      await updateFunction({
-        set: jest.fn(),
-        update: jest.fn(),
-      });
-    });
   });
 });
