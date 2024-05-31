@@ -91,7 +91,7 @@ public actor FirestoreAccountStorage: Module, AccountStorageConstraint {
             switch result {
             case let .success(data):
                 try await userDocument(for: identifier.accountId)
-                    .setData(data)
+                    .setData(data, merge: true)
             case let .failure(error):
                 throw error
             }
