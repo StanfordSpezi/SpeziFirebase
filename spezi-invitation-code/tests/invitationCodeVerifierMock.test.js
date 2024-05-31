@@ -38,7 +38,7 @@ describe("InvitationCodeVerifier", () => {
     firebaseTest.cleanup();
   });
 
-  test("should validate user invitation code successfully", async () => {
+  test("should validate user invitation code successfully", () => {
     firestore.collection.mockReturnValue({
       where: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
@@ -55,14 +55,14 @@ describe("InvitationCodeVerifier", () => {
     });
   });
 
-  test("should throw an error if invitationCode does not exist or already used", async () => {
+  test("should throw an error if invitationCode does not exist or already used", () => {
     firestore.doc.mockReturnValueOnce({
       get: jest.fn().mockResolvedValue({exists: false}),
     });
   });
 
   describe("validateUserInvitationCode", () => {
-    test("should throw an error if no valid invitation code found for the user", async () => {
+    test("should throw an error if no valid invitation code found for the user", () => {
       firestore.collection.mockReturnValue({
         where: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
@@ -70,7 +70,7 @@ describe("InvitationCodeVerifier", () => {
       });
     });
 
-    test("should throw an error if user document does not exist or contains incorrect invitation code", async () => {
+    test("should throw an error if user document does not exist or contains incorrect invitation code", () => {
       firestore.collection.mockReturnValue({
         where: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
