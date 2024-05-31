@@ -101,8 +101,6 @@ describe("InvitationCodeVerifier", () => {
     );
     await expect(verifier.validateUserInvitationCode("mDoquC3j6q52FyVNPi11sfSACNMC")).resolves.toBeUndefined();
     const userStudyDocAfter = await userStudyRef.get();
-    console.log(userStudyDocBefore.data());
-    console.log(userStudyDocAfter.data());
     expect(_.isMatch(userStudyDocAfter.data(), userStudyDocBefore.data())).toBe(true);
   });
 
