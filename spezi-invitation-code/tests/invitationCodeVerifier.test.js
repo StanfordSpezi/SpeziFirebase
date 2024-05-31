@@ -37,20 +37,31 @@ describe("InvitationCodeVerifier", () => {
     test("should enroll user successfully", async () => {
       await expect(verifier.enrollUserInStudy("HNzc8VN8maeT1uUnABgWozWMPT6x", "gdxRWF6G")).resolves.toBeUndefined();
     });
+
+    test("should throw error if user tries to re-enroll with exact same information", async () => {
+      await expect(verifier.enrollUserInStudy("HNzc8VN8maeT1uUnABgWozWMPT6x", "gdxRWF6G")).rejects.toThrow(
+          new https.HttpsError(
+              "not-found",
+              "Invitation code not found or already used.",
+          ),
+      );
+    });
   });
 
   test("should validate user invitation code successfully", async () => {
     await expect(verifier.validateUserInvitationCode("HNzc8VN8maeT1uUnABgWozWMPT6x")).resolves.toBeUndefined();
   });
 
-  test("should throw an error if invitationCode does not exist or already used", async () => {
+  test("should throw an error if user is already enrolled", async () => {
     await expect(verifier.enrollUserInStudy("HNzc8VN8maeT1uUnABgWozWMPT6x", "3Op7vweq")).rejects.toThrow(
         new https.HttpsError(
             "not-found",
-            "Invitation code not found or already used.",
+            "User is already enrolled in the study.",
         ),
     );
   });
+
+  // test already used
 
   describe("validateUserInvitationCode", () => {
     test("should throw an error if no valid invitation code found for the user", async () => {
@@ -60,7 +71,8 @@ describe("InvitationCodeVerifier", () => {
     });
 
     test("should throw an error if user document does not exist or contains incorrect invitation code", async () => {
-      await expect(verifier.validateUserInvitationCode("user123")).rejects.toThrow(
+      // Valid invitation code, but user document was never created.
+      await expect(verifier.validateUserInvitationCode("uy01WpWa2dP2nJnrpYXjhECT6Sn0")).rejects.toThrow(
           new https.HttpsError("failed-precondition", "User document does not exist or contains incorrect invitation code."),
       );
     });
