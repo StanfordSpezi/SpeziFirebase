@@ -10,13 +10,16 @@ const admin = require("firebase-admin");
 const firebaseTest = require("firebase-functions-test")();
 const InvitationCodeVerifier = require("../index.js");
 const {https} = require("firebase-functions/v2");
+const _ = require("lodash");
 
 describe("InvitationCodeVerifier", () => {
   let verifier;
+  let firestore;
 
   beforeAll(() => {
     admin.initializeApp();
     verifier = new InvitationCodeVerifier();
+    firestore = admin.firestore();
   });
 
   afterAll(() => {
@@ -61,8 +64,6 @@ describe("InvitationCodeVerifier", () => {
     );
   });
 
-  // test already used
-
   describe("validateUserInvitationCode", () => {
     test("should throw an error if no valid invitation code found for the user", async () => {
       await expect(verifier.validateUserInvitationCode("user123")).rejects.toThrow(
@@ -76,6 +77,33 @@ describe("InvitationCodeVerifier", () => {
           new https.HttpsError("failed-precondition", "User document does not exist or contains incorrect invitation code."),
       );
     });
+  });
+
+  test("should throw error if invitation code already used", async () => {
+    // User exists, but this particular invitation code has already been redeemed by someone else.
+    await expect(verifier.enrollUserInStudy("mDoquC3j6q52FyVNPi11sfSACNMC", "gdxRWF6G")).rejects.toThrow(
+        new https.HttpsError(
+            "not-found",
+            "Invitation code not found or already used.",
+        ),
+    );
+  });
+
+  test("should still accept a valid invitation code from same user (above), without overwriting anything", async () => {
+    await expect(verifier.enrollUserInStudy("mDoquC3j6q52FyVNPi11sfSACNMC", "Xkdyv3DF")).resolves.toBeUndefined();
+    const userStudyRef = firestore.doc("users/mDoquC3j6q52FyVNPi11sfSACNMC");
+    const userStudyDocBefore = await userStudyRef.get();
+    await expect(verifier.enrollUserInStudy("mDoquC3j6q52FyVNPi11sfSACNMC", "Xkdyv3DF")).rejects.toThrow(
+        new https.HttpsError(
+            "not-found",
+            "Invitation code not found or already used.",
+        ),
+    );
+    await expect(verifier.validateUserInvitationCode("mDoquC3j6q52FyVNPi11sfSACNMC")).resolves.toBeUndefined();
+    const userStudyDocAfter = await userStudyRef.get();
+    console.log(userStudyDocBefore.data());
+    console.log(userStudyDocAfter.data());
+    expect(_.isMatch(userStudyDocAfter.data(), userStudyDocBefore.data())).toBe(true);
   });
 
   test("should throw an error if invitationCode does not match regex", async () => {

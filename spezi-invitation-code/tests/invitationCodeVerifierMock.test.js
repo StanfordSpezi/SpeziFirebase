@@ -8,8 +8,6 @@
 
 const admin = require("firebase-admin");
 const firebaseTest = require("firebase-functions-test")();
-const InvitationCodeVerifier = require("../index.js");
-const {https} = require("firebase-functions/v2");
 
 jest.mock("firebase-admin", () => {
   const firestore = {
@@ -27,13 +25,12 @@ jest.mock("firebase-admin", () => {
 });
 
 describe("InvitationCodeVerifier", () => {
-  let verifier;
   let firestore;
 
   beforeAll(() => {
     admin.initializeApp();
-    verifier = new InvitationCodeVerifier();
     firestore = admin.firestore();
+    firebaseTest.mockConfig({invitationCodePath: "invitationCodes", userPath: "users"});
   });
 
   afterAll(() => {
@@ -88,7 +85,7 @@ describe("InvitationCodeVerifier", () => {
     });
   });
 
-  test("should not overwrite existing info?", () => {
+  test("should not overwrite existing user information", () => {
     firestore.doc.mockReturnValueOnce({
       get: jest.fn().mockResolvedValue({exists: true, data: () => ({used: false})}),
     });
