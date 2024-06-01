@@ -22,8 +22,9 @@ describe("InvitationCodeVerifier", () => {
     firestore = admin.firestore();
   });
 
-  afterAll(() => {
-    admin.app().delete();
+  afterAll(async () => {
+    await admin.firestore().terminate();
+    await admin.app().delete();
     firebaseTest.cleanup();
   });
 
@@ -32,7 +33,7 @@ describe("InvitationCodeVerifier", () => {
       await expect(verifier.enrollUserInStudy("", "validCode")).rejects.toThrow(
           new https.HttpsError(
               "invalid-argument",
-              "The function must be called with a valid 'userId' input.",
+              "The function must be called with a valid authenticated request.",
           ),
       );
     });

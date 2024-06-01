@@ -36,8 +36,8 @@ class InvitationCodeVerifier {
   async enrollUserInStudy(userId, invitationCode) {
     if (!userId) {
       throw new https.HttpsError(
-          "invalid-argument",
-          "The function must be called with a valid 'userId' input.",
+          "unauthenticated",
+          "The function must be called with a valid authenticated request.",
       );
     }
 
