@@ -52,21 +52,19 @@ describe("InvitationCodeVerifier", () => {
           ),
       );
     });
-  });
 
-  test("should validate user invitation code successfully", async () => {
-    const request = {auth: {uid: "HNzc8VN8maeT1uUnABgWozWMPT6x"}};
-    await expect(verifier.validateUserInvitationCode(request)).resolves.toBeUndefined();
-  });
+    test("should validate user invitation code successfully", async () => {
+      await expect(verifier.validateUserInvitationCode(request.auth.uid)).resolves.toBeUndefined();
+    });
 
-  test("should throw an error if user is already enrolled", async () => {
-    const request = {auth: {uid: "HNzc8VN8maeT1uUnABgWozWMPT6x"}};
-    await expect(verifier.enrollUserInStudy(request, "3Op7vweq")).rejects.toThrow(
-        new https.HttpsError(
-            "not-found",
-            "User is already enrolled in the study.",
-        ),
-    );
+    test("should throw an error if user is already enrolled", async () => {
+      await expect(verifier.enrollUserInStudy(request, "3Op7vweq")).rejects.toThrow(
+          new https.HttpsError(
+              "not-found",
+              "User is already enrolled in the study.",
+          ),
+      );
+    });
   });
 
   describe("validateUserInvitationCode", () => {
