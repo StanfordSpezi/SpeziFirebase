@@ -29,12 +29,12 @@ class InvitationCodeVerifier {
 
   /**
    * Enroll a user in a study using an invitation code.
-   * @param {string} userId - The ID of the user to enroll.
+   * @param {https.CallableRequest} request - The request object containing the user ID.
    * @param {string} invitationCode - The invitation code to use for enrollment.
    * @throws Will throw an error if the userId or invitationCode is invalid, not found or already used, or if the user is already enrolled.
    */
-  async enrollUserInStudy(userId, invitationCode) {
-    if (!userId) {
+  async enrollUserInStudy(request, invitationCode) {
+    if (!request.auth) {
       throw new https.HttpsError(
           "unauthenticated",
           "The function must be called with a valid authenticated request.",
@@ -55,6 +55,7 @@ class InvitationCodeVerifier {
       throw new https.HttpsError("not-found", "Invitation code not found or already used.");
     }
 
+    const userId = request.auth.uid;
     const userStudyRef = this.firestore.doc(`${this.userPath}/${userId}`);
     const userStudyDoc = await userStudyRef.get();
 

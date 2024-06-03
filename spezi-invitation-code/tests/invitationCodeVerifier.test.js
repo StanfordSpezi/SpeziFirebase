@@ -30,7 +30,7 @@ describe("InvitationCodeVerifier", () => {
 
   describe("enrollUserInStudy", () => {
     test("should throw an error if userId is invalid", async () => {
-      await expect(verifier.enrollUserInStudy("", "validCode")).rejects.toThrow(
+      await expect(verifier.enrollUserInStudy({}, "validCode")).rejects.toThrow(
           new https.HttpsError(
               "invalid-argument",
               "The function must be called with a valid authenticated request.",
@@ -38,12 +38,14 @@ describe("InvitationCodeVerifier", () => {
       );
     });
 
+    const request = {auth: {uid: "HNzc8VN8maeT1uUnABgWozWMPT6x"}};
+
     test("should enroll user successfully", async () => {
-      await expect(verifier.enrollUserInStudy("HNzc8VN8maeT1uUnABgWozWMPT6x", "gdxRWF6G")).resolves.toBeUndefined();
+      await expect(verifier.enrollUserInStudy(request, "gdxRWF6G")).resolves.toBeUndefined();
     });
 
     test("should throw error if user tries to re-enroll with exact same information", async () => {
-      await expect(verifier.enrollUserInStudy("HNzc8VN8maeT1uUnABgWozWMPT6x", "gdxRWF6G")).rejects.toThrow(
+      await expect(verifier.enrollUserInStudy(request, "gdxRWF6G")).rejects.toThrow(
           new https.HttpsError(
               "not-found",
               "Invitation code not found or already used.",
@@ -53,11 +55,13 @@ describe("InvitationCodeVerifier", () => {
   });
 
   test("should validate user invitation code successfully", async () => {
-    await expect(verifier.validateUserInvitationCode("HNzc8VN8maeT1uUnABgWozWMPT6x")).resolves.toBeUndefined();
+    const request = {auth: {uid: "HNzc8VN8maeT1uUnABgWozWMPT6x"}};
+    await expect(verifier.validateUserInvitationCode(request)).resolves.toBeUndefined();
   });
 
   test("should throw an error if user is already enrolled", async () => {
-    await expect(verifier.enrollUserInStudy("HNzc8VN8maeT1uUnABgWozWMPT6x", "3Op7vweq")).rejects.toThrow(
+    const request = {auth: {uid: "HNzc8VN8maeT1uUnABgWozWMPT6x"}};
+    await expect(verifier.enrollUserInStudy(request, "3Op7vweq")).rejects.toThrow(
         new https.HttpsError(
             "not-found",
             "User is already enrolled in the study.",
@@ -82,7 +86,8 @@ describe("InvitationCodeVerifier", () => {
 
   test("should throw error if invitation code already used", async () => {
     // User exists, but this particular invitation code has already been redeemed by someone else.
-    await expect(verifier.enrollUserInStudy("mDoquC3j6q52FyVNPi11sfSACNMC", "gdxRWF6G")).rejects.toThrow(
+    const request = {auth: {uid: "mDoquC3j6q52FyVNPi11sfSACNMC"}};
+    await expect(verifier.enrollUserInStudy(request, "gdxRWF6G")).rejects.toThrow(
         new https.HttpsError(
             "not-found",
             "Invitation code not found or already used.",
@@ -91,10 +96,11 @@ describe("InvitationCodeVerifier", () => {
   });
 
   test("should still accept a valid invitation code from same user (above), without overwriting anything", async () => {
-    await expect(verifier.enrollUserInStudy("mDoquC3j6q52FyVNPi11sfSACNMC", "Xkdyv3DF")).resolves.toBeUndefined();
-    const userStudyRef = firestore.doc("users/mDoquC3j6q52FyVNPi11sfSACNMC");
+    const request = {auth: {uid: "mDoquC3j6q52FyVNPi11sfSACNMC"}};
+    await expect(verifier.enrollUserInStudy(request, "Xkdyv3DF")).resolves.toBeUndefined();
+    const userStudyRef = firestore.doc(`users/${request.auth.uid}`);
     const userStudyDocBefore = await userStudyRef.get();
-    await expect(verifier.enrollUserInStudy("mDoquC3j6q52FyVNPi11sfSACNMC", "Xkdyv3DF")).rejects.toThrow(
+    await expect(verifier.enrollUserInStudy(request, "Xkdyv3DF")).rejects.toThrow(
         new https.HttpsError(
             "not-found",
             "Invitation code not found or already used.",
@@ -111,7 +117,8 @@ describe("InvitationCodeVerifier", () => {
         "users",
         /^[A-Z0-9]+$/,
     );
-    await expect(verifier.enrollUserInStudy("user123", "invalid_code")).rejects.toThrow(
+    const request = {auth: {uid: "user123"}};
+    await expect(verifier.enrollUserInStudy(request, "invalid_code")).rejects.toThrow(
         new https.HttpsError(
             "invalid-argument",
             "The function must be called with a 'invitationCode' that matches the configured regex.",
