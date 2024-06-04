@@ -33,6 +33,11 @@ jobs:
       path: Tests/UITests
       customcommand: |
           firebase emulators:exec 'set -o pipefail && xcodebuild test -project UITests.xcodeproj -scheme TestApp -destination "platform=iOS Simulator,name=iPhone 15 Pro" -resultBundlePath UITests.xcresult -derivedDataPath ".derivedData" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcbeautify'
+  testandcoverage:
+    name: Test and Coverage
+    uses: StanfordBDHG/.github/.github/workflows/npm-test-and-coverage.yml@v2
+    secrets:
+      token: ${{ secrets.CODECOV_TOKEN }}
   uploadcoveragereport:
     name: Upload Coverage Report
     needs: [buildandtest, buildandtestuitests]
