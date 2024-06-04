@@ -38,6 +38,8 @@ jobs:
     uses: StanfordBDHG/.github/.github/workflows/npm-test-and-coverage.yml@v2
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
+    with:
+      working-directory: spezi-invitation-code
   uploadcoveragereport:
     name: Upload Coverage Report
     needs: [buildandtest, buildandtestuitests]
