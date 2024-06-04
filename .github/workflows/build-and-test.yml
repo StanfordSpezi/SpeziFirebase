@@ -37,23 +37,16 @@ jobs:
     name: Test and Coverage
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          path: spezi-invitation-code
+      - uses: actions/checkout@v4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: 'npm'
-      - name: Install Node Dependencies
-        run: npm ci
+      - name: Install Node Dependencies and run the tests
+        run: cd spezi-invitation-code && npm ci && npm test
         env:
           CI: TRUE
-        working-directory: spezi-invitation-code
-      - name: Run the tests
-        run: npm test
-        working-directory: spezi-invitation-code
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
