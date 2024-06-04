@@ -38,16 +38,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18.x
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      - name: Change directory
-        run: cd spezi-invitation-code
-      - name: Install dependencies
+          cache: 'npm'
+      - name: Install Node Dependencies
         run: npm ci
-      - name: Run tests with coverage
-        run: npm run test
+        env:
+          CI: TRUE
+      - name: Run the tests
+        run: npm test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
   uploadcoveragereport:
     name: Upload Coverage Report
     needs: [buildandtest, buildandtestuitests]
