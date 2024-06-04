@@ -37,18 +37,20 @@ jobs:
     name: Test and Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: spezi-invitation-code
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: 'npm'
-          working-directory: spezi-invitation-code
       - name: Install Node Dependencies
         run: npm ci
-        working-directory: spezi-invitation-code
         env:
           CI: TRUE
+        working-directory: spezi-invitation-code
       - name: Run the tests
         run: npm test
         working-directory: spezi-invitation-code
