@@ -37,7 +37,7 @@ jobs:
     name: Test and Coverage
     uses: StanfordBDHG/.github/.github/workflows/npm-test-and-coverage.yml@v2
     with:
-      working-directory: spezi-invitation-code
+      path: spezi-invitation-code
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
   uploadcoveragereport:
