@@ -45,14 +45,15 @@ jobs:
           cache: 'npm'
       - name: Install Node Dependencies
         run: npm ci
-        working-directory: spezi-invitation-code
       - name: Run the tests
         run: npm test
-        working-directory: spezi-invitation-code
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           path: spezi-invitation-code
+    defaults:
+      run:
+        working-directory: spezi-invitation-code
   uploadcoveragereport:
     name: Upload Coverage Report
     needs: [buildandtest, buildandtestuitests]
