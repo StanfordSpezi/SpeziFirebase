@@ -448,7 +448,7 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
     func testSignupAccountLinking() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--firebaseAccount"]
+        app.launchArguments = ["--account-storage"]
         app.launch()
 
         XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
@@ -463,9 +463,11 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
         XCTAssertTrue(app.staticTexts["User, Anonymous"].waitForExistence(timeout: 5.0))
 
-        try app.signup(username: "test@username2.edu", password: "TestPassword2", givenName: "Leland", familyName: "Stanford", closeSheet: false)
+        try app.signup(username: "test@username2.edu", password: "TestPassword2", givenName: "Leland", familyName: "Stanford", biography: "Bio")
 
-        XCTAssert(app.staticTexts["Leland Stanford"].waitForExistence(timeout: 7.0))
+        app.buttons["Account Overview"].tap()
+        XCTAssert(app.staticTexts["Leland Stanford"].waitForExistence(timeout: 2.0))
+        XCTAssert(app.staticTexts["Biography, Bio"].exists)
     }
 }
 
@@ -488,7 +490,7 @@ extension XCUIApplication {
         }
     }
 
-    func signup(username: String, password: String, givenName: String, familyName: String, biography: String? = nil, closeSheet: Bool = true) throws {
+    func signup(username: String, password: String, givenName: String, familyName: String, biography: String? = nil) throws {
         buttons["Account Setup"].tap()
         buttons["Signup"].tap()
 
@@ -513,10 +515,7 @@ extension XCUIApplication {
         collectionViews.buttons["Signup"].tap()
 
         sleep(3)
-
-        if closeSheet {
-            buttons["Close"].tap()
-        }
+        buttons["Close"].tap()
     }
 }
 // swiftlint:disable:this file_length

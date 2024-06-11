@@ -94,10 +94,10 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
                 let result = try await currentUser.link(with: credential)
 
                 if let displayName = signupDetails.name {
-                    try await updateDisplayName(of: currentUser, displayName)
+                    try await updateDisplayName(of: result.user, displayName)
                 }
 
-                try await context.notifyUserSignIn(user: currentUser, for: self, isNewUser: true)
+                try await context.notifyUserSignIn(user: result.user, for: self)
 
                 return
             }

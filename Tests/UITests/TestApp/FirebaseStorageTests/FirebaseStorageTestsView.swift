@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import FirebaseStorage
+@preconcurrency import FirebaseStorage
 import PDFKit
 import SpeziViews
 import SwiftUI
@@ -35,7 +35,9 @@ struct FirebaseStorageTestsView: View {
                 let ref = Storage.storage().reference().child("test.txt")
                 let metadata = StorageMetadata()
                 metadata.contentType = "text/plain"
-                _ = try await ref.putDataAsync("Hello World!".data(using: .utf8) ?? .init(), metadata: metadata)
+                _ = try await ref.putDataAsync("Hello World!".data(using: .utf8) ?? .init(), metadata: metadata) { @Sendable _ in
+                    // silence warning
+                }
                 viewState = .idle
             } catch {
                 viewState = .error(AnyLocalizedError(error: error))
