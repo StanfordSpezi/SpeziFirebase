@@ -445,6 +445,28 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
         app.tap() // that triggers the interruption monitor closure
     }
+
+    func testSignupAccountLinking() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--firebaseAccount"]
+        app.launch()
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        if app.buttons["Logout"].waitForExistence(timeout: 3.0) && app.buttons["Logout"].isHittable {
+            app.buttons["Logout"].tap()
+        }
+
+        XCTAssertTrue(app.buttons["Login Anonymously"].waitForExistence(timeout: 2.0))
+        app.buttons["Login Anonymously"].tap()
+
+        XCTAssertTrue(app.staticTexts["User, Anonymous"].waitForExistence(timeout: 5.0))
+
+        try app.signup(username: "test@username2.edu", password: "TestPassword2", givenName: "Leland", familyName: "Stanford", closeSheet: false)
+
+        XCTAssert(app.staticTexts["Leland Stanford"].waitForExistence(timeout: 7.0))
+    }
 }
 
 
@@ -466,7 +488,7 @@ extension XCUIApplication {
         }
     }
 
-    func signup(username: String, password: String, givenName: String, familyName: String, biography: String? = nil) throws {
+    func signup(username: String, password: String, givenName: String, familyName: String, biography: String? = nil, closeSheet: Bool = true) throws {
         buttons["Account Setup"].tap()
         buttons["Signup"].tap()
 
@@ -491,6 +513,10 @@ extension XCUIApplication {
         collectionViews.buttons["Signup"].tap()
 
         sleep(3)
-        buttons["Close"].tap()
+
+        if closeSheet {
+            buttons["Close"].tap()
+        }
     }
 }
+// swiftlint:disable:this file_length
