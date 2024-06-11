@@ -93,7 +93,11 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
                 Self.logger.debug("Linking email-password credentials with current anonymous user account ...")
                 let result = try await currentUser.link(with: credential)
 
-                try await context.notifyUserSignIn(user: currentUser, for: self, isNewUser: true)
+                if let displayName = signupDetails.name {
+                    try await updateDisplayName(of: result.user, displayName)
+                }
+
+                try await context.notifyUserSignIn(user: result.user, for: self)
 
                 return
             }
@@ -105,10 +109,7 @@ actor FirebaseEmailPasswordAccountService: UserIdPasswordAccountService, Firebas
             try await authResult.user.sendEmailVerification()
 
             if let displayName = signupDetails.name {
-                Self.logger.debug("Creating change request for display name.")
-                let changeRequest = authResult.user.createProfileChangeRequest()
-                changeRequest.displayName = displayName.formatted(.name(style: .medium))
-                try await changeRequest.commitChanges()
+                try await updateDisplayName(of: authResult.user, displayName)
             }
         }
     }
