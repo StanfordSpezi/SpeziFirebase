@@ -38,6 +38,7 @@ jobs:
     uses: StanfordBDHG/.github/.github/workflows/npm-test-and-coverage.yml@lint
     secrets:
       token: ${{ secrets.CODECOV_TOKEN }}
+      GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
     with:
       working-directory: spezi-invitation-code
       setup-firebase-emulator: true
