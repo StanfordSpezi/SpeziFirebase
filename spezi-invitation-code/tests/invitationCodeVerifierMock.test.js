@@ -16,7 +16,6 @@ jest.mock("firebase-admin", () => {
     runTransaction: jest.fn(),
   };
   return {
-    initializeApp: jest.fn(),
     firestore: jest.fn(() => firestore),
     app: jest.fn(() => ({
       delete: jest.fn(),
@@ -28,7 +27,6 @@ describe("InvitationCodeVerifier", () => {
   let firestore;
 
   beforeAll(() => {
-    admin.initializeApp();
     firestore = admin.firestore();
     firebaseTest.mockConfig({invitationCodePath: "invitationCodes", userPath: "users"});
   });
