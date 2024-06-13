@@ -445,6 +445,30 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
         app.tap() // that triggers the interruption monitor closure
     }
+
+    func testSignupAccountLinking() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--account-storage"]
+        app.launch()
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        if app.buttons["Logout"].waitForExistence(timeout: 3.0) && app.buttons["Logout"].isHittable {
+            app.buttons["Logout"].tap()
+        }
+
+        XCTAssertTrue(app.buttons["Login Anonymously"].waitForExistence(timeout: 2.0))
+        app.buttons["Login Anonymously"].tap()
+
+        XCTAssertTrue(app.staticTexts["User, Anonymous"].waitForExistence(timeout: 5.0))
+
+        try app.signup(username: "test@username2.edu", password: "TestPassword2", givenName: "Leland", familyName: "Stanford", biography: "Bio")
+
+        app.buttons["Account Overview"].tap()
+        XCTAssert(app.staticTexts["Leland Stanford"].waitForExistence(timeout: 2.0))
+        XCTAssert(app.staticTexts["Biography, Bio"].exists)
+    }
 }
 
 
@@ -494,3 +518,4 @@ extension XCUIApplication {
         buttons["Close"].tap()
     }
 }
+// swiftlint:disable:this file_length

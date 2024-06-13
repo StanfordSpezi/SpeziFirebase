@@ -113,10 +113,7 @@ extension FirebaseAccountService {
             }
 
             if let name = modifications.modifiedDetails.name {
-                Self.logger.debug("Creating change request for updated display name.")
-                let changeRequest = currentUser.createProfileChangeRequest()
-                changeRequest.displayName = name.formatted(.name(style: .long))
-                try await changeRequest.commitChanges()
+                try await updateDisplayName(of: currentUser, name)
             }
 
             // None of the above requests will trigger our state change listener, therefore, we just call it manually.
@@ -128,5 +125,12 @@ extension FirebaseAccountService {
             Self.logger.error("Received error on firebase dispatch: \(error)")
             throw FirebaseAccountError.unknown(.internalError)
         }
+    }
+
+    func updateDisplayName(of user: User, _ name: PersonNameComponents) async throws {
+        Self.logger.debug("Creating change request for updated display name.")
+        let changeRequest = user.createProfileChangeRequest()
+        changeRequest.displayName = name.formatted(.name(style: .long))
+        try await changeRequest.commitChanges()
     }
 }

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import FirebaseFirestore
+@preconcurrency import FirebaseFirestore
 import Spezi
 import SpeziFirestore
 import SpeziViews

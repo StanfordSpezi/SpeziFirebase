@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import FirebaseAuth
+@preconcurrency import FirebaseAuth
 import Spezi
 import SpeziAccount
 import SpeziFirebaseAccount
@@ -24,9 +24,18 @@ struct FirebaseAccountTestsView: View {
     @State var showSetup = false
     @State var showOverview = false
     @State var isEditing = false
-    
+
+    @State var uiUpdates: Int = 0
+
     var body: some View {
         List {
+            if uiUpdates > 0, // register to UI updates
+               let user = Auth.auth().currentUser,
+               user.isAnonymous {
+                ListRow("User") {
+                    Text("Anonymous")
+                }
+            }
             if let details = account.details {
                 HStack {
                     UserProfileView(name: details.name ?? .init(givenName: "NOT FOUND"))
@@ -43,6 +52,15 @@ struct FirebaseAccountTestsView: View {
             }
             Button("Account Overview") {
                 showOverview = true
+            }
+            if !account.signedIn {
+                AsyncButton("Login Anonymously", state: $viewState) {
+                    if Auth.auth().currentUser != nil {
+                        try Auth.auth().signOut()
+                    }
+                    try await Auth.auth().signInAnonymously()
+                    uiUpdates += 1
+                }
             }
         }
             .sheet(isPresented: $showSetup) {
