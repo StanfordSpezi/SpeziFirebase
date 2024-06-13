@@ -5,7 +5,13 @@ Copyright: 2022 Stanford University and the project authors (see CONTRIBUTORS.md
 License: MIT
 Comment: All files are part of the Stanford Spezi open-source project.
 
-Files: spezi-invitation-code/firebase/*/*
+Files: \\
+  firebase/auth_export/accounts.json \\
+  firebase/auth_export/config.json \\
+  firebase/firebase-export-metadata.json \\
+  firebase/firestore_export/all_namespaces/all_kinds/all_namespaces_all_kinds.export_metadata \\
+  firebase/firestore_export/all_namespaces/all_kinds/output-0 \\
+  firebase/firestore_export/firestore_export.overall_export_metadata
 Copyright: 2022 Stanford University and the project authors (see CONTRIBUTORS.md)
 License: MIT
 Comment: All files are part of the Stanford Spezi open-source project.
