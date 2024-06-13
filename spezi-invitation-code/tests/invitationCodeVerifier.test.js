@@ -17,6 +17,7 @@ describe("InvitationCodeVerifier", () => {
   let firestore;
 
   beforeAll(() => {
+    admin.initializeApp();
     verifier = new InvitationCodeVerifier();
     firestore = admin.firestore();
   });
