@@ -40,6 +40,7 @@ jobs:
       token: ${{ secrets.CODECOV_TOKEN }}
     with:
       working-directory: spezi-invitation-code
+      setup-firebase-emulator: true
   uploadcoveragereport:
     name: Upload Coverage Report
     needs: [buildandtest, buildandtestuitests]
