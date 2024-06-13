@@ -12,6 +12,18 @@ const {FieldValue} = require("firebase-admin/firestore");
 
 /**
  * Invitation code verifier for Spezi Firebase.
+ * @example
+ * const invitationCodeVerifier = new InvitationCodeVerifier(
+ *   "invitationCodes",
+ *   "users",
+ *   /^[A-Z0-9]{6}$/
+ * );
+ *
+ * exports.checkInvitationCode = onCall(async (request) => {
+ *   const {invitationCode} = request.data;
+ *   await invitationCodeVerifier.enrollUserInStudy(request, invitationCode);
+ *   return {};
+ * });
  */
 class InvitationCodeVerifier {
   /**
