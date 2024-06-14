@@ -17,7 +17,7 @@ describe("InvitationCodeVerifier", () => {
   let firestore;
 
   beforeAll(() => {
-    admin.initializeApp();
+    admin.initializeApp({credential: admin.credential.cert(require(process.env.GOOGLE_APPLICATION_CREDENTIALS))});
     verifier = new InvitationCodeVerifier();
     firestore = admin.firestore();
   });
