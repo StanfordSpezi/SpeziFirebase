@@ -46,34 +46,28 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.nodeVersion }}
+          node-version: '18'
           cache: 'npm'
           cache-dependency-path: 'spezi-invitation-code/package-lock.json'
       - name: Cache Firebase Emulators
-        if: ${{ !env.selfhosted && inputs.setup-firebase-emulator }}
         uses: actions/cache@v4
         with:
           path: ~/.cache/firebase/emulators
           key: ${{ runner.os }}-${{ runner.arch }}-firebase-emulators-${{ hashFiles('~/.cache/firebase/emulators/**') }}
       - name: Setup Java
-        if: ${{ !env.selfhosted && inputs.setup-firebase-emulator }}
         uses: actions/setup-java@v4
         with:
           distribution: 'microsoft'
           java-version: '17'
       - name: Install Firebase CLI Tools
-        if: ${{ !env.selfhosted && inputs.setup-firebase-emulator }}
         run: npm install -g firebase-tools
       - name: Install Node Dependencies
         run: npm ci
       - name: Run the tests
         run: |
-          if ${{ inputs.setup-firebase-emulator }}; then
-              echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
-              export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
-              echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
-          fi
-
+          echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
+          echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
           npm test
         env:
           GOOGLE_APPLICATION_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}
@@ -84,7 +78,6 @@ jobs:
           token: ${{ secrets.token }}
           working-directory: spezi-invitation-code
       - name: Clean up Google application credentials
-        if: ${{ always() }}
         run: |
           rm -rf $RUNNER_TEMP/google-application-credentials.json || true
   uploadcoveragereport:
