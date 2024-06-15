@@ -34,7 +34,6 @@ jobs:
       customcommand: |
           firebase emulators:exec 'set -o pipefail && xcodebuild test -project UITests.xcodeproj -scheme TestApp -destination "platform=iOS Simulator,name=iPhone 15 Pro" -resultBundlePath UITests.xcresult -derivedDataPath ".derivedData" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO | xcbeautify'
   testandcoverage:
-    name: Build and Test npm Package
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -43,11 +42,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check environment
         run: |
-          echo "env.selfhosted: ${{ env.selfhosted }}"
+            echo "env.selfhosted: ${{ env.selfhosted }}"
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ inputs.nodeVersion }}
           cache: 'npm'
           cache-dependency-path: 'spezi-invitation-code/package-lock.json'
       - name: Cache Firebase Emulators
@@ -69,8 +68,8 @@ jobs:
         run: npm ci
       - name: Run the tests
         run: |
-          if [ "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" ]; then
-              echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 --decode > "$RUNNER_TEMP/google-application-credentials.json"
+          if ${{ inputs.setup-firebase-emulator }}; then
+              echo -n "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_BASE64 }}" | base64 -d > "$RUNNER_TEMP/google-application-credentials.json"
               export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/google-application-credentials.json"
               echo "Stored the Google application credentials at $GOOGLE_APPLICATION_CREDENTIALS"
           fi
@@ -83,8 +82,7 @@ jobs:
         if: ${{ always() }}
         with:
           token: ${{ secrets.token }}
-          working-directory: 'spezi-invitation-code'
-
+          working-directory: spezi-invitation-code
       - name: Clean up Google application credentials
         if: ${{ always() }}
         run: |
