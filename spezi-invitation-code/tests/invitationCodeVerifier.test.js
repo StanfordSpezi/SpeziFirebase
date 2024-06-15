@@ -11,6 +11,7 @@ const firebaseTest = require("firebase-functions-test")();
 const InvitationCodeVerifier = require("../index.js");
 const {https} = require("firebase-functions/v2");
 const _ = require("lodash");
+const fs = require("fs");
 
 describe("InvitationCodeVerifier", () => {
   let verifier;
@@ -18,7 +19,10 @@ describe("InvitationCodeVerifier", () => {
 
   beforeAll(() => {
     const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    const credentials = require(credentialsPath);
+    if (!credentialsPath) {
+      throw new Error("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
+    }
+    const credentials = JSON.parse(fs.readFileSync(credentialsPath, "utf8"));
     admin.initializeApp({credential: admin.credential.cert(credentials)});
     verifier = new InvitationCodeVerifier();
     firestore = admin.firestore();
