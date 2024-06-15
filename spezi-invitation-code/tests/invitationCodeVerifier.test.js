@@ -17,7 +17,6 @@ describe("InvitationCodeVerifier", () => {
   let firestore;
 
   beforeAll(() => {
-    console.log("credentials length", process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64.length);
     const credentials = JSON.parse(Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64, "base64").toString("utf8"));
     admin.initializeApp({credential: admin.credential.cert(credentials)});
     verifier = new InvitationCodeVerifier();
