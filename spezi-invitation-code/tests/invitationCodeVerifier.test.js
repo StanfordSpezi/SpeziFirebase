@@ -22,8 +22,8 @@ describe("InvitationCodeVerifier", () => {
     if (!credentialsPath) {
       throw new Error("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
     }
-    const credentials = JSON.parse(fs.readFileSync(credentialsPath, "utf8"));
-    admin.initializeApp({credential: admin.credential.cert(credentials)});
+    // const credentials = JSON.parse(fs.readFileSync(credentialsPath, "utf8"));
+    admin.initializeApp({credential: admin.credential.cert(credentialsPath)});
     verifier = new InvitationCodeVerifier();
     firestore = admin.firestore();
   });
