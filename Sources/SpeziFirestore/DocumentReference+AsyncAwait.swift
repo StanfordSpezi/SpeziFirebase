@@ -30,19 +30,8 @@ extension DocumentReference {
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
         do {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                do {
-                    let encoded = try encoder.encode(value)
-                    setData(encoded) { error in
-                        if let error {
-                            continuation.resume(throwing: error)
-                        }
-                        continuation.resume()
-                    }
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
+            let encoded = try encoder.encode(value)
+            try await setData(encoded)
         } catch {
             throw FirestoreError(error)
         }
@@ -69,19 +58,8 @@ extension DocumentReference {
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
         do {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                do {
-                    let encoded = try encoder.encode(value)
-                    setData(encoded, merge: merge) { error in
-                        if let error {
-                            continuation.resume(throwing: error)
-                        }
-                        continuation.resume()
-                    }
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
+            let encoded = try encoder.encode(value)
+            try await setData(encoded, merge: merge)
         } catch {
             throw FirestoreError(error)
         }
@@ -112,19 +90,8 @@ extension DocumentReference {
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
         do {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                do {
-                    let encoded = try encoder.encode(value)
-                    setData(encoded, mergeFields: mergeFields) { error in
-                        if let error {
-                            continuation.resume(throwing: error)
-                        }
-                        continuation.resume()
-                    }
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
+            let encoded = try encoder.encode(value)
+            try await setData(encoded, mergeFields: mergeFields)
         } catch {
             throw FirestoreError(error)
         }
