@@ -32,14 +32,17 @@ struct FirestoreDataStorageTestsView: View {
                     prompt: Text("Enter the element's identifier.")
                 )
                 TextField(
-                    "Context",
+                    "Content",
                     text: $element.content,
-                    prompt: Text("Enter the element's optional context.")
+                    prompt: Text("Enter the element's optional content.")
                 )
             }
             Section("Actions") {
                 Button("Upload Element") {
                     uploadElement()
+                }
+                Button("Merge Element") {
+                    mergeElement()
                 }
                 Button(
                     role: .destructive,
@@ -63,13 +66,38 @@ struct FirestoreDataStorageTestsView: View {
         viewState = .processing
         Task {
             do {
-                try await Firestore.firestore().collection("Test").document(element.id).setData(from: element)
+                try await Firestore
+                    .firestore()
+                    .collection("Test")
+                    .document(element.id)
+                    .setData(from: element)
                 viewState = .idle
             } catch {
                 viewState = .error(FirestoreError(error))
             }
         }
     }
+    
+    @MainActor
+    private func mergeElement() {
+        viewState = .processing
+        Task {
+            do {
+                try await Firestore
+                    .firestore()
+                    .collection("Test")
+                    .document(element.id)
+                    .setData(
+                        from: element,
+                        merge: true
+                    )
+                viewState = .idle
+            } catch {
+                viewState = .error(FirestoreError(error))
+            }
+        }
+    }
+
     
     @MainActor
     private func deleteElement() {

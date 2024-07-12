@@ -66,7 +66,31 @@ final class FirestoreDataStorageTests: XCTestCase {
         var documents = try await getAllDocuments()
         XCTAssert(documents.isEmpty)
         
-        try add(id: "Identifier1", context: "1")
+        try add(id: "Identifier1", content: "1")
+        
+        try await Task.sleep(for: .seconds(0.5))
+        documents = try await getAllDocuments()
+        XCTAssertEqual(
+            documents.sorted(by: { $0.name < $1.name }),
+            [
+                FirestoreElement(
+                    id: "Identifier1",
+                    content: "1"
+                )
+            ]
+        )
+    }
+    
+    @MainActor
+    func testFirestoreMerge() async throws {
+        let app = XCUIApplication()
+        app.launch()
+        app.buttons["FirestoreDataStorage"].tap()
+        
+        var documents = try await getAllDocuments()
+        XCTAssert(documents.isEmpty)
+        
+        try merge(id: "Identifier1", content: "1")
         
         try await Task.sleep(for: .seconds(0.5))
         documents = try await getAllDocuments()
@@ -90,7 +114,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         var documents = try await getAllDocuments()
         XCTAssert(documents.isEmpty)
         
-        try add(id: "Identifier1", context: "1")
+        try add(id: "Identifier1", content: "1")
         
         try await Task.sleep(for: .seconds(0.5))
         documents = try await getAllDocuments()
@@ -104,7 +128,7 @@ final class FirestoreDataStorageTests: XCTestCase {
             ]
         )
         
-        try add(id: "Identifier1", context: "2")
+        try add(id: "Identifier1", content: "2")
         
         try await Task.sleep(for: .seconds(0.5))
         documents = try await getAllDocuments()
@@ -129,7 +153,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         var documents = try await getAllDocuments()
         XCTAssert(documents.isEmpty)
         
-        try add(id: "Identifier1", context: "1")
+        try add(id: "Identifier1", content: "1")
         
         try await Task.sleep(for: .seconds(0.5))
         documents = try await getAllDocuments()
@@ -143,33 +167,38 @@ final class FirestoreDataStorageTests: XCTestCase {
             ]
         )
         
-        try remove(id: "Identifier1", context: "1")
+        try remove(id: "Identifier1", content: "1")
         
         documents = try await getAllDocuments()
         XCTAssert(documents.isEmpty)
     }
     
     
-    private func add(id: String, context: String) throws {
-        try enterFirestoreElement(id: id, context: context)
+    private func add(id: String, content: String) throws {
+        try enterFirestoreElement(id: id, content: content)
         XCUIApplication().buttons["Upload Element"].tap()
     }
     
-    private func remove(id: String, context: String) throws {
-        try enterFirestoreElement(id: id, context: context)
+    private func merge(id: String, content: String) throws {
+        try enterFirestoreElement(id: id, content: content)
+        XCUIApplication().buttons["Merge Element"].tap()
+    }
+    
+    private func remove(id: String, content: String) throws {
+        try enterFirestoreElement(id: id, content: content)
         XCUIApplication().buttons["Delete Element"].tap()
     }
     
-    private func enterFirestoreElement(id: String, context: String) throws {
+    private func enterFirestoreElement(id: String, content: String) throws {
         let app = XCUIApplication()
         
         let identifierTextFieldIdentifier = "Enter the element's identifier."
         try app.textFields[identifierTextFieldIdentifier].delete(count: 42)
         try app.textFields[identifierTextFieldIdentifier].enter(value: id)
         
-        let contextFieldIdentifier = "Enter the element's optional context."
-        try app.textFields[contextFieldIdentifier].delete(count: 100)
-        try app.textFields[contextFieldIdentifier].enter(value: context)
+        let contentFieldIdentifier = "Enter the element's optional content."
+        try app.textFields[contentFieldIdentifier].delete(count: 100)
+        try app.textFields[contentFieldIdentifier].enter(value: content)
     }
     
     private func deleteAllDocuments() async throws {
