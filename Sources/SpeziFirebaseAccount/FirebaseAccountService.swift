@@ -28,7 +28,9 @@ import SwiftUI
 ///     }
 /// }
 /// ```
-public final class FirebaseAccountService: AccountService { // TODO: update all docs!
+public final class FirebaseAccountService: AccountService { // swiftlint:disable:this type_body_length
+    // TODO: body length!
+    // TODO: update all docs!
     // TODO: replace with Spezi logger!
     static nonisolated let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "AccountService")
 

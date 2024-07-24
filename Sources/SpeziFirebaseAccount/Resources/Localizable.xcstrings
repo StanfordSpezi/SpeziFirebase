@@ -451,6 +451,7 @@
 
     },
     "OAuth Credential" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

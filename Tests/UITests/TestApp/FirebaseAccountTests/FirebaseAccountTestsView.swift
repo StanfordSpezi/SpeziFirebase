@@ -44,7 +44,7 @@ struct FirebaseAccountTestsView: View {
                 }
 
                 AsyncButton("Logout", role: .destructive, state: $viewState) {
-                    try await details.accountService.logout()
+                    try await account.accountService.logout()
                 }
             }
             Button("Account Setup") {

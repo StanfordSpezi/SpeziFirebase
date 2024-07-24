@@ -30,23 +30,25 @@ class TestAppDelegate: SpeziAppDelegate {
     }
 
     @ModuleBuilder var configurations: ModuleCollection {
-        if FeatureFlags.accountStorageTests {
-            AccountConfiguration(configuration: [
+        let configuration: AccountValueConfiguration = FeatureFlags.accountStorageTests
+            ? [
                 .requires(\.userId),
                 .requires(\.name),
                 .requires(\.biography)
-            ])
-        } else {
-            AccountConfiguration(configuration: [
+            ]
+            : [
                 .requires(\.userId),
                 .collects(\.name)
-            ])
-        }
-        Firestore(settings: .emulator)
-        FirebaseAccountConfiguration(
-            authenticationMethods: [.emailAndPassword, .signInWithApple],
-            emulatorSettings: (host: "localhost", port: 9099)
+            ]
+
+        AccountConfiguration(
+            service: FirebaseAccountService(
+                authenticationMethods: [.emailAndPassword, .signInWithApple],
+                emulatorSettings: (host: "localhost", port: 9099)
+            ),
+            configuration: configuration
         )
+        Firestore(settings: .emulator)
         FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))
     }
 }
