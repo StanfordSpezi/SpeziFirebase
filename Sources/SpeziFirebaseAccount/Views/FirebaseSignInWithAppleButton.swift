@@ -12,7 +12,7 @@ import SwiftUI
 
 
 struct FirebaseSignInWithAppleButton: View {
-    @Environment(FirebaseAccountConfiguration.self)
+    @Environment(FirebaseAccountService.self)
     private var service
 
     @Environment(\.colorScheme)

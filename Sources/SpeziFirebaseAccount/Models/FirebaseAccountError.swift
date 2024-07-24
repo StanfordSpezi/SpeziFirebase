@@ -95,7 +95,7 @@ enum FirebaseAccountError: LocalizedError { // TODO: make public?
 
     
     init(authErrorCode: AuthErrorCode) {
-        FirebaseAccountConfiguration.logger.debug("Received authError with code \(authErrorCode)") // TODO: what?
+        FirebaseAccountService.logger.debug("Received authError with code \(authErrorCode)") // TODO: what?
 
         switch authErrorCode.code {
         case .invalidEmail, .invalidRecipientEmail:

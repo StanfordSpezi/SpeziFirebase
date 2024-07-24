@@ -28,7 +28,7 @@ import SwiftUI
 ///     }
 /// }
 /// ```
-public final class FirebaseAccountConfiguration: AccountService {
+public final class FirebaseAccountService: AccountService { // TODO: update all docs!
     // TODO: replace with Spezi logger!
     static nonisolated let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "AccountService")
 
@@ -361,7 +361,7 @@ public final class FirebaseAccountConfiguration: AccountService {
 
 // MARK: - Sign In With Apple
 
-extension FirebaseAccountConfiguration {
+extension FirebaseAccountService {
     @MainActor
     func onAppleSignInRequest(request: ASAuthorizationAppleIDRequest) {
         let nonce = CryptoUtils.randomNonceString(length: 32)

@@ -11,7 +11,7 @@ import SwiftUI
 
 
 struct FirebaseLoginView: View {
-    @Environment(FirebaseAccountConfiguration.self)
+    @Environment(FirebaseAccountService.self)
     private var service
 
 
