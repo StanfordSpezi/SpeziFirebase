@@ -15,6 +15,7 @@ struct OAuthCredentialWrapper: Equatable {
 }
 
 
+// TODO: just remove that whole file!
 struct FirebaseOAuthCredentialKey: AccountKey {
     typealias Value = OAuthCredentialWrapper
 

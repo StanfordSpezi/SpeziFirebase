@@ -8,6 +8,7 @@
 
 import FirebaseAuth
 import OSLog
+import Spezi
 import SpeziAccount
 import SpeziLocalStorage
 import SpeziSecureStorage
@@ -19,50 +20,38 @@ private enum UserChange {
 }
 
 private struct UserUpdate {
-    let service: (any FirebaseAccountService)?
     let change: UserChange
     var authResult: AuthDataResult?
 }
 
 
-actor FirebaseContext {
+actor FirebaseContext: Module, DefaultInitializable {
     static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "InternalStorage")
 
-    private let localStorage: LocalStorage
-    private let secureStorage: SecureStorage
-    @_WeakInjectable<Account> private var account: Account
+    @Dependency private var localStorage: LocalStorage
+    @Dependency private var secureStorage: SecureStorage
+    @Dependency private var account: Account
 
-    private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
-
-    private var lastActiveAccountServiceId: String?
-    private var lastActiveAccountService: (any FirebaseAccountService)?
+    @MainActor private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
 
     // dispatch of user updates
     private var shouldQueue = false
     private var queuedUpdate: UserUpdate?
 
 
-    init(local localStorage: LocalStorage, secure secureStorage: SecureStorage) {
-        self.localStorage = localStorage
-        self.secureStorage = secureStorage
-    }
+    init() {}
 
-
-    func share(account: Account) {
-        self._account.inject(account)
-    }
-
-    func setup(_ registeredServices: [any FirebaseAccountService]) {
-        self.loadLastActiveAccountService()
-
-        if let lastActiveAccountServiceId,
-           let service = registeredServices.first(where: { $0.id == lastActiveAccountServiceId }) {
-            self.lastActiveAccountService = service
-            Self.logger.debug("Last active account service is \(service.id)")
-        }
-
+    @MainActor
+    func configure() {
         // get notified about changes of the User reference
-        authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener(stateDidChangeListener)
+        authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] auth, user in
+            guard let self else {
+                return
+            }
+            Task {
+                await self.stateDidChangeListener(auth: auth, user: user)
+            }
+        }
 
         // if there is a cached user, we refresh the authentication token
         Auth.auth().currentUser?.getIDTokenForcingRefresh(true) { _, error in
@@ -74,18 +63,17 @@ actor FirebaseContext {
                 }
 
                 Task {
-                    try await self.notifyUserRemoval(for: self.lastActiveAccountService)
+                    try await self.notifyUserRemoval()
                 }
             }
         }
     }
 
     // a overload that just returns void
-    func dispatchFirebaseAuthAction<Service: FirebaseAccountService>(
-        on service: Service,
+    func dispatchFirebaseAuthAction(
         action: () async throws -> Void
     ) async throws {
-        try await self.dispatchFirebaseAuthAction(on: service) {
+        try await self.dispatchFirebaseAuthAction {
             try await action()
             return nil
         }
@@ -101,8 +89,7 @@ actor FirebaseContext {
     ///   - action: The action. If you doing an authentication action, return the auth data result. This way
     ///     we can forward additional information back to SpeziAccount.
     @_disfavoredOverload
-    func dispatchFirebaseAuthAction<Service: FirebaseAccountService>(
-        on service: Service,
+    func dispatchFirebaseAuthAction(
         action: () async throws -> AuthDataResult?
     ) async throws {
         defer {
@@ -110,7 +97,6 @@ actor FirebaseContext {
         }
 
         shouldQueue = true
-        setActiveAccountService(to: service)
 
         do {
             let result = try await action()
@@ -125,7 +111,7 @@ actor FirebaseContext {
         }
     }
 
-    private nonisolated func removeCredentials(userId: String, server: String) {
+    private func removeCredentials(userId: String, server: String) { // TODO: remove legacy keys!
         do {
             try secureStorage.deleteCredentials(userId, server: server)
         } catch SecureStorageError.notFound {
@@ -135,53 +121,7 @@ actor FirebaseContext {
         }
     }
 
-    private func setActiveAccountService(to service: any FirebaseAccountService) {
-        self.lastActiveAccountServiceId = service.id
-        self.lastActiveAccountService = service
-
-
-        do {
-            try secureStorage.store(
-                credentials: Credentials(username: "_", password: service.id),
-                server: StorageKeys.activeAccountService,
-                removeDuplicate: true
-            )
-        } catch {
-            Self.logger.error("Failed to store active account service: \(error)")
-        }
-    }
-
-    private func loadLastActiveAccountService() {
-        let id: String
-        do {
-            let credential = try secureStorage.retrieveCredentials("_", server: StorageKeys.activeAccountService)
-            if let credential {
-                id = credential.password
-            } else {
-                // In previous versions we used the plain local storage for the active key.
-                do {
-                    id = try localStorage.read(storageKey: StorageKeys.activeAccountService)
-                } catch {
-                    if let cocoaError = error as? CocoaError,
-                       cocoaError.isFileError {
-                        return // silence any file errors (e.g. file doesn't exist)
-                    }
-                    Self.logger.error("Failed to read last active account service from local storage: \(error)")
-                    return
-                }
-            }
-        } catch {
-            Self.logger.error("Failed to retrieve last active account service from secure storage: \(error)")
-            return
-        }
-
-        self.lastActiveAccountServiceId = id
-    }
-
     private func resetActiveAccountService() {
-        self.lastActiveAccountService = nil
-        self.lastActiveAccountServiceId = nil
-
         do {
             try secureStorage.deleteCredentials("_", server: StorageKeys.activeAccountService)
         } catch SecureStorageError.notFound {
@@ -205,7 +145,7 @@ actor FirebaseContext {
             change = .removed
         }
 
-        let update = UserUpdate(service: lastActiveAccountService, change: change)
+        let update = UserUpdate(change: change)
 
         if shouldQueue {
             Self.logger.debug("Received stateDidChange that is queued to be dispatched in active call.")
@@ -266,6 +206,8 @@ actor FirebaseContext {
                 return
             }
 
+            /*
+             // TODO: investigate if this is still an issue?
             guard let service = update.service else {
                 Self.logger.error("Failed to dispatch user update due to missing account service identifier on disk!")
                 do {
@@ -277,14 +219,15 @@ actor FirebaseContext {
                 }
                 throw FirebaseAccountError.setupError
             }
+             */
 
-            try await notifyUserSignIn(user: user, for: service, isNewUser: isNewUser)
+            try await notifyUserSignIn(user: user, isNewUser: isNewUser)
         case .removed:
-            try await notifyUserRemoval(for: update.service)
+            try await notifyUserRemoval()
         }
     }
 
-    func notifyUserSignIn(user: User, for service: any FirebaseAccountService, isNewUser: Bool = false) async throws {
+    func notifyUserSignIn(user: User, isNewUser: Bool = false) async throws {
         guard let email = user.email else {
             Self.logger.error("Failed to associate firebase account due to missing email address.")
             throw FirebaseAccountError.invalidEmail
@@ -292,18 +235,18 @@ actor FirebaseContext {
 
         Self.logger.debug("Notifying SpeziAccount with updated user details.")
 
-        let builder = AccountDetails.Builder()
-            .set(\.accountId, value: user.uid)
-            .set(\.userId, value: email)
-            .set(\.isEmailVerified, value: user.isEmailVerified)
 
-        if let displayName = user.displayName,
-           let nameComponents = try? PersonNameComponents(displayName, strategy: .name) {
-            // we wouldn't be here if we couldn't create the person name components from the given string
-            builder.set(\.name, value: nameComponents)
+        let details: AccountDetails = .build { details in
+            details.accountId = user.uid
+            details.userId = email
+            details.isEmailVerified = user.isEmailVerified
+
+            if let displayName = user.displayName,
+               let nameComponents = try? PersonNameComponents(displayName, strategy: .name) {
+                // we wouldn't be here if we couldn't create the person name components from the given string
+                details.name = nameComponents
+            }
         }
-
-        let details = builder.build(owner: service)
 
         // Previous SpeziFirebase releases used to store the password within the keychain.
         // We keep this for now, to clear the keychain of all users.
@@ -312,7 +255,7 @@ actor FirebaseContext {
         try await account.supplyUserDetails(details, isNewUser: isNewUser)
     }
 
-    func notifyUserRemoval(for service: (any FirebaseAccountService)?) async throws {
+    func notifyUserRemoval() async throws {
         Self.logger.debug("Notifying SpeziAccount of removed user details.")
 
         await account.removeUserDetails()

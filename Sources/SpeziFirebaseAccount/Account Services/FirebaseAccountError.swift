@@ -9,8 +9,10 @@
 import FirebaseAuth
 import Foundation
 
+// TODO: move whole folder
 
-enum FirebaseAccountError: LocalizedError {
+
+enum FirebaseAccountError: LocalizedError { // TODO: make public?
     case invalidEmail
     case accountAlreadyInUse
     case weakPassword
@@ -93,7 +95,7 @@ enum FirebaseAccountError: LocalizedError {
 
     
     init(authErrorCode: AuthErrorCode) {
-        FirebaseEmailPasswordAccountService.logger.debug("Received authError with code \(authErrorCode)")
+        FirebaseAccountConfiguration.logger.debug("Received authError with code \(authErrorCode)") // TODO: what?
 
         switch authErrorCode.code {
         case .invalidEmail, .invalidRecipientEmail:

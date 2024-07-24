@@ -414,6 +414,7 @@
       }
     },
     "FIREBASE_EMAIL_AND_PASSWORD" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -430,6 +431,7 @@
       }
     },
     "FIREBASE_IDENTITY_PROVIDER" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

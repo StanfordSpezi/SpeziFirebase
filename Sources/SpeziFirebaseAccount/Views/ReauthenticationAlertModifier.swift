@@ -48,7 +48,7 @@ struct ReauthenticationAlertModifier: ViewModifier {
                 SecureField(text: $password) {
                     Text(PasswordFieldType.password.localizedStringResource)
                 }
-                    .textContentType(.newPassword)
+                    .textContentType(.password) // TODO: this is not a newPassword?
                     .autocorrectionDisabled()
                     .textInputAutocapitalization(.never)
                     .validate(input: password, rules: .nonEmpty)
@@ -76,6 +76,8 @@ struct ReauthenticationAlertModifier: ViewModifier {
                 Text("Please enter your password for \(context.userId).")
             }
     }
+
+    nonisolated init() {}
 }
 
 
