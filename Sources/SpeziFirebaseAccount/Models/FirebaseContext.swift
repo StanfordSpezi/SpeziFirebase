@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import FirebaseAuth
+@preconcurrency import FirebaseAuth
 import OSLog
 import Spezi
 import SpeziAccount
@@ -71,7 +71,7 @@ actor FirebaseContext: Module, DefaultInitializable {
 
     // a overload that just returns void
     func dispatchFirebaseAuthAction(
-        action: () async throws -> Void
+        action: @Sendable () async throws -> Void
     ) async throws {
         try await self.dispatchFirebaseAuthAction {
             try await action()
@@ -90,7 +90,7 @@ actor FirebaseContext: Module, DefaultInitializable {
     ///     we can forward additional information back to SpeziAccount.
     @_disfavoredOverload
     func dispatchFirebaseAuthAction(
-        action: () async throws -> AuthDataResult?
+        action: @Sendable () async throws -> AuthDataResult?
     ) async throws {
         defer {
             cleanupQueuedChanges()

@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import FirebaseFirestore
+@preconcurrency import FirebaseFirestore
 import Spezi
 import SpeziAccount
 import SpeziFirestore
@@ -69,74 +69,103 @@ import SpeziFirestore
 ///     }
 /// }
 /// ```
-public actor FirestoreAccountStorage: Module, AccountStorageConstraint {
+public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: completely restructure docs!
     @Dependency private var firestore: SpeziFirestore.Firestore // ensure firestore is configured
+    @Dependency private var externalStorage: ExternalAccountStorage
 
-    private let collection: () -> CollectionReference
+    private let collection: @Sendable () -> CollectionReference
 
+
+    private var listenerRegistrations: [String: ListenerRegistration] = [:]
+    private var localCache: [String: AccountDetails] = [:]
 
     public init(storeIn collection: @Sendable @autoclosure @escaping () -> CollectionReference) {
         self.collection = collection
     }
 
 
-    private func userDocument(for accountId: String) -> DocumentReference {
+    private nonisolated func userDocument(for accountId: String) -> DocumentReference {
         collection().document(accountId)
     }
 
-    public func create(_ identifier: AdditionalRecordId, _ details: SignupDetails) async throws {
-        let result = details.acceptAll(FirestoreEncodeVisitor())
+    private func snapshotListener(for accountId: String, with keys: [any AccountKey.Type]) {
+        if let existingListener = listenerRegistrations[accountId] {
+            existingListener.remove()
+        }
+        let document = userDocument(for: accountId)
 
-        do {
-            switch result {
-            case let .success(data):
-                try await userDocument(for: identifier.accountId)
-                    .setData(data, merge: true)
-            case let .failure(error):
-                throw error
+        listenerRegistrations[accountId] = document.addSnapshotListener { [weak self] snapshot, error in
+            guard let self else {
+                return
             }
-        } catch {
-            throw FirestoreError(error)
+
+            guard let snapshot else {
+                // TODO: error happened, how to best notify about error?
+                return
+            }
+
+            Task {
+                await self.processUpdatedSnapshot(for: accountId, with: keys, snapshot)
+            }
         }
     }
 
-    public func load(_ identifier: AdditionalRecordId, _ keys: [any AccountKey.Type]) async throws -> PartialAccountDetails {
-        let builder = PartialAccountDetails.Builder()
-
-        let document = userDocument(for: identifier.accountId)
-
+    private func processUpdatedSnapshot(for accountId: String, with keys: [any AccountKey.Type], _ snapshot: DocumentSnapshot) {
         do {
-            let data = try await document
-                .getDocument()
-                .data()
+            let details = try buildAccountDetails(from: snapshot, keys: keys)
+            localCache[accountId] = details
 
-            if let data {
-                for key in keys {
-                    guard let value = data[key.identifier] else {
-                        continue
-                    }
+            externalStorage.notifyAboutUpdatedDetails(for: accountId, details)
+        } catch {
+            // TODO: log or do something with that info!
+            // TODO: does it make sense to notify the account service about the error?
+        }
+    }
 
-                    let visitor = FirestoreDecodeVisitor(value: value, builder: builder, in: document)
-                    key.accept(visitor)
-                    if case let .failure(error) = visitor.final() {
-                        throw error
-                    }
+    private nonisolated func buildAccountDetails(from snapshot: DocumentSnapshot, keys: [any AccountKey.Type]) throws -> AccountDetails {
+        guard let data = snapshot.data() else {
+            return AccountDetails()
+        }
+
+        return try .build { details in
+            for key in keys {
+                guard let value = data[key.identifier] else {
+                    continue
+                }
+
+                let visitor = FirestoreDecodeVisitor(value: value, builder: details, in: snapshot.reference)
+                key.accept(visitor)
+                if case let .failure(error) = visitor.final() {
+                    throw FirestoreError(error)
                 }
             }
-        } catch {
-            throw FirestoreError(error)
         }
-
-        return builder.build()
     }
 
-    public func modify(_ identifier: AdditionalRecordId, _ modifications: AccountModifications) async throws {
+    public func create(_ accountId: String, _ details: AccountDetails) async throws {
+        // we just treat it as modifications
+        let modifications = try AccountModifications(modifiedDetails: details)
+        try await modify(accountId, modifications)
+    }
+
+    public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async throws -> AccountDetails? { // TODO: transport keys as set?
+        let cached = localCache[accountId]
+
+        if listenerRegistrations[accountId] != nil { // check that there is a snapshot listener in place
+            snapshotListener(for: accountId, with: keys)
+        }
+
+
+        return cached // TODO: also try to load from disk if in-memory cache doesn't work!
+    }
+
+    public func modify(_ accountId: String, _ modifications: AccountModifications) async throws {
         let result = modifications.modifiedDetails.acceptAll(FirestoreEncodeVisitor())
 
         do {
             switch result {
             case let .success(data):
-                try await userDocument(for: identifier.accountId)
+                try await userDocument(for: accountId)
                     .setData(data, merge: true)
             case let .failure(error):
                 throw error
@@ -146,20 +175,46 @@ public actor FirestoreAccountStorage: Module, AccountStorageConstraint {
                 result[key.identifier] = FieldValue.delete()
             }
 
-            try await userDocument(for: identifier.accountId)
+            try await userDocument(for: accountId)
                 .updateData(removedFields)
         } catch {
             throw FirestoreError(error)
         }
+
+        // make sure our cache is consistent
+        let details: AccountDetails = .build { details in
+            if let cached = localCache[accountId] {
+                details.add(contentsOf: cached)
+            }
+            details.add(contentsOf: modifications.modifiedDetails, merge: true)
+            details.removeAll(modifications.removedAccountKeys)
+        }
+        localCache[accountId] = details
+
+
+        // TODO: check if the snapshot listener is in place with the same set of keys (add remove)!
+        if listenerRegistrations[accountId] != nil {
+            // TODO: if we have sets, its easier!
+            // TODO: actually keep track of all account keys, this will fail!
+            snapshotListener(for: accountId, with: modifications.modifiedDetails.keys)
+        }
     }
 
-    public func clear(_ identifier: AdditionalRecordId) async {
-        // nothing we can do ...
+    public func disassociate(_ accountId: String) {
+        guard let registration = listenerRegistrations.removeValue(forKey: accountId) else {
+            return
+        }
+        registration.remove()
+
+        localCache.removeValue(forKey: accountId)
+        // TODO: remove values form disk! don't keep personal data after logout
     }
 
-    public func delete(_ identifier: AdditionalRecordId) async throws {
+    public func delete(_ accountId: String) async throws {
+        disassociate(accountId)
+
         do {
-            try await userDocument(for: identifier.accountId)
+            try await userDocument(for: accountId)
                 .delete()
         } catch {
             throw FirestoreError(error)

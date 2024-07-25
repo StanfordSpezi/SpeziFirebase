@@ -7,7 +7,7 @@
 //
 
 import AuthenticationServices
-import FirebaseAuth
+@preconcurrency import FirebaseAuth
 import OSLog
 import Spezi
 import SpeziAccount
@@ -28,16 +28,17 @@ import SwiftUI
 ///     }
 /// }
 /// ```
-public final class FirebaseAccountService: AccountService { // swiftlint:disable:this type_body_length
-    // TODO: body length!
+public final class FirebaseAccountService: AccountService {
     // TODO: update all docs!
-    // TODO: replace with Spezi logger!
-    static nonisolated let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "AccountService")
+    @Application(\.logger)
+    private var logger
 
-    // TODO: remove this in favor for the account service?
     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
-    @Dependency private var account: Account
     @Dependency private var context: FirebaseContext
+
+    @Dependency private var account: Account
+    @Dependency private var notifications: AccountNotifications
+    @Dependency private var externalStorage: ExternalAccountStorage
 
     @Model private var firebaseModel = FirebaseAccountModel()
     @Modifier private var firebaseModifier = FirebaseAccountModifier()
@@ -46,8 +47,10 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     private let authenticationMethods: FirebaseAuthAuthenticationMethods
     public let configuration: AccountServiceConfiguration
 
-    @IdentityProvider(placement: .embedded) private var loginWithPassword = FirebaseLoginView()
-    @IdentityProvider(placement: .external) private var signInWithApple = FirebaseSignInWithAppleButton()
+    @IdentityProvider(placement: .embedded)
+    private var loginWithPassword = FirebaseLoginView()
+    @IdentityProvider(placement: .external)
+    private var signInWithApple = FirebaseSignInWithAppleButton()
 
     @SecurityRelatedModifier private var emailPasswordReauth = ReauthenticationAlertModifier()
 
@@ -62,10 +65,12 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         authenticationMethods: FirebaseAuthAuthenticationMethods,
         emulatorSettings: (host: String, port: Int)? = nil
     ) {
+        // TODO: how do we support anonymous login and e.g. a invitation code setup with FirebaseAccountService? => anonymous account and signup only (however login page at when already used).
         self.emulatorSettings = emulatorSettings
         self.authenticationMethods = authenticationMethods
 
         let supportedKeys = AccountKeyCollection {
+            // TODO: try to remove the supportedKeys, account service makes sure keys are there anyways?
             \.accountId
             \.userId
 
@@ -101,29 +106,44 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         if let emulatorSettings {
             Auth.auth().useEmulator(withHost: emulatorSettings.host, port: emulatorSettings.port)
         }
-    }
 
-    func login(userId: String, password: String) async throws {
-        Self.logger.debug("Received new login request...")
+        let subscription = externalStorage.detailUpdates
+        Task { [weak self] in
+            for await updatedDetails in subscription {
+                guard let self else {
+                    return
+                }
 
-        try await context.dispatchFirebaseAuthAction {
-            try await Auth.auth().signIn(withEmail: userId, password: password)
-            Self.logger.debug("signIn(withEmail:password:)")
+                handleUpdatedDetailsFromExternalStorage(for: updatedDetails.accountId, details: updatedDetails.details)
+            }
         }
     }
 
-    func signUp(signupDetails: SignupDetails) async throws {
-        Self.logger.debug("Received new signup request...")
+    private func handleUpdatedDetailsFromExternalStorage(for accountId: String, details: AccountDetails) {
+        // TODO: merge with local representation and notify account of the new details?
+    }
+
+    func login(userId: String, password: String) async throws {
+        logger.debug("Received new login request...")
+
+        try await context.dispatchFirebaseAuthAction { @MainActor in
+            try await Auth.auth().signIn(withEmail: userId, password: password)
+            logger.debug("signIn(withEmail:password:)")
+        }
+    }
+
+    func signUp(signupDetails: AccountDetails) async throws {
+        logger.debug("Received new signup request...")
 
         guard let password = signupDetails.password else {
             throw FirebaseAccountError.invalidCredentials
         }
 
-        try await context.dispatchFirebaseAuthAction {
+        try await context.dispatchFirebaseAuthAction { @MainActor in
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
                 let credential = EmailAuthProvider.credential(withEmail: signupDetails.userId, password: password)
-                Self.logger.debug("Linking email-password credentials with current anonymous user account ...")
+                logger.debug("Linking email-password credentials with current anonymous user account ...")
                 let result = try await currentUser.link(with: credential)
 
                 if let displayName = signupDetails.name { // TODO: we are not doing that thing with Apple?
@@ -136,9 +156,9 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             }
 
             let authResult = try await Auth.auth().createUser(withEmail: signupDetails.userId, password: password)
-            Self.logger.debug("createUser(withEmail:password:) for user.")
+            logger.debug("createUser(withEmail:password:) for user.")
 
-            Self.logger.debug("Sending email verification link now...")
+            logger.debug("Sending email verification link now...")
             try await authResult.user.sendEmailVerification()
 
             if let displayName = signupDetails.name {
@@ -149,10 +169,10 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
     func signupWithCredential(_ credential: OAuthCredential) async throws {
         // TODO: the whole firebase auth action complexity is not necessary anymore is it? (We are a single account service now!)
-        try await context.dispatchFirebaseAuthAction {
+        try await context.dispatchFirebaseAuthAction { @MainActor in
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
-                Self.logger.debug("Linking oauth credentials with current anonymous user account ...")
+                logger.debug("Linking oauth credentials with current anonymous user account ...")
                 let result = try await currentUser.link(with: credential)
 
                 try await context.notifyUserSignIn(user: currentUser, isNewUser: true)
@@ -161,7 +181,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             }
 
             let authResult = try await Auth.auth().signIn(with: credential)
-            Self.logger.debug("signIn(with:) credential for user.")
+            logger.debug("signIn(with:) credential for user.")
 
             return authResult // TODO: resolve the slight "isNewUser" difference! just make the "ask for potential differences" explicit!
         }
@@ -170,7 +190,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     func resetPassword(userId: String) async throws {
         do {
             try await Auth.auth().sendPasswordReset(withEmail: userId)
-            Self.logger.debug("sendPasswordReset(withEmail:) for user.")
+            logger.debug("sendPasswordReset(withEmail:) for user.")
         } catch let error as NSError {
             let firebaseError = FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
             if case .invalidCredentials = firebaseError {
@@ -183,33 +203,6 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         }
     }
 
-    func reauthenticateUserPassword(user: User) async throws -> ReauthenticationOperationResult {
-        guard let userId = user.email else {
-            return .cancelled
-        }
-
-        Self.logger.debug("Requesting credentials for re-authentication...")
-        let passwordQuery = await firebaseModel.reauthenticateUser(userId: userId)
-        guard case let .password(password) = passwordQuery else {
-            return .cancelled
-        }
-
-        Self.logger.debug("Re-authenticating password-based user now ...")
-        try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
-        return .success
-    }
-
-    func reauthenticateUserApple(user: User) async throws -> ReauthenticationOperationResult {
-        guard let appleIdCredential = try await requestAppleSignInCredential() else {
-            return .cancelled
-        }
-
-        let credential = try oAuthCredential(from: appleIdCredential)
-
-        try await user.reauthenticate(with: credential)
-        return .success
-    }
-
     public func logout() async throws {
         guard Auth.auth().currentUser != nil else {
             if account.signedIn {
@@ -220,18 +213,14 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             }
         }
 
-        try await context.dispatchFirebaseAuthAction {
+        try await context.dispatchFirebaseAuthAction { @MainActor in
             try Auth.auth().signOut()
             try await Task.sleep(for: .milliseconds(10))
-            Self.logger.debug("signOut() for user.")
+            logger.debug("signOut() for user.")
         }
     }
 
     public func delete() async throws {
-        // TODO: how to navigate?
-    }
-
-    public func deleteUserIDCredential() async throws {
         guard let currentUser = Auth.auth().currentUser else {
             if account.signedIn {
                 try await context.notifyUserRemoval()
@@ -239,65 +228,49 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             throw FirebaseAccountError.notSignedIn
         }
 
-        try await context.dispatchFirebaseAuthAction {
-            let result = try await reauthenticateUserPassword(user: currentUser) // delete requires a recent sign in
+        try await notifications.reportEvent(.deletingAccount, for: currentUser.uid)
+
+        try await context.dispatchFirebaseAuthAction { @MainActor in
+            // TODO: always use Apple Id if we can, we need the token!
+            let result = try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
             guard case .success = result else {
-                Self.logger.debug("Re-authentication was cancelled. Not deleting the account.")
+                logger.debug("Re-authentication was cancelled by user. Not deleting the account.")
                 return // cancelled
             }
 
-            try await currentUser.delete()
-            Self.logger.debug("delete() for user.")
-        }
-    }
+            if let credential = result.credential {
+                // re-authentication was made through sign in provider, delete SSO account as well
+                guard let authorizationCode = credential.authorizationCode else {
+                    logger.error("Unable to fetch authorizationCode from ASAuthorizationAppleIDCredential.")
+                    throw FirebaseAccountError.setupError
+                }
 
-    public func deleteApple() async throws {
-        guard let currentUser = Auth.auth().currentUser else {
-            if account.signedIn {
-                try await context.notifyUserRemoval()
-            }
-            throw FirebaseAccountError.notSignedIn
-        }
+                guard let authorizationCodeString = String(data: authorizationCode, encoding: .utf8) else {
+                    logger.error("Unable to serialize authorizationCode to utf8 string.")
+                    throw FirebaseAccountError.setupError
+                }
 
-        try await context.dispatchFirebaseAuthAction {
-            guard let credential = try await requestAppleSignInCredential() else {
-                return // user canceled
-            }
-
-            guard let authorizationCode = credential.authorizationCode else {
-                Self.logger.error("Unable to fetch authorizationCode from ASAuthorizationAppleIDCredential.")
-                throw FirebaseAccountError.setupError
-            }
-
-            guard let authorizationCodeString = String(data: authorizationCode, encoding: .utf8) else {
-                Self.logger.error("Unable to serialize authorizationCode to utf8 string.")
-                throw FirebaseAccountError.setupError
-            }
-
-            Self.logger.debug("Re-Authenticating Apple Credential before deleting user account ...")
-            let authCredential = try oAuthCredential(from: credential)
-            try await currentUser.reauthenticate(with: authCredential)
-
-            do {
-                Self.logger.debug("Revoking Apple Id Token ...")
-                try await Auth.auth().revokeToken(withAuthorizationCode: authorizationCodeString)
-            } catch let error as NSError {
+                do {
+                    logger.debug("Revoking Apple Id Token ...")
+                    try await Auth.auth().revokeToken(withAuthorizationCode: authorizationCodeString)
+                } catch let error as NSError {
 #if targetEnvironment(simulator)
-                // token revocation for Sign in with Apple is currently unsupported for Firebase
-                // see https://github.com/firebase/firebase-tools/issues/6028
-                // and https://github.com/firebase/firebase-tools/pull/6050
-                if AuthErrorCode(_nsError: error).code != .invalidCredential {
+                    // token revocation for Sign in with Apple is currently unsupported for Firebase
+                    // see https://github.com/firebase/firebase-tools/issues/6028
+                    // and https://github.com/firebase/firebase-tools/pull/6050
+                    if AuthErrorCode(_nsError: error).code != .invalidCredential {
+                        throw error
+                    }
+#else
+                    throw error
+#endif
+                } catch {
                     throw error
                 }
-#else
-                throw error
-#endif
-            } catch {
-                throw error
             }
 
             try await currentUser.delete()
-            Self.logger.debug("delete() for user.")
+            logger.debug("delete() for user.")
         }
     }
 
@@ -312,28 +285,21 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         do {
             // if we modify sensitive credentials and require a recent login
             if modifications.modifiedDetails.storage[UserIdKey.self] != nil || modifications.modifiedDetails.password != nil {
-                let result: ReauthenticationOperationResult
-
-                // TODO: which reauthentication to call? (Just prefer Apple for simplicity?)
-                if currentUser.providerData.contains(where: {$0.providerID == "apple.com" }) { // TODO: that's how we check?
-                    result = try await reauthenticateUserApple(user: currentUser)
-                } else {
-                    result = try await reauthenticateUserPassword(user: currentUser)
-                }
+                let result = try await reauthenticateUser(user: currentUser)
                 guard case .success = result else {
-                    Self.logger.debug("Re-authentication was cancelled. Not deleting the account.")
+                    logger.debug("Re-authentication was cancelled. Not updating sensitive user details.")
                     return // got cancelled!
                 }
             }
 
             if let userId = modifications.modifiedDetails.storage[UserIdKey.self] {
-                Self.logger.debug("updateEmail(to:) for user.")
+                logger.debug("updateEmail(to:) for user.")
                 // TODO: try await currentUser.sendEmailVerification(beforeUpdatingEmail: userId) (show in UI that they need to accept!)
                 try await currentUser.updateEmail(to: userId)
             }
 
             if let password = modifications.modifiedDetails.password {
-                Self.logger.debug("updatePassword(to:) for user.")
+                logger.debug("updatePassword(to:) for user.")
                 try await currentUser.updatePassword(to: password)
             }
 
@@ -344,16 +310,54 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             // None of the above requests will trigger our state change listener, therefore, we just call it manually.
             try await context.notifyUserSignIn(user: currentUser)
         } catch let error as NSError {
-            Self.logger.error("Received NSError on firebase dispatch: \(error)")
+            logger.error("Received NSError on firebase dispatch: \(error)")
             throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
-            Self.logger.error("Received error on firebase dispatch: \(error)")
+            logger.error("Received error on firebase dispatch: \(error)")
             throw FirebaseAccountError.unknown(.internalError)
         }
     }
 
+    private func reauthenticateUser(user: User) async throws -> ReauthenticationOperation {
+        // TODO: which reauthentication to call? (Just prefer Apple for simplicity?) => any way to build UI for a selection?
+
+        if user.providerData.contains(where: { $0.providerID == "apple.com" }) {
+            try await reauthenticateUserApple(user: user)
+        } else {
+            try await reauthenticateUserPassword(user: user)
+        }
+    }
+
+    private func reauthenticateUserPassword(user: User) async throws -> ReauthenticationOperation {
+        guard let userId = user.email else {
+            return .cancelled
+        }
+
+        logger.debug("Requesting credentials for re-authentication...")
+        let passwordQuery = await firebaseModel.reauthenticateUser(userId: userId)
+        guard case let .password(password) = passwordQuery else {
+            return .cancelled
+        }
+
+        logger.debug("Re-authenticating password-based user now ...")
+        try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
+        return .success
+    }
+
+    private func reauthenticateUserApple(user: User) async throws -> ReauthenticationOperation {
+        guard let appleIdCredential = try await requestAppleSignInCredential() else {
+            return .cancelled
+        }
+
+        let credential = try oAuthCredential(from: appleIdCredential)
+        logger.debug("Re-Authenticating Apple credential ...")
+        try await user.reauthenticate(with: credential)
+
+        return .success(with: appleIdCredential)
+    }
+
     private func updateDisplayName(of user: User, _ name: PersonNameComponents) async throws {
-        Self.logger.debug("Creating change request for updated display name.")
+        logger.debug("Creating change request for updated display name.")
         let changeRequest = user.createProfileChangeRequest()
         changeRequest.displayName = name.formatted(.name(style: .long))
         try await changeRequest.commitChanges()
@@ -390,22 +394,22 @@ extension FirebaseAccountService {
         switch result {
         case let .success(authorization):
             guard let appleIdCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
-                Self.logger.error("Unable to obtain credential as ASAuthorizationAppleIDCredential")
+                logger.error("Unable to obtain credential as ASAuthorizationAppleIDCredential")
                 throw FirebaseAccountError.setupError
             }
 
             let credential = try oAuthCredential(from: appleIdCredential)
 
-            Self.logger.info("onAppleSignInCompletion creating firebase apple credential from authorization credential")
+            logger.info("onAppleSignInCompletion creating firebase apple credential from authorization credential")
 
             try await signupWithCredential(credential)
         case let .failure(error):
             guard let authorizationError = error as? ASAuthorizationError else {
-                Self.logger.error("onAppleSignInCompletion received unknown error: \(error)")
+                logger.error("onAppleSignInCompletion received unknown error: \(error)")
                 throw error
             }
 
-            Self.logger.error("Received ASAuthorizationError error: \(authorizationError)")
+            logger.error("Received ASAuthorizationError error: \(authorizationError)")
 
             switch ASAuthorizationError.Code(rawValue: authorizationError.errorCode) {
             case .unknown, .canceled: // 1000, 1001
@@ -422,7 +426,7 @@ extension FirebaseAccountService {
 
 
     private func requestAppleSignInCredential() async throws -> ASAuthorizationAppleIDCredential? {
-        Self.logger.debug("Requesting on the fly Sign in with Apple")
+        logger.debug("Requesting on the fly Sign in with Apple")
         let appleIDProvider = ASAuthorizationAppleIDProvider()
         let request = appleIDProvider.createRequest()
 
@@ -434,7 +438,7 @@ extension FirebaseAccountService {
         }
 
         guard lastNonce != nil else {
-            Self.logger.error("onAppleSignInCompletion was received though no login request was found.")
+            logger.error("onAppleSignInCompletion was received though no login request was found.")
             throw FirebaseAccountError.setupError
         }
 
@@ -443,7 +447,7 @@ extension FirebaseAccountService {
 
     private func performRequest(_ request: ASAuthorizationAppleIDRequest) async throws -> ASAuthorizationResult? {
         guard let authorizationController = firebaseModel.authorizationController else {
-            Self.logger.error("Failed to perform AppleID request. We are missing access to the AuthorizationController.")
+            logger.error("Failed to perform AppleID request. We are missing access to the AuthorizationController.")
             throw FirebaseAccountError.setupError
         }
 
@@ -459,17 +463,17 @@ extension FirebaseAccountService {
     @MainActor
     private func oAuthCredential(from credential: ASAuthorizationAppleIDCredential) throws -> OAuthCredential {
         guard let lastNonce else {
-            Self.logger.error("AppleIdCredential was received though no login request was found.")
+            logger.error("AppleIdCredential was received though no login request was found.")
             throw FirebaseAccountError.setupError
         }
 
         guard let identityToken = credential.identityToken else {
-            Self.logger.error("Unable to fetch identityToken from ASAuthorizationAppleIDCredential.")
+            logger.error("Unable to fetch identityToken from ASAuthorizationAppleIDCredential.")
             throw FirebaseAccountError.setupError
         }
 
         guard let identityTokenString = String(data: identityToken, encoding: .utf8) else {
-            Self.logger.error("Unable to serialize identityToken to utf8 string.")
+            logger.error("Unable to serialize identityToken to utf8 string.")
             throw FirebaseAccountError.setupError
         }
 
