@@ -10,37 +10,37 @@ import FirebaseFirestore
 import SpeziAccount
 
 
-class FirestoreDecodeVisitor: AccountKeyVisitor {
-    private let builder: SimpleBuilder<AccountDetails>
+struct FirestoreDecodeVisitor: AccountKeyVisitor {
+    private var details: AccountDetails
     private let value: Any
     private let reference: DocumentReference
 
     private var error: Error?
 
 
-    init(value: Any, builder: SimpleBuilder<AccountDetails>, in reference: DocumentReference) {
+    init(value: Any, details: AccountDetails, in reference: DocumentReference) {
         self.value = value
-        self.builder = builder
+        self.details = details
         self.reference = reference
     }
 
 
-    func visit<Key: AccountKey>(_ key: Key.Type) {
+    mutating func visit<Key: AccountKey>(_ key: Key.Type) {
         let decoder = Firestore.Decoder()
 
         do {
-            // TODO: do we really need to pass the doc reference?
-            try builder.set(key, value: decoder.decode(Key.Value.self, from: value, in: reference))
+            let value = try decoder.decode(Key.Value.self, from: value, in: reference)
+            details.set(key, value: value)
         } catch {
             self.error = error
         }
     }
 
-    func final() -> Result<Void, Error> {
+    func final() -> Result<AccountDetails, Error> {
         if let error {
             return .failure(error)
         } else {
-            return .success(())
+            return .success(details)
         }
     }
 }

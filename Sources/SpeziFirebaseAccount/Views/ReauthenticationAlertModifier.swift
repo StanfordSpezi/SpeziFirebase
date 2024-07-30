@@ -35,6 +35,8 @@ struct ReauthenticationAlertModifier: ViewModifier {
         firebaseModel.reauthenticationContext
     }
 
+    nonisolated init() {}
+
 
     func body(content: Content) -> some View {
         content
@@ -48,36 +50,34 @@ struct ReauthenticationAlertModifier: ViewModifier {
                 SecureField(text: $password) {
                     Text(PasswordFieldType.password.localizedStringResource)
                 }
-                    .textContentType(.password) // TODO: this is not a newPassword?
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .validate(input: password, rules: .nonEmpty)
-                    .receiveValidation(in: $validation)
-                    .onDisappear {
-                        password = "" // make sure we don't hold onto passwords
-                    }
+                .textContentType(.password)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .validate(input: password, rules: .nonEmpty)
+                .receiveValidation(in: $validation)
+                .onDisappear {
+                    password = "" // make sure we don't hold onto passwords
+                }
 
-                Button(role: .cancel, action: {
+                Button(role: .cancel) {
                     context.continuation.resume(returning: .cancelled)
-                }) {
+                } label: {
                     Text("Cancel", bundle: .module)
                 }
 
-                Button(action: {
+                Button {
                     guard validation.validateSubviews() else {
                         context.continuation.resume(returning: .cancelled)
                         return
                     }
                     context.continuation.resume(returning: .password(password))
-                }) {
+                } label: {
                     Text("Login", bundle: .module)
                 }
             } message: { context in
                 Text("Please enter your password for \(context.userId).")
             }
     }
-
-    nonisolated init() {}
 }
 
 

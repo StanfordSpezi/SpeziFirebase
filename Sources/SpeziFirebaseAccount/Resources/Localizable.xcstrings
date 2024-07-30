@@ -413,59 +413,8 @@
         }
       }
     },
-    "FIREBASE_EMAIL_AND_PASSWORD" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-Mail und Password"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-Mail and Password"
-          }
-        }
-      }
-    },
-    "FIREBASE_IDENTITY_PROVIDER" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Single Sign-On"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Single Sign-On"
-          }
-        }
-      }
-    },
     "Login" : {
 
-    },
-    "OAuth Credential" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OAuth Berechtigung"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OAuth Credential"
-          }
-        }
-      }
     },
     "Please enter your password for %@." : {
 

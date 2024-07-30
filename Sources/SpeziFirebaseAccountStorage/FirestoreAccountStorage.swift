@@ -70,14 +70,16 @@ import SpeziFirestore
 /// }
 /// ```
 public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: completely restructure docs!
+    @Application(\.logger) private var logger
+
     @Dependency private var firestore: SpeziFirestore.Firestore // ensure firestore is configured
     @Dependency private var externalStorage: ExternalAccountStorage
+    @Dependency private var localCache: LocalDetailsCache
 
     private let collection: @Sendable () -> CollectionReference
 
 
     private var listenerRegistrations: [String: ListenerRegistration] = [:]
-    private var localCache: [String: AccountDetails] = [:]
 
     public init(storeIn collection: @Sendable @autoclosure @escaping () -> CollectionReference) {
         self.collection = collection
@@ -113,10 +115,11 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
     private func processUpdatedSnapshot(for accountId: String, with keys: [any AccountKey.Type], _ snapshot: DocumentSnapshot) {
         do {
             let details = try buildAccountDetails(from: snapshot, keys: keys)
-            localCache[accountId] = details
+            localCache.communicateRemoteChanges(for: accountId, details)
 
             externalStorage.notifyAboutUpdatedDetails(for: accountId, details)
         } catch {
+            logger.error("")
             // TODO: log or do something with that info!
             // TODO: does it make sense to notify the account service about the error?
         }
@@ -127,19 +130,24 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
             return AccountDetails()
         }
 
-        return try .build { details in
-            for key in keys {
-                guard let value = data[key.identifier] else {
-                    continue
-                }
+        var details = AccountDetails()
 
-                let visitor = FirestoreDecodeVisitor(value: value, builder: details, in: snapshot.reference)
-                key.accept(visitor)
-                if case let .failure(error) = visitor.final() {
-                    throw FirestoreError(error)
-                }
+        for key in keys {
+            guard let value = data[key.identifier] else {
+                continue
+            }
+
+            var visitor = FirestoreDecodeVisitor(value: value, details: details, in: snapshot.reference)
+            key.accept(&visitor)
+            switch visitor.final() {
+            case let .success(value):
+                details = value
+            case let .failure(error):
+                throw FirestoreError(error)
             }
         }
+
+        return details
     }
 
     public func create(_ accountId: String, _ details: AccountDetails) async throws {
@@ -149,14 +157,13 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
     }
 
     public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async throws -> AccountDetails? { // TODO: transport keys as set?
-        let cached = localCache[accountId]
+        let cached = localCache.loadEntry(for: accountId, keys)
 
         if listenerRegistrations[accountId] != nil { // check that there is a snapshot listener in place
             snapshotListener(for: accountId, with: keys)
         }
 
-
-        return cached // TODO: also try to load from disk if in-memory cache doesn't work!
+        return cached
     }
 
     public func modify(_ accountId: String, _ modifications: AccountModifications) async throws {
@@ -181,15 +188,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
             throw FirestoreError(error)
         }
 
-        // make sure our cache is consistent
-        let details: AccountDetails = .build { details in
-            if let cached = localCache[accountId] {
-                details.add(contentsOf: cached)
-            }
-            details.add(contentsOf: modifications.modifiedDetails, merge: true)
-            details.removeAll(modifications.removedAccountKeys)
-        }
-        localCache[accountId] = details
+        localCache.communicateModifications(for: accountId, modifications)
 
 
         // TODO: check if the snapshot listener is in place with the same set of keys (add remove)!
@@ -206,8 +205,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
         }
         registration.remove()
 
-        localCache.removeValue(forKey: accountId)
-        // TODO: remove values form disk! don't keep personal data after logout
+        localCache.clearEntry(for: accountId)
     }
 
     public func delete(_ accountId: String) async throws {

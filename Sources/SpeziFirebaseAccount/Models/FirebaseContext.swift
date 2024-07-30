@@ -25,7 +25,7 @@ private struct UserUpdate {
 }
 
 
-actor FirebaseContext: Module, DefaultInitializable {
+actor FirebaseContext: Module, DefaultInitializable { // TODO: better name? no actor!
     static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "InternalStorage")
 
     @Dependency private var localStorage: LocalStorage
@@ -67,6 +67,12 @@ actor FirebaseContext: Module, DefaultInitializable {
                 }
             }
         }
+
+        Task {
+            // Previous SpeziFirebase releases used to store an identifier for the active account service on disk.
+            // We keep this for now, to clear the keychain of all users.
+            await resetActiveAccountService()
+        }
     }
 
     // a overload that just returns void
@@ -93,7 +99,7 @@ actor FirebaseContext: Module, DefaultInitializable {
         action: @Sendable () async throws -> AuthDataResult?
     ) async throws {
         defer {
-            cleanupQueuedChanges()
+            shouldQueue = false
         }
 
         shouldQueue = true
@@ -108,16 +114,6 @@ actor FirebaseContext: Module, DefaultInitializable {
         } catch {
             Self.logger.error("Received error on firebase dispatch: \(error)")
             throw FirebaseAccountError.unknown(.internalError)
-        }
-    }
-
-    private func removeCredentials(userId: String, server: String) { // TODO: remove legacy keys!
-        do {
-            try secureStorage.deleteCredentials(userId, server: server)
-        } catch SecureStorageError.notFound {
-            // we don't care if we want to delete something that doesn't exist
-        } catch {
-            Self.logger.error("Failed to remove credentials: \(error)")
         }
     }
 
@@ -147,25 +143,22 @@ actor FirebaseContext: Module, DefaultInitializable {
 
         let update = UserUpdate(change: change)
 
+        // TODO: update some of the log messages to be less confusing!
         if shouldQueue {
             Self.logger.debug("Received stateDidChange that is queued to be dispatched in active call.")
             self.queuedUpdate = update
         } else {
             Self.logger.debug("Received stateDidChange that that was triggered due to other reasons. Dispatching anonymously...")
-            anonymouslyDispatch(update: update)
+
+            // just apply update out of band, errors are just logged as we can't throw them somewhere where UI pops up // TODO: (should we try?)
+            Task {
+                do {
+                    try await apply(update: update)
+                } catch {
+                    Self.logger.error("Failed to anonymously dispatch user change due to \(error)")
+                }
+            }
         }
-    }
-
-    private func cleanupQueuedChanges() {
-        shouldQueue = false
-
-        guard let queuedUpdate = self.queuedUpdate else {
-            return
-        }
-
-
-        self.queuedUpdate = nil
-        anonymouslyDispatch(update: queuedUpdate)
     }
 
     private func dispatchQueuedChanges(result: AuthDataResult? = nil) async throws {
@@ -185,17 +178,6 @@ actor FirebaseContext: Module, DefaultInitializable {
         try await apply(update: queuedUpdate)
     }
 
-    private func anonymouslyDispatch(update: UserUpdate) {
-        // anonymous dispatch doesn't forward the error!
-        Task {
-            do {
-                try await apply(update: update)
-            } catch {
-                Self.logger.error("Failed to anonymously dispatch user change due to \(error)")
-            }
-        }
-    }
-
     private func apply(update: UserUpdate) async throws {
         switch update.change {
         case let .user(user):
@@ -203,23 +185,10 @@ actor FirebaseContext: Module, DefaultInitializable {
             if user.isAnonymous {
                 // We explicitly handle anonymous users on every signup and call our state change handler ourselves.
                 // But generally, we don't care about anonymous users.
+
+                // TODO: we do now! restructure this! => rename account service methods to indicate a signup or link!
                 return
             }
-
-            /*
-             // TODO: investigate if this is still an issue?
-            guard let service = update.service else {
-                Self.logger.error("Failed to dispatch user update due to missing account service identifier on disk!")
-                do {
-                    // This typically happens if there still is a Account associated in the Keychain but the App was recently deleted.
-                    // Therefore, we reset the user account to allow for easily re-authenticating with firebase.
-                    try Auth.auth().signOut()
-                } catch {
-                    Self.logger.warning("Tried to remove local user. But Firebase signOut failed with \(error)")
-                }
-                throw FirebaseAccountError.setupError
-            }
-             */
 
             try await notifyUserSignIn(user: user, isNewUser: isNewUser)
         case .removed:
@@ -227,7 +196,7 @@ actor FirebaseContext: Module, DefaultInitializable {
         }
     }
 
-    func notifyUserSignIn(user: User, isNewUser: Bool = false) async throws {
+    func notifyUserSignIn(user: User, isNewUser: Bool = false, mergeWith additionalDetails: AccountDetails? = nil) async throws {
         guard let email = user.email else {
             Self.logger.error("Failed to associate firebase account due to missing email address.")
             throw FirebaseAccountError.invalidEmail
@@ -236,30 +205,29 @@ actor FirebaseContext: Module, DefaultInitializable {
         Self.logger.debug("Notifying SpeziAccount with updated user details.")
 
 
-        let details: AccountDetails = .build { details in
-            details.accountId = user.uid
-            details.userId = email
-            details.isEmailVerified = user.isEmailVerified
+        var details = AccountDetails()
+        details.accountId = user.uid
+        details.userId = email
+        details.isEmailVerified = user.isEmailVerified
 
-            if let displayName = user.displayName,
-               let nameComponents = try? PersonNameComponents(displayName, strategy: .name) {
-                // we wouldn't be here if we couldn't create the person name components from the given string
-                details.name = nameComponents
-            }
+        if let displayName = user.displayName,
+           let nameComponents = try? PersonNameComponents(displayName, strategy: .name) {
+            // we wouldn't be here if we couldn't create the person name components from the given string
+            details.name = nameComponents
         }
 
-        // Previous SpeziFirebase releases used to store the password within the keychain.
-        // We keep this for now, to clear the keychain of all users.
-        removeCredentials(userId: details.userId, server: StorageKeys.emailPasswordCredentials)
+        if let additionalDetails {
+            details.add(contentsOf: additionalDetails)
+        }
 
-        try await account.supplyUserDetails(details, isNewUser: isNewUser)
+        let account = account
+        await account.supplyUserDetails(details, isNewUser: isNewUser)
     }
 
     func notifyUserRemoval() async throws {
         Self.logger.debug("Notifying SpeziAccount of removed user details.")
 
+        let account = account
         await account.removeUserDetails()
-
-        resetActiveAccountService()
     }
 }

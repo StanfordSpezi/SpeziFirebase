@@ -30,14 +30,6 @@ extension AccountKeys {
 }
 
 
-extension AccountValues {
-    /// Access if the user's email of their firebase account is verified.
-    public var isEmailVerified: Bool {
-        storage[FirebaseEmailVerifiedKey.self] ?? false
-    }
-}
-
-
 extension FirebaseEmailVerifiedKey {
     public struct DataEntry: DataEntryView {
         public typealias Key = FirebaseEmailVerifiedKey

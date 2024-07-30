@@ -35,7 +35,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/StanfordSpezi/Spezi", from: "1.0.0"),
         .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", from: "1.0.0"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziStorage", from: "1.0.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziStorage", from: "1.1.0"),
         .package(url: "https://github.com/StanfordSpezi/SpeziAccount", branch: "feature/account-service-singleton"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.13.0")
     ] + swiftLintPackage(),

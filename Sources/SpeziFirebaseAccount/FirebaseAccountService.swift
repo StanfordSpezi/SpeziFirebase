@@ -28,7 +28,7 @@ import SwiftUI
 ///     }
 /// }
 /// ```
-public final class FirebaseAccountService: AccountService {
+public final class FirebaseAccountService: AccountService { // swiftlint:disable:this type_body_length
     // TODO: update all docs!
     @Application(\.logger)
     private var logger
@@ -47,9 +47,9 @@ public final class FirebaseAccountService: AccountService {
     private let authenticationMethods: FirebaseAuthAuthenticationMethods
     public let configuration: AccountServiceConfiguration
 
-    @IdentityProvider(placement: .embedded)
+    @IdentityProvider(section: .primary)
     private var loginWithPassword = FirebaseLoginView()
-    @IdentityProvider(placement: .external)
+    @IdentityProvider(section: .singleSignOn)
     private var signInWithApple = FirebaseSignInWithAppleButton()
 
     @SecurityRelatedModifier private var emailPasswordReauth = ReauthenticationAlertModifier()
@@ -107,25 +107,36 @@ public final class FirebaseAccountService: AccountService {
             Auth.auth().useEmulator(withHost: emulatorSettings.host, port: emulatorSettings.port)
         }
 
-        let subscription = externalStorage.detailUpdates
+        let subscription = externalStorage.updatedDetails
         Task { [weak self] in
             for await updatedDetails in subscription {
                 guard let self else {
                     return
                 }
 
-                handleUpdatedDetailsFromExternalStorage(for: updatedDetails.accountId, details: updatedDetails.details)
+                await handleUpdatedDetailsFromExternalStorage(for: updatedDetails.accountId, details: updatedDetails.details)
             }
         }
     }
 
-    private func handleUpdatedDetailsFromExternalStorage(for accountId: String, details: AccountDetails) {
-        // TODO: merge with local representation and notify account of the new details?
+    private func handleUpdatedDetailsFromExternalStorage(for accountId: String, details: AccountDetails) async {
+        guard let user = Auth.auth().currentUser else {
+            return
+        }
+
+        // TODO: make sure we do not interrupt! anything?
+        do {
+            let context = context
+            try await context.notifyUserSignIn(user: user, mergeWith: details)
+        } catch {
+            logger.error("Failed to propagate update details from external storage: \(error)")
+        }
     }
 
     func login(userId: String, password: String) async throws {
         logger.debug("Received new login request...")
 
+        let context = context
         try await context.dispatchFirebaseAuthAction { @MainActor in
             try await Auth.auth().signIn(withEmail: userId, password: password)
             logger.debug("signIn(withEmail:password:)")
@@ -139,6 +150,7 @@ public final class FirebaseAccountService: AccountService {
             throw FirebaseAccountError.invalidCredentials
         }
 
+        let context = context
         try await context.dispatchFirebaseAuthAction { @MainActor in
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
@@ -168,7 +180,7 @@ public final class FirebaseAccountService: AccountService {
     }
 
     func signupWithCredential(_ credential: OAuthCredential) async throws {
-        // TODO: the whole firebase auth action complexity is not necessary anymore is it? (We are a single account service now!)
+        let context = context
         try await context.dispatchFirebaseAuthAction { @MainActor in
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
@@ -204,6 +216,8 @@ public final class FirebaseAccountService: AccountService {
     }
 
     public func logout() async throws {
+        let context = context
+
         guard Auth.auth().currentUser != nil else {
             if account.signedIn {
                 try await context.notifyUserRemoval()
@@ -221,6 +235,8 @@ public final class FirebaseAccountService: AccountService {
     }
 
     public func delete() async throws {
+        let context = context
+
         guard let currentUser = Auth.auth().currentUser else {
             if account.signedIn {
                 try await context.notifyUserRemoval()
@@ -228,7 +244,7 @@ public final class FirebaseAccountService: AccountService {
             throw FirebaseAccountError.notSignedIn
         }
 
-        try await notifications.reportEvent(.deletingAccount, for: currentUser.uid)
+        try await notifications.reportEvent(.deletingAccount(currentUser.uid))
 
         try await context.dispatchFirebaseAuthAction { @MainActor in
             // TODO: always use Apple Id if we can, we need the token!
@@ -275,6 +291,8 @@ public final class FirebaseAccountService: AccountService {
     }
 
     public func updateAccountDetails(_ modifications: AccountModifications) async throws {
+        let context = context
+
         guard let currentUser = Auth.auth().currentUser else {
             if account.signedIn {
                 try await context.notifyUserRemoval()
@@ -284,7 +302,7 @@ public final class FirebaseAccountService: AccountService {
 
         do {
             // if we modify sensitive credentials and require a recent login
-            if modifications.modifiedDetails.storage[UserIdKey.self] != nil || modifications.modifiedDetails.password != nil {
+            if modifications.modifiedDetails.contains(UserIdKey.self) || modifications.modifiedDetails.password != nil {
                 let result = try await reauthenticateUser(user: currentUser)
                 guard case .success = result else {
                     logger.debug("Re-authentication was cancelled. Not updating sensitive user details.")
@@ -292,10 +310,10 @@ public final class FirebaseAccountService: AccountService {
                 }
             }
 
-            if let userId = modifications.modifiedDetails.storage[UserIdKey.self] {
+            if modifications.modifiedDetails.contains(UserIdKey.self) {
                 logger.debug("updateEmail(to:) for user.")
                 // TODO: try await currentUser.sendEmailVerification(beforeUpdatingEmail: userId) (show in UI that they need to accept!)
-                try await currentUser.updateEmail(to: userId)
+                try await currentUser.updateEmail(to: modifications.modifiedDetails.userId)
             }
 
             if let password = modifications.modifiedDetails.password {
@@ -485,3 +503,5 @@ extension FirebaseAccountService {
         )
     }
 }
+
+// swiftlint:disable:this file_length

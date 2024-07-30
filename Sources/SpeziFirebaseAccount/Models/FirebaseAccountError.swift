@@ -9,24 +9,67 @@
 import FirebaseAuth
 import Foundation
 
-// TODO: move whole folder
 
-
-enum FirebaseAccountError: LocalizedError { // TODO: make public?
+/// Error thrown by the `FirebaseAccountService`.
+///
+/// This error type might be thrown by methods of the ``FirebaseAccountService``.
+public enum FirebaseAccountError {
+    /// The provided email is invalid.
     case invalidEmail
+    /// The account is already in use.
     case accountAlreadyInUse
+    /// The password was rejected because it is too weak.
     case weakPassword
+    /// The provided credentials are invalid.
     case invalidCredentials
+    /// Internal error occurred when resetting the password.
     case internalPasswordResetError
+    /// Internal error when performing the account operation.
     case setupError
+    /// An operation was performed that requires an signed in user account.
     case notSignedIn
+    /// The security operation requires a recent login.
     case requireRecentLogin
+    /// The `ASAuthorizationAppleIDRequest` request failed due do an error reported from the AccountServices framework.
     case appleFailed
+    /// Linking the account failed as the account was already linked with this type of account provider.
     case linkFailedDuplicate
+    /// Linking the account failed as the credentials are already in use with a different account.
     case linkFailedAlreadyInUse
+    /// Unrecognized Firebase account error.
     case unknown(AuthErrorCode.Code)
-    
-    
+
+
+    /// Derive the error from the Firebase `AuthErrorCode`.
+    /// - Parameter authErrorCode: The error code from the NSError reported by Firebase Auth.
+    public init(authErrorCode: AuthErrorCode) {
+        switch authErrorCode.code {
+        case .invalidEmail, .invalidRecipientEmail:
+            self = .invalidEmail
+        case .emailAlreadyInUse:
+            self = .accountAlreadyInUse
+        case .weakPassword:
+            self = .weakPassword
+        case .userDisabled, .wrongPassword, .userNotFound, .userMismatch:
+            self = .invalidCredentials
+        case .invalidSender, .invalidMessagePayload:
+            self = .internalPasswordResetError
+        case .operationNotAllowed, .invalidAPIKey, .appNotAuthorized, .keychainError, .internalError:
+            self = .setupError
+        case .requiresRecentLogin:
+            self = .requireRecentLogin
+        case .providerAlreadyLinked:
+            self = .linkFailedDuplicate
+        case .credentialAlreadyInUse:
+            self = .linkFailedAlreadyInUse
+        default:
+            self = .unknown(authErrorCode.code)
+        }
+    }
+}
+
+
+extension FirebaseAccountError: LocalizedError {
     private var errorDescriptionValue: String.LocalizationValue {
         switch self {
         case .invalidEmail:
@@ -56,10 +99,10 @@ enum FirebaseAccountError: LocalizedError { // TODO: make public?
         }
     }
 
-    var errorDescription: String? {
+    public var errorDescription: String? {
         .init(localized: errorDescriptionValue, bundle: .module)
     }
-    
+
     private var recoverySuggestionValue: String.LocalizationValue {
         switch self {
         case .invalidEmail:
@@ -89,35 +132,7 @@ enum FirebaseAccountError: LocalizedError { // TODO: make public?
         }
     }
 
-    var recoverySuggestion: String? {
+    public var recoverySuggestion: String? {
         .init(localized: recoverySuggestionValue, bundle: .module)
-    }
-
-    
-    init(authErrorCode: AuthErrorCode) {
-        // TODO: FirebaseAccountService.logger.debug("Received authError with code \(authErrorCode)") // TODO: what?
-
-        switch authErrorCode.code {
-        case .invalidEmail, .invalidRecipientEmail:
-            self = .invalidEmail
-        case .emailAlreadyInUse:
-            self = .accountAlreadyInUse
-        case .weakPassword:
-            self = .weakPassword
-        case .userDisabled, .wrongPassword, .userNotFound, .userMismatch:
-            self = .invalidCredentials
-        case .invalidSender, .invalidMessagePayload:
-            self = .internalPasswordResetError
-        case .operationNotAllowed, .invalidAPIKey, .appNotAuthorized, .keychainError, .internalError:
-            self = .setupError
-        case .requiresRecentLogin:
-            self = .requireRecentLogin
-        case .providerAlreadyLinked:
-            self = .linkFailedDuplicate
-        case .credentialAlreadyInUse:
-            self = .linkFailedAlreadyInUse
-        default:
-            self = .unknown(authErrorCode.code)
-        }
     }
 }
