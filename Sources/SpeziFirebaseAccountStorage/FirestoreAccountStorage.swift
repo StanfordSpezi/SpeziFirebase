@@ -170,8 +170,10 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
         do {
             switch result {
             case let .success(data):
-                try await userDocument(for: accountId)
-                    .setData(data, merge: true)
+                if !data.isEmpty {
+                    try await userDocument(for: accountId)
+                        .setData(data, merge: true)
+                }
             case let .failure(error):
                 throw error
             }
@@ -180,8 +182,10 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
                 result[key.identifier] = FieldValue.delete()
             }
 
-            try await userDocument(for: accountId)
-                .updateData(removedFields)
+            if !removedFields.isEmpty {
+                try await userDocument(for: accountId)
+                    .updateData(removedFields)
+            }
         } catch {
             throw FirestoreError(error)
         }
