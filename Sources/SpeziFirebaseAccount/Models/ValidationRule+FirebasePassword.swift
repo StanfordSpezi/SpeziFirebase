@@ -9,7 +9,7 @@
 import SpeziValidation
 
 
-extension ValidationRule { // TODO: move!
+extension ValidationRule {
     static var minimumFirebasePassword: ValidationRule {
         // Firebase as a non-configurable limit of 6 characters for an account password.
         // Refer to https://stackoverflow.com/questions/38064248/firebase-password-validation-allowed-regex

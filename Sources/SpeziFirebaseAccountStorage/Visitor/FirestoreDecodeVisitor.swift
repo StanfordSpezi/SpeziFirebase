@@ -11,36 +11,35 @@ import SpeziAccount
 
 
 struct FirestoreDecodeVisitor: AccountKeyVisitor {
-    private var details: AccountDetails
-    private let value: Any
+    private let data: [String: Any]
     private let reference: DocumentReference
 
-    private var error: Error?
+    private var details = AccountDetails()
+    private(set) var errors: [(any AccountKey.Type, Error)] = []
 
 
-    init(value: Any, details: AccountDetails, in reference: DocumentReference) {
-        self.value = value
-        self.details = details
+    init(data: [String: Any], in reference: DocumentReference) {
+        self.data = data
         self.reference = reference
     }
 
 
     mutating func visit<Key: AccountKey>(_ key: Key.Type) {
+        guard let dataValue = data[key.identifier] else {
+            return
+        }
+
         let decoder = Firestore.Decoder()
 
         do {
-            let value = try decoder.decode(Key.Value.self, from: value, in: reference)
+            let value = try decoder.decode(Key.Value.self, from: dataValue, in: reference)
             details.set(key, value: value)
         } catch {
-            self.error = error
+            errors.append((key, error))
         }
     }
 
-    func final() -> Result<AccountDetails, Error> {
-        if let error {
-            return .failure(error)
-        } else {
-            return .success(details)
-        }
+    func final() -> AccountDetails {
+        details
     }
 }

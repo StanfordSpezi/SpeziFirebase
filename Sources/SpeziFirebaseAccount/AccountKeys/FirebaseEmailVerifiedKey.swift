@@ -10,34 +10,32 @@ import Foundation
 import SpeziAccount
 import SwiftUI
 
+private struct EntryView: DataEntryView {
+    @Binding private var value: Bool
 
-/// Flag indicating if the firebase account has a verified email address.
-///
-/// - Important: This key is read-only and cannot be modified.
-public struct FirebaseEmailVerifiedKey: AccountKey {
-    public typealias Value = Bool
-    public static let name: LocalizedStringResource = "E-Mail Verified" // not translated as never shown
-    public static let category: AccountKeyCategory = .other
-    public static let initialValue: InitialValue<Bool> = .default(false)
-}
+    var body: some View {
+        BoolEntryView(\.isEmailVerified, $value)
+            .disabled(true) // you cannot manually change that
+    }
 
-
-extension AccountKeys {
-    /// The email-verified ``FirebaseEmailVerifiedKey`` metatype.
-    public var isEmailVerified: FirebaseEmailVerifiedKey.Type {
-        FirebaseEmailVerifiedKey.self
+    init(_ value: Binding<Bool>) {
+        _value = value
     }
 }
 
 
-extension FirebaseEmailVerifiedKey {
-    public struct DataEntry: DataEntryView {
-        public typealias Key = FirebaseEmailVerifiedKey
-
-        public var body: some View {
-            Text(verbatim: "The FirebaseEmailVerifiedKey cannot be set!")
-        }
-
-        public init(_ value: Binding<Value>) {}
-    }
+extension AccountDetails {
+    /// Flag indicating if the firebase account has a verified email address.
+    ///
+    /// - Important: This key is read-only and cannot be modified.
+    @AccountKey(
+        name: LocalizedStringResource("E-Mail Verified", bundle: .atURL(from: .module)),
+        as: Bool.self,
+        entryView: EntryView.self
+    )
+    public var isEmailVerified: Bool? // swiftlint:disable:this discouraged_optional_boolean
 }
+
+
+@KeyEntry(\.isEmailVerified)
+public extension AccountKeys {} // swiftlint:disable:this no_extension_access_modifier

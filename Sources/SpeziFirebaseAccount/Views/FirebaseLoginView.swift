@@ -16,14 +16,11 @@ struct FirebaseLoginView: View {
 
 
     var body: some View {
-        // TODO: configure preferred visual way:
-        //  => signup view + Already have an account?
-        //  => login view + Don't have an account yet?
-        // TODO: emebded login view styles?
-        UserIdPasswordEmbeddedView { credential in
+        // you can customize appearance using the `preferredAccountSetupStyle(_:)` modifier
+        AccountSetupProviderView { credential in
             try await service.login(userId: credential.userId, password: credential.password)
         } signup: { details in
-            try await service.signUp(signupDetails: details)
+            try await service.signUp(with: details)
         } resetPassword: { userId in
             try await service.resetPassword(userId: userId)
         }

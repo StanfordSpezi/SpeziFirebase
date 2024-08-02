@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import AuthenticationServices
+import SpeziAccount
 import SpeziViews
 import SwiftUI
 
@@ -41,8 +41,6 @@ struct FirebaseSignInWithAppleButton: View {
                 }
             }
         }
-            .frame(height: 55)
-            .signInWithAppleButtonStyle(colorScheme == .light ? .black : .white)
             .viewStateAlert(state: $viewState)
     }
 

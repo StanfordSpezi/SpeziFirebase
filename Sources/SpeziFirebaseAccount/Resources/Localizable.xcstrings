@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Anonymous Signup" : {
+
+    },
     "Authentication Required" : {
       "localizations" : {
         "en" : {

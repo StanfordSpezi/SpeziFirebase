@@ -70,16 +70,18 @@ import SpeziFirestore
 /// }
 /// ```
 public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: completely restructure docs!
-    @Application(\.logger) private var logger
+    @Application(\.logger)
+    private var logger
 
-    @Dependency private var firestore: SpeziFirestore.Firestore // ensure firestore is configured
-    @Dependency private var externalStorage: ExternalAccountStorage
-    @Dependency private var localCache: LocalDetailsCache
+    @Dependency private var firestore = SpeziFirestore.Firestore() // ensure firestore is configured
+    @Dependency(ExternalAccountStorage.self)
+    private var externalStorage
+    @Dependency private var localCache = AccountDetailsCache()
 
     private let collection: @Sendable () -> CollectionReference
 
-
     private var listenerRegistrations: [String: ListenerRegistration] = [:]
+    private var registeredKeys: [String: [ObjectIdentifier: any AccountKey.Type]] = [:]
 
     public init(storeIn collection: @Sendable @autoclosure @escaping () -> CollectionReference) {
         self.collection = collection
@@ -96,55 +98,50 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
         }
         let document = userDocument(for: accountId)
 
+        registeredKeys[accountId] = keys.reduce(into: [:]) { result, key in
+            result[ObjectIdentifier(key)] = key
+        }
+
         listenerRegistrations[accountId] = document.addSnapshotListener { [weak self] snapshot, error in
             guard let self else {
                 return
             }
 
-            guard let snapshot else {
-                // TODO: error happened, how to best notify about error?
-                return
-            }
-
             Task {
-                await self.processUpdatedSnapshot(for: accountId, with: keys, snapshot)
+                guard let snapshot else {
+                    await self.logger.error("Failed to retrieve user document collection: \(error)")
+                    return
+                }
+                await self.processUpdatedSnapshot(for: accountId, snapshot)
             }
         }
     }
 
-    private func processUpdatedSnapshot(for accountId: String, with keys: [any AccountKey.Type], _ snapshot: DocumentSnapshot) {
-        do {
-            let details = try buildAccountDetails(from: snapshot, keys: keys)
-            localCache.communicateRemoteChanges(for: accountId, details)
-
-            externalStorage.notifyAboutUpdatedDetails(for: accountId, details)
-        } catch {
-            logger.error("")
-            // TODO: log or do something with that info!
-            // TODO: does it make sense to notify the account service about the error?
+    private func processUpdatedSnapshot(for accountId: String, _ snapshot: DocumentSnapshot) async {
+        guard let keys = registeredKeys[accountId]?.values else {
+            logger.error("Failed to process updated document snapshot as we couldn't locate registered keys.")
+            return
         }
+
+        let details = buildAccountDetails(from: snapshot, keys: Array(keys))
+
+        externalStorage.notifyAboutUpdatedDetails(for: accountId, details)
+
+        let localCache = localCache
+        await localCache.communicateRemoteChanges(for: accountId, details)
     }
 
-    private nonisolated func buildAccountDetails(from snapshot: DocumentSnapshot, keys: [any AccountKey.Type]) throws -> AccountDetails {
+    private func buildAccountDetails(from snapshot: DocumentSnapshot, keys: [any AccountKey.Type]) -> AccountDetails {
         guard let data = snapshot.data() else {
             return AccountDetails()
         }
 
-        var details = AccountDetails()
+        // TODO: just use simple decoder?
+        var visitor = FirestoreDecodeVisitor(data: data, in: snapshot.reference)
+        let details = keys.acceptAll(&visitor)
 
-        for key in keys {
-            guard let value = data[key.identifier] else {
-                continue
-            }
-
-            var visitor = FirestoreDecodeVisitor(value: value, details: details, in: snapshot.reference)
-            key.accept(&visitor)
-            switch visitor.final() {
-            case let .success(value):
-                details = value
-            case let .failure(error):
-                throw FirestoreError(error)
-            }
+        for (key, error) in visitor.errors {
+            logger.error("Failed to decode account value from firestore snapshot for key \(key.identifier): \(error)")
         }
 
         return details
@@ -156,8 +153,9 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
         try await modify(accountId, modifications)
     }
 
-    public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async throws -> AccountDetails? { // TODO: transport keys as set?
-        let cached = localCache.loadEntry(for: accountId, keys)
+    public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async throws -> AccountDetails? {
+        let localCache = localCache
+        let cached = await localCache.loadEntry(for: accountId, keys)
 
         if listenerRegistrations[accountId] != nil { // check that there is a snapshot listener in place
             snapshotListener(for: accountId, with: keys)
@@ -188,28 +186,33 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
             throw FirestoreError(error)
         }
 
-        localCache.communicateModifications(for: accountId, modifications)
+        if var keys = registeredKeys[accountId] { // we have a snapshot listener in place which we need to update the keys for
+            for newKey in modifications.modifiedDetails.keys where keys[ObjectIdentifier(newKey)] == nil {
+                keys.updateValue(newKey, forKey: ObjectIdentifier(newKey))
+            }
 
-
-        // TODO: check if the snapshot listener is in place with the same set of keys (add remove)!
-        if listenerRegistrations[accountId] != nil {
-            // TODO: if we have sets, its easier!
-            // TODO: actually keep track of all account keys, this will fail!
-            snapshotListener(for: accountId, with: modifications.modifiedDetails.keys)
+            for removedKey in modifications.removedAccountKeys {
+                keys.removeValue(forKey: ObjectIdentifier(removedKey))
+            }
         }
+
+        let localCache = localCache
+        await localCache.communicateModifications(for: accountId, modifications)
     }
 
-    public func disassociate(_ accountId: String) {
+    public func disassociate(_ accountId: String) async {
         guard let registration = listenerRegistrations.removeValue(forKey: accountId) else {
             return
         }
         registration.remove()
+        registeredKeys.removeValue(forKey: accountId)
 
-        localCache.clearEntry(for: accountId)
+        let localCache = localCache
+        await localCache.clearEntry(for: accountId)
     }
 
     public func delete(_ accountId: String) async throws {
-        disassociate(accountId)
+        await disassociate(accountId)
 
         do {
             try await userDocument(for: accountId)

@@ -6,9 +6,11 @@
 // SPDX-License-Identifier: MIT
 //
 
+import FirebaseFirestore
 import Spezi
 import SpeziAccount
-import SpeziFirebaseAccount
+@_spi(Internal) import SpeziFirebaseAccount
+import SpeziFirebaseAccountStorage
 import SpeziFirebaseStorage
 import SpeziFirestore
 import SwiftUI
@@ -16,21 +18,8 @@ import SwiftUI
 
 class TestAppDelegate: SpeziAppDelegate {
     override var configuration: Configuration {
-        if FeatureFlags.accountStorageTests {
-            return Configuration(standard: AccountStorageTestStandard(), configurationsClosure)
-        } else {
-            return Configuration(configurationsClosure)
-        }
-    }
-
-    var configurationsClosure: () -> ModuleCollection {
-        {
-            self.configurations
-        }
-    }
-
-    @ModuleBuilder var configurations: ModuleCollection {
-        let configuration: AccountValueConfiguration = FeatureFlags.accountStorageTests
+        Configuration {
+            let configuration: AccountValueConfiguration = FeatureFlags.accountStorageTests
             ? [
                 .requires(\.userId),
                 .requires(\.name),
@@ -41,14 +30,23 @@ class TestAppDelegate: SpeziAppDelegate {
                 .collects(\.name)
             ]
 
-        AccountConfiguration(
-            service: FirebaseAccountService(
-                authenticationMethods: [.emailAndPassword, .signInWithApple],
+            let service = FirebaseAccountService(
+                providers: [.emailAndPassword, .signInWithApple, .anonymousButton], // TODO: add anonymous button tests
                 emulatorSettings: (host: "localhost", port: 9099)
-            ),
-            configuration: configuration
-        )
-        Firestore(settings: .emulator)
-        FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))
+            )
+
+            if FeatureFlags.accountStorageTests {
+                AccountConfiguration(
+                    service: service,
+                    storageProvider: FirestoreAccountStorage(storeIn: Firestore.firestore().collection("users")),
+                    configuration: configuration
+                )
+            } else {
+                AccountConfiguration(service: service, configuration: configuration)
+            }
+
+            Firestore(settings: .emulator)
+            FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))
+        }
     }
 }

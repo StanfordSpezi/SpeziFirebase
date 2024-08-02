@@ -29,7 +29,6 @@
 		A9D83F9B2B0BDB1D000D0C78 /* BiographyKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D83F9A2B0BDB1D000D0C78 /* BiographyKey.swift */; };
 		A9D83F9D2B0BDB3A000D0C78 /* FirebaseAccountStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D83F9C2B0BDB3A000D0C78 /* FirebaseAccountStorageTests.swift */; };
 		A9D83F9F2B0BDCC7000D0C78 /* SpeziFirebaseAccountStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A9D83F9E2B0BDCC7000D0C78 /* SpeziFirebaseAccountStorage */; };
-		A9D83FA22B0BE048000D0C78 /* AccountStorageTestStandard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D83FA12B0BE048000D0C78 /* AccountStorageTestStandard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,7 +65,6 @@
 		A9D83F982B0BDB13000D0C78 /* FeatureFlags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
 		A9D83F9A2B0BDB1D000D0C78 /* BiographyKey.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BiographyKey.swift; sourceTree = "<group>"; };
 		A9D83F9C2B0BDB3A000D0C78 /* FirebaseAccountStorageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FirebaseAccountStorageTests.swift; sourceTree = "<group>"; };
-		A9D83FA12B0BE048000D0C78 /* AccountStorageTestStandard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountStorageTestStandard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -190,7 +188,6 @@
 			isa = PBXGroup;
 			children = (
 				A9D83F9A2B0BDB1D000D0C78 /* BiographyKey.swift */,
-				A9D83FA12B0BE048000D0C78 /* AccountStorageTestStandard.swift */,
 			);
 			path = FirebaseAccountStorage;
 			sourceTree = "<group>";
@@ -312,7 +309,6 @@
 				2F148C00298BB15900031B7F /* FirebaseAccountTestsView.swift in Sources */,
 				2FA7382C290ADFAA007ACEB9 /* TestApp.swift in Sources */,
 				2FE62C3D2966074F00FCBE7F /* FirestoreDataStorageTests.swift in Sources */,
-				A9D83FA22B0BE048000D0C78 /* AccountStorageTestStandard.swift in Sources */,
 				2F8A431729130BBC005D2B8F /* TestAppType.swift in Sources */,
 				2F9F07F129090B0500CDC598 /* TestAppDelegate.swift in Sources */,
 				A9D83F992B0BDB13000D0C78 /* FeatureFlags.swift in Sources */,
