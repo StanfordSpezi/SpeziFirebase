@@ -23,7 +23,7 @@ struct ReauthenticationAlertModifier: ViewModifier {
     @State private var isActive = false
 
 
-    private var isPresented: Binding<Bool> {
+    @MainActor private var isPresented: Binding<Bool> {
         Binding {
             firebaseModel.isPresentingReauthentication && isActive
         } set: { newValue in
@@ -31,7 +31,7 @@ struct ReauthenticationAlertModifier: ViewModifier {
         }
     }
 
-    private var context: ReauthenticationContext? {
+    @MainActor private var context: ReauthenticationContext? {
         firebaseModel.reauthenticationContext
     }
 
