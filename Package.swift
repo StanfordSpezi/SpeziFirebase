@@ -33,11 +33,10 @@ let package = Package(
         .library(name: "SpeziFirebaseAccountStorage", targets: ["SpeziFirebaseAccountStorage"])
     ],
     dependencies: [
-        .package(url: "https://github.com/StanfordSpezi/Spezi", from: "1.0.0"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", from: "1.0.0"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziStorage", branch: "feature/sendable-modules"),
+        .package(url: "https://github.com/StanfordSpezi/Spezi", branch: "feature/dependency-restructure"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", from: "1.5.0"),
         .package(url: "https://github.com/StanfordSpezi/SpeziAccount", branch: "feature/account-service-singleton"),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.13.0")
+        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "10.29.0")
     ] + swiftLintPackage(),
     targets: [
         .target(
@@ -47,8 +46,6 @@ let package = Package(
                 .product(name: "Spezi", package: "Spezi"),
                 .product(name: "SpeziValidation", package: "SpeziViews"),
                 .product(name: "SpeziAccount", package: "SpeziAccount"),
-                .product(name: "SpeziLocalStorage", package: "SpeziStorage"),
-                .product(name: "SpeziSecureStorage", package: "SpeziStorage"),
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
             swiftSettings: [

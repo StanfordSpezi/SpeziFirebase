@@ -22,7 +22,6 @@ struct FirebaseAccountTestsView: View {
 
     @State var showSetup = false
     @State var showOverview = false
-    @State var isEditing = false
 
     var body: some View {
         List {
@@ -59,22 +58,17 @@ struct FirebaseAccountTestsView: View {
             }
             .sheet(isPresented: $showOverview) {
                 NavigationStack {
-                    AccountOverview(isEditing: $isEditing)
-                        .toolbar {
-                            toolbar(closing: $showOverview, isEditing: $isEditing)
-                        }
+                    AccountOverview(close: .showCloseButton)
                 }
             }
     }
 
 
     @ToolbarContentBuilder
-    func toolbar(closing flag: Binding<Bool>, isEditing: Binding<Bool> = .constant(false)) -> some ToolbarContent {
-        if isEditing.wrappedValue == false {
-            ToolbarItemGroup(placement: .cancellationAction) {
-                Button("Close") {
-                    flag.wrappedValue = false
-                }
+    func toolbar(closing flag: Binding<Bool>) -> some ToolbarContent {
+        ToolbarItemGroup(placement: .cancellationAction) {
+            Button("Close") {
+                flag.wrappedValue = false
             }
         }
     }

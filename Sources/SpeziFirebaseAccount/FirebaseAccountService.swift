@@ -14,6 +14,7 @@ import SpeziAccount
 import SpeziFirebaseConfiguration
 import SpeziLocalStorage
 import SpeziSecureStorage
+import SpeziValidation
 import SwiftUI
 
 
@@ -48,7 +49,6 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         \.userId
         \.password
         \.name
-        \.isEmailVerified
     }
 
     // TODO: update all docs!
@@ -87,29 +87,38 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
     // dispatch of user updates
     private var shouldQueue = false
+    private var isConfiguring = false
     private var queuedUpdate: UserUpdate?
+
+
+    private var unsupportedKeys: AccountKeyCollection {
+        var unsupportedKeys = account.configuration.keys
+        unsupportedKeys.removeAll(Self.supportedAccountKeys)
+        return unsupportedKeys
+    }
 
     /// - Parameters:
     ///   - providers: The authentication methods that should be supported.
     ///   - emulatorSettings: The emulator settings. The default value is `nil`, connecting the FirebaseAccount module to the Firebase Auth cloud instance.
+    ///   - passwordValidation: Override the default password validation rule. By default firebase enforces a minimum length of 6 characters.
     public init(
         providers: FirebaseAuthProviders,
-        emulatorSettings: (host: String, port: Int)? = nil
+        emulatorSettings: (host: String, port: Int)? = nil,
+        passwordValidation: [ValidationRule]? = nil // swiftlint:disable:this discouraged_optional_collection
     ) {
         self.emulatorSettings = emulatorSettings
 
-        // TODO: try to remove the supportedKeys, account service makes sure keys are there anyways?
         self.configuration = AccountServiceConfiguration(supportedKeys: .exactly(Self.supportedAccountKeys)) {
             RequiredAccountKeys {
                 \.userId
                 if providers.contains(.emailAndPassword) {
-                    \.password // TODO: how does that translate to the new model?
+                    \.password
                 }
             }
 
             UserIdConfiguration.emailAddress
             FieldValidationRules(for: \.userId, rules: .minimalEmail)
-            FieldValidationRules(for: \.password, rules: .minimumFirebasePassword) // TODO: still support overriding this?
+            FieldValidationRules(for: \.password, rules: passwordValidation ?? [.minimumFirebasePassword])
         }
 
         if !providers.contains(.emailAndPassword) {
@@ -128,11 +137,44 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             Auth.auth().useEmulator(withHost: emulatorSettings.host, port: emulatorSettings.port)
         }
 
+        isConfiguring = true
+        defer {
+            isConfiguring = false
+        }
+
         // get notified about changes of the User reference
         authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] auth, user in
             guard let self else {
                 return
             }
+
+            if isConfiguring {
+                // We can safely assume main actor isolation, see
+                // https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/Auth#/c:@M@FirebaseAuth@objc(cs)FIRAuth(im)addAuthStateDidChangeListener:
+                let skip = MainActor.assumeIsolated {
+                    // Ensure that there are details associated as soon as possible.
+                    // Mark them as incomplete if we know there might be account details that are stored externally,
+                    // we update the details later anyways, even if we might be wrong.
+                    if let user {
+                        var details = self.buildUser(user, isNewUser: false)
+                        details.isIncomplete = !self.unsupportedKeys.isEmpty
+
+                        self.logger.debug("Supply initial user details of associated Firebase account.")
+                        self.account.supplyUserDetails(details)
+                        return !details.isIncomplete
+                    } else {
+                        self.account.removeUserDetails()
+                        return true
+                    }
+                }
+
+                guard !skip else {
+                    // don't spin of the task below if we know it wouldn't change anything.
+                    return
+                }
+            }
+
+
             Task {
                 do {
                     try await self.stateDidChangeListener(auth: auth, user: user)
@@ -151,6 +193,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
                     return // we make sure that we don't remove the account when we don't have network (e.g., flight mode)
                 }
 
+                // TODO: can we assume main actor?
                 Task {
                     self.notifyUserRemoval()
                 }
@@ -181,11 +224,11 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         }
 
         // TODO: make sure we do not interrupt! anything? (e.g. shouldQueue is true?)
-        do {
-            try await notifyUserSignIn(user: user, mergeWith: details)
-        } catch {
-            logger.error("Failed to propagate update details from external storage: \(error)")
-        }
+        // TODO: semaphore on the withFirebaseAction?
+
+        let details = buildUser(user, isNewUser: false, mergeWith: details)
+        logger.debug("Update user details due to updates in the externally stored account details.")
+        account.supplyUserDetails(details)
     }
 
     public func login(userId: String, password: String) async throws { // TODO: do all docs
@@ -196,6 +239,8 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             logger.debug("signIn(withEmail:password:)")
         }
     }
+
+    // TODO: expose methods for email verification?
 
     public func signUpAnonymously() async throws {
         try await dispatchFirebaseAuthAction {
@@ -381,9 +426,12 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
                 try await updateDisplayName(of: currentUser, name)
             }
 
-            // TODO: remove all keys that were stored already!
-            let externalStorage = externalStorage
-            try await externalStorage.updateExternalStorage(with: modifications, for: currentUser.uid)
+            var externalModifications = modifications
+            externalModifications.removeModifications(for: Self.supportedAccountKeys)
+            if !externalModifications.isEmpty {
+                let externalStorage = externalStorage
+                try await externalStorage.updateExternalStorage(with: externalModifications, for: currentUser.uid)
+            }
 
             // None of the above requests will trigger our state change listener, therefore, we just call it manually.
             try await notifyUserSignIn(user: currentUser)
@@ -444,8 +492,8 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
 // MARK: - Sign In With Apple
 
+@MainActor
 extension FirebaseAccountService {
-    @MainActor
     func onAppleSignInRequest(request: ASAuthorizationAppleIDRequest) {
         let nonce = CryptoUtils.randomNonceString(length: 32)
         // we configured userId as `required` in the account service
@@ -462,7 +510,6 @@ extension FirebaseAccountService {
         self.lastNonce = nonce // save the nonce for later use to be passed to FirebaseAuth
     }
 
-    @MainActor
     func onAppleSignInCompletion(result: Result<ASAuthorization, Error>) async throws {
         defer { // cleanup tasks
             self.lastNonce = nil
@@ -537,7 +584,6 @@ extension FirebaseAccountService {
         return nil
     }
 
-    @MainActor
     private func oAuthCredential(from credential: ASAuthorizationAppleIDCredential) throws -> OAuthCredential {
         guard let lastNonce else {
             logger.error("AppleIdCredential was received though no login request was found.")
@@ -564,6 +610,7 @@ extension FirebaseAccountService {
 }
 
 
+@MainActor
 extension FirebaseAccountService {
     private static nonisolated func resetLegacyStorage(_ secureStorage: SecureStorage, _ localStorage: LocalStorage, _ logger: Logger) {
         do {
@@ -582,6 +629,7 @@ extension FirebaseAccountService {
     func dispatchFirebaseAuthAction(
         action: @Sendable () async throws -> Void
     ) async throws {
+        // TODO: use async semaphore here!
         try await self.dispatchFirebaseAuthAction {
             try await action()
             return nil
@@ -670,17 +718,21 @@ extension FirebaseAccountService {
         }
     }
 
-    func notifyUserSignIn(user: User, isNewUser: Bool = false, mergeWith additionalDetails: AccountDetails? = nil) async throws {
-        logger.debug("Notifying SpeziAccount with updated user details.")
-
+    private func buildUser(_ user: User, isNewUser: Bool, mergeWith additionalDetails: AccountDetails? = nil) -> AccountDetails {
         var details = AccountDetails()
         details.accountId = user.uid
         if let email = user.email {
             details.userId = email // userId will fallback to accountId if not present
         }
-        details.isEmailVerified = user.isEmailVerified
+
+        // flags
         details.isNewUser = isNewUser
+        details.isVerified = user.isEmailVerified
         details.isAnonymous = user.isAnonymous
+
+        // metadata
+        details.creationDate = user.metadata.creationDate
+        details.lastSignInDate = user.metadata.lastSignInDate
 
         if let displayName = user.displayName,
            let nameComponents = try? PersonNameComponents(displayName, strategy: .name) {
@@ -692,16 +744,26 @@ extension FirebaseAccountService {
             details.add(contentsOf: additionalDetails)
         }
 
-        // TODO: way to retrieve all configured keys => remove all supported => check if non-empty, then retrieve?
-        let unsupportedKeys = configuration
-            .unsupportedAccountKeys(basedOn: account.configuration)
-            .map { $0.key } // TODO: this is a mouthful
+        return details
+    }
+
+    private func buildUserQueryingStorageProvider(user: User, isNewUser: Bool) async throws -> AccountDetails {
+        var details = buildUser(user, isNewUser: isNewUser)
+
+        let unsupportedKeys = unsupportedKeys
         if !unsupportedKeys.isEmpty {
             let externalStorage = externalStorage
             let externalDetails = try await externalStorage.retrieveExternalStorage(for: details.accountId, unsupportedKeys)
             details.add(contentsOf: externalDetails)
         }
 
+        return details
+    }
+
+    func notifyUserSignIn(user: User, isNewUser: Bool = false) async throws {
+        let details = try await buildUserQueryingStorageProvider(user: user, isNewUser: isNewUser)
+
+        logger.debug("Notifying SpeziAccount with updated user details.")
         account.supplyUserDetails(details)
     }
 

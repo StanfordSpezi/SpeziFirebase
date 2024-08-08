@@ -17,30 +17,16 @@ struct FirebaseSignInWithAppleButton: View {
 
     @Environment(\.colorScheme)
     private var colorScheme
-    @Environment(\.defaultErrorDescription)
-    private var defaultErrorDescription
 
     @State private var viewState: ViewState = .idle
 
     var body: some View {
-        SignInWithAppleButton { request in
+        SignInWithAppleButton(state: $viewState) { request in
             service.onAppleSignInRequest(request: request)
         } onCompletion: { result in
-            Task {
-                do {
-                    try await service.onAppleSignInCompletion(result: result)
-                } catch {
-                    if let localizedError = error as? LocalizedError {
-                        viewState = .error(localizedError)
-                    } else {
-                        viewState = .error(AnyLocalizedError(
-                            error: error,
-                            defaultErrorDescription: defaultErrorDescription
-                        ))
-                    }
-                }
-            }
+            try await service.onAppleSignInCompletion(result: result)
         }
+            .frame(height: 55)
             .viewStateAlert(state: $viewState)
     }
 

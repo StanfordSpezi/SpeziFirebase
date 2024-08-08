@@ -69,7 +69,8 @@ import SpeziFirestore
 ///     }
 /// }
 /// ```
-public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: completely restructure docs!
+public actor FirestoreAccountStorage: AccountStorageProvider {
+    // TODO: completely restructure docs!
     @Application(\.logger)
     private var logger
 
@@ -107,11 +108,16 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
                 return
             }
 
-            Task {
+            if snapshot?.metadata.hasPendingWrites == true {
+                return // ignore updates we caused locally, see https://firebase.google.com/docs/firestore/query-data/listen#events-local-changes
+            }
+
+            Task { @Sendable in
                 guard let snapshot else {
                     await self.logger.error("Failed to retrieve user document collection: \(error)")
                     return
                 }
+
                 await self.processUpdatedSnapshot(for: accountId, snapshot)
             }
         }
@@ -125,32 +131,30 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
 
         let details = buildAccountDetails(from: snapshot, keys: Array(keys))
 
-        externalStorage.notifyAboutUpdatedDetails(for: accountId, details)
+        guard !details.isEmpty else {
+            return
+        }
 
         let localCache = localCache
         await localCache.communicateRemoteChanges(for: accountId, details)
+
+        externalStorage.notifyAboutUpdatedDetails(for: accountId, details)
     }
 
     private func buildAccountDetails(from snapshot: DocumentSnapshot, keys: [any AccountKey.Type]) -> AccountDetails {
-        guard let data = snapshot.data() else {
+        guard snapshot.exists else {
             return AccountDetails()
         }
 
-        // TODO: just use simple decoder?
-        var visitor = FirestoreDecodeVisitor(data: data, in: snapshot.reference)
-        let details = keys.acceptAll(&visitor)
+        let decoder = Firestore.Decoder()
+        decoder.userInfo[.accountDetailsKeys] = keys
 
-        for (key, error) in visitor.errors {
-            logger.error("Failed to decode account value from firestore snapshot for key \(key.identifier): \(error)")
+        do {
+            return try snapshot.data(as: AccountDetails.self, decoder: decoder)
+        } catch {
+            logger.error("Failed to decode account details from firestore snapshot: \(error)")
+            return AccountDetails()
         }
-
-        return details
-    }
-
-    public func create(_ accountId: String, _ details: AccountDetails) async throws {
-        // we just treat it as modifications
-        let modifications = try AccountModifications(modifiedDetails: details)
-        try await modify(accountId, modifications)
     }
 
     public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async throws -> AccountDetails? {
@@ -164,31 +168,29 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
         return cached
     }
 
-    public func modify(_ accountId: String, _ modifications: AccountModifications) async throws {
-        let result = modifications.modifiedDetails.acceptAll(FirestoreEncodeVisitor())
+    public func store(_ accountId: String, _ modifications: SpeziAccount.AccountModifications) async throws {
+        let document = userDocument(for: accountId)
 
-        do {
-            switch result {
-            case let .success(data):
-                if !data.isEmpty {
-                    try await userDocument(for: accountId)
-                        .setData(data, merge: true)
-                }
-            case let .failure(error):
-                throw error
+        if !modifications.modifiedDetails.isEmpty {
+            do {
+                try await document.setData(from: modifications.modifiedDetails, merge: true)
+            } catch {
+                throw FirestoreError(error)
             }
-
-            let removedFields: [String: Any] = modifications.removedAccountDetails.keys.reduce(into: [:]) { result, key in
-                result[key.identifier] = FieldValue.delete()
-            }
-
-            if !removedFields.isEmpty {
-                try await userDocument(for: accountId)
-                    .updateData(removedFields)
-            }
-        } catch {
-            throw FirestoreError(error)
         }
+
+        let removedFields: [String: Any] = modifications.removedAccountDetails.keys.reduce(into: [:]) { result, key in
+            result[key.identifier] = FieldValue.delete()
+        }
+
+        if !removedFields.isEmpty {
+            do {
+                try await document.updateData(removedFields)
+            } catch {
+                throw FirestoreError(error)
+            }
+        }
+
 
         if var keys = registeredKeys[accountId] { // we have a snapshot listener in place which we need to update the keys for
             for newKey in modifications.modifiedDetails.keys where keys[ObjectIdentifier(newKey)] == nil {
@@ -198,6 +200,8 @@ public actor FirestoreAccountStorage: AccountStorageProvider { // TODO: complete
             for removedKey in modifications.removedAccountKeys {
                 keys.removeValue(forKey: ObjectIdentifier(removedKey))
             }
+
+            registeredKeys[accountId] = keys
         }
 
         let localCache = localCache

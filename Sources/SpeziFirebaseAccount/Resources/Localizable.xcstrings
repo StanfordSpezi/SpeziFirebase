@@ -25,6 +25,7 @@
       }
     },
     "E-Mail Verified" : {
+      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {

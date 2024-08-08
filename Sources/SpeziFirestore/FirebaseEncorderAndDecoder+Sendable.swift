@@ -9,6 +9,7 @@
 import FirebaseFirestoreSwift
 
 
+// TODO: lol, remove that!
 extension FirebaseFirestore.Firestore.Encoder: @unchecked Sendable {}
 
 
