@@ -9,7 +9,8 @@
 import FirebaseFirestore
 import Spezi
 import SpeziAccount
-@_spi(Internal) import SpeziFirebaseAccount
+@_spi(Internal)
+import SpeziFirebaseAccount
 import SpeziFirebaseAccountStorage
 import SpeziFirebaseStorage
 import SpeziFirestore
@@ -31,7 +32,7 @@ class TestAppDelegate: SpeziAppDelegate {
             ]
 
             let service = FirebaseAccountService(
-                providers: [.emailAndPassword, .signInWithApple, .anonymousButton], // TODO: add anonymous button tests
+                providers: [.emailAndPassword, .signInWithApple, .anonymousButton],
                 emulatorSettings: (host: "localhost", port: 9099)
             )
 

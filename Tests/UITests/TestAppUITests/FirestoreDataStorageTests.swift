@@ -202,7 +202,10 @@ final class FirestoreDataStorageTests: XCTestCase {
         try app.textFields[contentFieldIdentifier].delete(count: 100)
         try app.textFields[contentFieldIdentifier].enter(value: content)
     }
-    
+}
+
+
+extension FirestoreDataStorageTests {
     private static func deleteAllDocuments() async throws {
         let emulatorDocumentsURL = try XCTUnwrap(
             URL(string: "http://localhost:8080/emulator/v1/projects/spezifirebaseuitests/databases/(default)/documents")
@@ -211,7 +214,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         request.httpMethod = "DELETE"
 
         let (_, response) = try await URLSession.shared.data(for: request)
-        
+
         guard let urlResponse = response as? HTTPURLResponse,
               200...299 ~= urlResponse.statusCode else {
             print(
@@ -231,7 +234,7 @@ final class FirestoreDataStorageTests: XCTestCase {
             URL(string: "http://localhost:8080/v1/projects/spezifirebaseuitests/databases/(default)/documents/")
         )
         let (data, response) = try await URLSession.shared.data(from: documentsURL)
-        
+
         guard let urlResponse = response as? HTTPURLResponse,
               200...299 ~= urlResponse.statusCode else {
             print(
@@ -244,11 +247,11 @@ final class FirestoreDataStorageTests: XCTestCase {
             )
             throw URLError(.fileDoesNotExist)
         }
-        
+
         struct ResponseWrapper: Decodable {
             let documents: [FirestoreElement]
         }
-        
+
         do {
             return try JSONDecoder().decode(ResponseWrapper.self, from: data).documents
         } catch {

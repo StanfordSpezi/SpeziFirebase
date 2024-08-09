@@ -21,7 +21,6 @@
 		2FB07597299DF96E00C0B37F /* SpeziFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07596299DF96E00C0B37F /* SpeziFirestore */; };
 		2FE62C3D2966074F00FCBE7F /* FirestoreDataStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FE62C3C2966074F00FCBE7F /* FirestoreDataStorageTests.swift */; };
 		97359F642ADB27500080CB11 /* FirebaseStorageTestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97359F632ADB27500080CB11 /* FirebaseStorageTestsView.swift */; };
-		97359F662ADB286D0080CB11 /* StorageMetadata+Sendable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97359F652ADB286D0080CB11 /* StorageMetadata+Sendable.swift */; };
 		978DFE922ADB1E1600E2B9B5 /* SpeziFirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 978DFE912ADB1E1600E2B9B5 /* SpeziFirebaseStorage */; };
 		978E198E2ADB40A300732324 /* FirebaseStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 978E198D2ADB40A300732324 /* FirebaseStorageTests.swift */; };
 		A95D60D02AA35E2200EB5968 /* FirebaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95D60CF2AA35E2200EB5968 /* FirebaseClient.swift */; };
@@ -59,7 +58,6 @@
 		2FC42FD7290ADD5E00B08F18 /* SpeziFirebase */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SpeziFirebase; path = ../..; sourceTree = "<group>"; };
 		2FE62C3C2966074F00FCBE7F /* FirestoreDataStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreDataStorageTests.swift; sourceTree = "<group>"; };
 		97359F632ADB27500080CB11 /* FirebaseStorageTestsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FirebaseStorageTestsView.swift; sourceTree = "<group>"; };
-		97359F652ADB286D0080CB11 /* StorageMetadata+Sendable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StorageMetadata+Sendable.swift"; sourceTree = "<group>"; };
 		978E198D2ADB40A300732324 /* FirebaseStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseStorageTests.swift; sourceTree = "<group>"; };
 		A95D60CF2AA35E2200EB5968 /* FirebaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseClient.swift; sourceTree = "<group>"; };
 		A9D83F982B0BDB13000D0C78 /* FeatureFlags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
@@ -179,7 +177,6 @@
 			isa = PBXGroup;
 			children = (
 				97359F632ADB27500080CB11 /* FirebaseStorageTestsView.swift */,
-				97359F652ADB286D0080CB11 /* StorageMetadata+Sendable.swift */,
 			);
 			path = FirebaseStorageTests;
 			sourceTree = "<group>";
@@ -305,7 +302,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				97359F662ADB286D0080CB11 /* StorageMetadata+Sendable.swift in Sources */,
 				2F148C00298BB15900031B7F /* FirebaseAccountTestsView.swift in Sources */,
 				2FA7382C290ADFAA007ACEB9 /* TestApp.swift in Sources */,
 				2FE62C3D2966074F00FCBE7F /* FirestoreDataStorageTests.swift in Sources */,

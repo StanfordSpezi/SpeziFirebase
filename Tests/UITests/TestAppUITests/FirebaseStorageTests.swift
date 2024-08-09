@@ -46,13 +46,16 @@ final class FirebaseStorageTests: XCTestCase {
         documents = try await Self.getAllFiles()
         XCTAssertEqual(documents.count, 1)
     }
-    
+}
+
+
+extension FirebaseStorageTests {
     private static func getAllFiles() async throws -> [FirebaseStorageItem] {
         let documentsURL = try XCTUnwrap(
             URL(string: "http://localhost:9199/v0/b/STORAGE_BUCKET/o")
         )
         let (data, response) = try await URLSession.shared.data(from: documentsURL)
-        
+
         guard let urlResponse = response as? HTTPURLResponse,
               200...299 ~= urlResponse.statusCode else {
             print(
@@ -65,18 +68,18 @@ final class FirebaseStorageTests: XCTestCase {
             )
             throw URLError(.fileDoesNotExist)
         }
-        
+
         struct ResponseWrapper: Decodable {
             let items: [FirebaseStorageItem]
         }
-        
+
         do {
             return try JSONDecoder().decode(ResponseWrapper.self, from: data).items
         } catch {
             return []
         }
     }
-    
+
     private static func deleteAllFiles() async throws {
         for storageItem in try await getAllFiles() {
             let url = try XCTUnwrap(
@@ -84,9 +87,9 @@ final class FirebaseStorageTests: XCTestCase {
             )
             var request = URLRequest(url: url)
             request.httpMethod = "DELETE"
-            
+
             let (_, response) = try await URLSession.shared.data(for: request)
-            
+
             guard let urlResponse = response as? HTTPURLResponse,
                   200...299 ~= urlResponse.statusCode else {
                 print(

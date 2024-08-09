@@ -14,7 +14,7 @@ import XCTestExtensions
 ///
 /// Refer to https://firebase.google.com/docs/emulator-suite/connect_auth about more information about the
 /// Firebase Local Emulator Suite.
-final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_body_length2
+final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_body_length
     override func setUp() {
         continueAfterFailure = false
     }
