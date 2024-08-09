@@ -14,31 +14,47 @@ Firebase Auth support for SpeziAccount.
 
 ## Overview
 
-This Module adds support for Firebase Auth for SpeziAccount by implementing a respective
- [AccountService](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountservice).
+This Module adds support for Firebase Auth for SpeziAccount by implementing an
+ [`AccountService`](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountservice).
 
-The `FirebaseAccountConfiguration` can, e.g., be used to to connect to the Firebase Auth emulator:
-```
+Configure the account service by supplying it to the
+ [`AccountConfiguration`](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountconfiguration).
+
+> Note: For more information refer to the 
+[Account Configuration](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/initial-setup#Account-Configuration) article.
+
+```swift
+import SpeziAccount
+import SpeziFirebaseAccount
+
 class ExampleAppDelegate: SpeziAppDelegate {
     override var configuration: Configuration {
         Configuration {
-            FirebaseAccountConfiguration(emulatorSettings: (host: "localhost", port: 9099))
-            // ...
+            AccountConfiguration(
+                service: FirebaseAccountService()
+                configuration: [/* ... */]
+            )
         }
     }
 }
 ```
 
+> Note: Use the ``FirebaseAccountService/init(providers:emulatorSettings:passwordValidation:)`` to customize the enabled
+    ``FirebaseAuthProviders`` or supplying Firebase Auth emulator settings.
+
 ## Topics
 
-### Firebase Account
+### Configuration
 
-- ``FirebaseAccountConfiguration``
-- ``FirebaseAuthAuthenticationMethods``
+- ``FirebaseAccountService``
+- ``FirebaseAuthProviders``
 
-### Account Keys
+### Account Details
 
-- ``FirebaseEmailVerifiedKey``
-- ``SpeziAccount/AccountValues/isEmailVerified``
-- ``SpeziAccount/AccountKeys/isEmailVerified``
+- ``SpeziAccount/AccountDetails/creationDate``
+- ``SpeziAccount/AccountDetails/lastSignInDate``
+
+### Errors
+
+- ``FirebaseAccountError``
 

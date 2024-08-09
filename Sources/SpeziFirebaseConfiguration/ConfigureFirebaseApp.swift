@@ -10,16 +10,20 @@ import FirebaseCore
 import Spezi
 
 
-/// Module to configure the Firebase set of dependencies.
+/// Configure the Firebase application.
 ///
-/// The ``configure()`` method calls `FirebaseApp.configure()`.
+/// The `FirebaseApp.configure()` method will be called upon configuration of the `Module`.
+///
 /// Use the `@Dependency` property wrapper to define a dependency on this module and ensure that `FirebaseApp.configure()` is called before any
-/// other Firebase-related modules:
-/// ```swift
-/// public final class YourFirebaseModule: Module {
-///     @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
+/// other Firebase-related modules and to ensure it is called exactly once.
 ///
-///     // ...
+/// ```swift
+/// import Spezi
+/// import SpeziFirebaseConfiguration
+///
+/// public final class MyFirebaseModule: Module {
+///     @Dependency(ConfigureFirebaseApp.self)
+///     private var configureFirebaseApp
 /// }
 /// ```
 public final class ConfigureFirebaseApp: Module, DefaultInitializable {

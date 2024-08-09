@@ -12,7 +12,11 @@ import SpeziViews
 import SwiftUI
 
 
-struct ReauthenticationAlertModifier: ViewModifier {
+/// An alert to authorize security-sensitive operations.
+///
+/// The alert will request the user's password to authorize security-sensitive operations like account deletion or change of
+/// sensitive account details.
+public struct FirebaseSecurityAlert: ViewModifier {
     @Environment(FirebaseAccountModel.self)
     private var firebaseModel: FirebaseAccountModel
 
@@ -38,7 +42,7 @@ struct ReauthenticationAlertModifier: ViewModifier {
     nonisolated init() {}
 
 
-    func body(content: Content) -> some View {
+    public func body(content: Content) -> some View {
         content
             .onAppear {
                 isActive = true
@@ -86,7 +90,7 @@ struct ReauthenticationAlertModifier: ViewModifier {
     let model = FirebaseAccountModel()
 
     return Text(verbatim: "")
-        .modifier(ReauthenticationAlertModifier())
+        .modifier(FirebaseSecurityAlert())
         .environment(model)
         .task {
             let password = await model.reauthenticateUser(userId: "lelandstandford@stanford.edu")

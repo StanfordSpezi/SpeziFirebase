@@ -14,10 +14,13 @@ import SpeziFirebaseConfiguration
 import SwiftUI
 
 
-/// The ``Firestore`` module allows for easy configuration of Firebase Firestore.
+/// Easy configuration of Firebase Firestore.
 ///
-/// You can configure the ``Firestore`` module in the `SpeziAppDelegate`, e.g. the configure it using the Firebase emulator.
+/// You can configure the `Firestore` module in the `SpeziAppDelegate`, e.g. the configure it using the Firebase emulator.
 /// ```swift
+/// import Spezi
+/// import SpeziFirestore
+///
 /// class FirestoreExampleDelegate: SpeziAppDelegate {
 ///     override var configuration: Configuration {
 ///         Configuration {

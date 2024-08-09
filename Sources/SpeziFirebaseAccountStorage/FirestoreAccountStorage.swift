@@ -18,74 +18,81 @@ import SpeziFirestore
 /// The `FirestoreAccountStorage` can be used to store additional account details, that are not supported out of the box by your account services,
 /// inside Firestore in a custom user collection.
 ///
-/// - Note: The `FirestoreAccountStorage` relies on the primary [AccountId](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountidkey)
-///     as the document identifier. Fore Firebase-based account service, this is the primary, firebase user identifier. Make sure to configure your firestore security rules respectively.
+/// - Important: The `FirestoreAccountStorage` uses the [`accountId`](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountdetails/accountid)
+///     of the user for the document identifier. When using the `FirebaseAccountService`, this is the primary, firebase user identifier. Make sure to configure your firestore security rules respectively.
 ///
-/// Once you have [AccountConfiguration](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/initial-setup#Account-Configuration)
-/// and the [FirebaseAccountConfiguration](https://swiftpackageindex.com/stanfordspezi/spezifirebase/documentation/spezifirebaseaccount/firebaseaccountconfiguration)
-/// set up, you can adopt the [AccountStorageConstraint](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountstorageconstraint)
-/// protocol to provide a custom storage for SpeziAccount.
+/// To configure Firestore as your external storage provider, just supply the ``FirestoreAccountStorage`` as an argument to the `AccountConfiguration`.
 ///
-/// - Important: In order to use the `FirestoreAccountStorage`, you must have [Firestore](https://swiftpackageindex.com/stanfordspezi/spezifirebase/main/documentation/spezifirestore/firestore)
-///     configured in your app. Refer to the documentation page for more information.
+/// - Note: For more information refer to the
+///  [Account Configuration](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/initial-setup#Account-Configuration) article.
+///
+/// The example below illustrates a configuration example, setting up the `FirebaseAccountService` in combination with the `FirestoreAccountStorage` provider.
 ///
 /// ```swift
-/// import FirebaseFirestore
 /// import Spezi
 /// import SpeziAccount
+/// import SpeziFirebase
+/// import SpeziFirebaseAccount
 /// import SpeziFirebaseAccountStorage
 ///
-///
-/// actor ExampleStandard: Standard, AccountStorageConstraint {
-///     // Define the collection where you want to store your additional user data, ...
-///     static var collection: CollectionReference {
-///         Firestore.firestore().collection("users")
-///     }
-///
-///     // ... define and initialize the `FirestoreAccountStorage` dependency ...
-///     @Dependency private var accountStorage = FirestoreAccountStorage(storedIn: Self.collection)
-///
-///
-///     // ... and forward all implementations of `AccountStorageConstraint` to the `FirestoreAccountStorage`.
-///
-///     public func create(_ identifier: AdditionalRecordId, _ details: SignupDetails) async throws {
-///         try await accountStorage.create(identifier, details)
-///     }
-///
-///     public func load(_ identifier: AdditionalRecordId, _ keys: [any AccountKey.Type]) async throws -> PartialAccountDetails {
-///         try await accountStorage.load(identifier, keys)
-///     }
-///
-///     public func modify(_ identifier: AdditionalRecordId, _ modifications: AccountModifications) async throws {
-///         try await accountStorage.modify(identifier, modifications)
-///     }
-///
-///     public func clear(_ identifier: AdditionalRecordId) async {
-///         await accountStorage.clear(identifier)
-///     }
-///
-///     public func delete(_ identifier: AdditionalRecordId) async throws {
-///         try await accountStorage.delete(identifier)
+/// class ExampleAppDelegate: SpeziAppDelegate {
+/// override var configuration: Configuration {
+///     Configuration {
+///         AccountConfiguration(
+///             service: FirebaseAccountService(),
+///             storageProvider: FirestoreAccountStorage(storeIn: Firestore.firestore().collection("users"))
+///             configuration: [/* ... */]
+///         )
 ///     }
 /// }
 /// ```
+///
+/// - Important: In order to use the `FirestoreAccountStorage`, you must have [`Firestore`](https://swiftpackageindex.com/stanfordspezi/spezifirebase/main/documentation/spezifirestore/firestore)
+///     configured in your app. Refer to the documentation page for more information.
+///
+/// ## Topics
+///
+/// ### Configuration
+/// - ``init(storeIn:mapping:)``
 public actor FirestoreAccountStorage: AccountStorageProvider {
-    // TODO: completely restructure docs!
     @Application(\.logger)
     private var logger
 
-    @Dependency private var firestore = SpeziFirestore.Firestore() // ensure firestore is configured
+    @Dependency(Firestore.self)
+    private var firestore
     @Dependency(ExternalAccountStorage.self)
     private var externalStorage
-    @Dependency private var localCache = AccountDetailsCache()
+    @Dependency(AccountDetailsCache.self)
+    private var localCache
 
     private let collection: @Sendable () -> CollectionReference
+    private let identifierMapping: [String: any AccountKey.Type]? // swiftlint:disable:this discouraged_optional_collection
 
     private var listenerRegistrations: [String: ListenerRegistration] = [:]
     private var registeredKeys: [String: [ObjectIdentifier: any AccountKey.Type]] = [:]
 
-    public init(storeIn collection: @Sendable @autoclosure @escaping () -> CollectionReference) {
-        self.collection = collection
+    /// Configure the Firestore Account Storage provider.
+    ///
+    /// - Note: The `collection` parameter is passed as an auto-closure. At the time the closure is called the
+    ///   [`Firestore`](https://swiftpackageindex.com/stanfordspezi/spezifirebase/main/documentation/spezifirestore/firestore)
+    ///   Module has been configured and it is safe to access `Firestore.firestore()` to derive the collection reference.
+    ///
+    /// ### Custom Identifier Mapping
+    ///
+    /// By default, the [`identifier`](https://swiftpackageindex.com/stanfordspezi/speziaccount/1.2.4/documentation/speziaccount/accountkey/identifier)
+    /// provided by the account key is used as a field name.
+    ///
+    /// - Parameters:
+    ///   - collection: The Firestore collection that all users records are stored in. The `accountId` is used for the name of
+    ///     each user document. The field names are derived from the stable `AccountKey/identifier`.
+    ///   - identifierMapping: An optional mapping of string identifiers to their `AccountKey`. Use that to customize the scheme used to store account keys
+    ///     or provide backwards compatibility with details stored with SpeziAccount 1.0.
+    public init(
+        storeIn collection: @Sendable @autoclosure @escaping () -> CollectionReference,
+        mapping identifierMapping: [String: any AccountKey.Type]? = nil // swiftlint:disable:this discouraged_optional_collection
+    ) {
+        self.collection = collection // make it a auto-closure. Firestore.firstore() is only configured later on
+        self.identifierMapping = identifierMapping
     }
 
 
@@ -148,6 +155,9 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
 
         let decoder = Firestore.Decoder()
         decoder.userInfo[.accountDetailsKeys] = keys
+        if let identifierMapping {
+            decoder.userInfo[.accountKeyIdentifierMapping] = identifierMapping
+        }
 
         do {
             return try snapshot.data(as: AccountDetails.self, decoder: decoder)
@@ -157,6 +167,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
         }
     }
 
+    @_documentation(visibility: internal)
     public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async throws -> AccountDetails? {
         let localCache = localCache
         let cached = await localCache.loadEntry(for: accountId, keys)
@@ -168,12 +179,17 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
         return cached
     }
 
+    @_documentation(visibility: internal)
     public func store(_ accountId: String, _ modifications: SpeziAccount.AccountModifications) async throws {
         let document = userDocument(for: accountId)
 
         if !modifications.modifiedDetails.isEmpty {
             do {
-                try await document.setData(from: modifications.modifiedDetails, merge: true)
+                let encoder = Firestore.Encoder()
+                if let identifierMapping {
+                    encoder.userInfo[.accountKeyIdentifierMapping] = identifierMapping
+                }
+                try await document.setData(from: modifications.modifiedDetails, merge: true, encoder: encoder)
             } catch {
                 throw FirestoreError(error)
             }
@@ -208,6 +224,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
         await localCache.communicateModifications(for: accountId, modifications)
     }
 
+    @_documentation(visibility: internal)
     public func disassociate(_ accountId: String) async {
         guard let registration = listenerRegistrations.removeValue(forKey: accountId) else {
             return
@@ -219,6 +236,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
         await localCache.clearEntry(for: accountId)
     }
 
+    @_documentation(visibility: internal)
     public func delete(_ accountId: String) async throws {
         await disassociate(accountId)
 

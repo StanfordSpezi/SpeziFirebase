@@ -33,6 +33,7 @@ let package = Package(
         .library(name: "SpeziFirebaseAccountStorage", targets: ["SpeziFirebaseAccountStorage"])
     ],
     dependencies: [
+        .package(url: "https://github.com/StanfordSpezi/SpeziFoundation.git", from: "1.1.3"),
         .package(url: "https://github.com/StanfordSpezi/Spezi", branch: "feature/dependency-restructure"),
         .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", from: "1.5.0"),
         .package(url: "https://github.com/StanfordSpezi/SpeziAccount", branch: "feature/account-service-singleton"),
@@ -43,6 +44,7 @@ let package = Package(
             name: "SpeziFirebaseAccount",
             dependencies: [
                 .target(name: "SpeziFirebaseConfiguration"),
+                .product(name: "SpeziFoundation", package: "SpeziFoundation"),
                 .product(name: "Spezi", package: "Spezi"),
                 .product(name: "SpeziValidation", package: "SpeziViews"),
                 .product(name: "SpeziAccount", package: "SpeziAccount"),

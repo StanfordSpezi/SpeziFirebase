@@ -36,6 +36,8 @@ public enum FirebaseAccountError {
     case linkFailedDuplicate
     /// Linking the account failed as the credentials are already in use with a different account.
     case linkFailedAlreadyInUse
+    /// Encountered an unrecognized provider when trying to re-authenticate the user.
+    case unsupportedProvider
     /// Unrecognized Firebase account error.
     case unknown(AuthErrorCode.Code)
 
@@ -88,6 +90,8 @@ extension FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_SIGN_IN_ERROR"
         case .requireRecentLogin:
             return "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR"
+        case .unsupportedProvider:
+            return "FIREBASE_ACCOUNT_UNSUPPORTED_PROVIDER_ERROR"
         case .appleFailed:
             return "FIREBASE_APPLE_FAILED"
         case .linkFailedDuplicate:
@@ -121,6 +125,8 @@ extension FirebaseAccountError: LocalizedError {
             return "FIREBASE_ACCOUNT_SIGN_IN_ERROR_SUGGESTION"
         case .requireRecentLogin:
             return "FIREBASE_ACCOUNT_REQUIRE_RECENT_LOGIN_ERROR_SUGGESTION"
+        case .unsupportedProvider:
+            return "FIREBASE_ACCOUNT_UNSUPPORTED_PROVIDER_ERROR_SUGGESTION"
         case .appleFailed:
             return "FIREBASE_APPLE_FAILED_SUGGESTION"
         case .linkFailedDuplicate:

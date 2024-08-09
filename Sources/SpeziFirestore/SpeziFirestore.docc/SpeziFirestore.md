@@ -16,8 +16,10 @@ Easily configure and interact with Firebase Firestore.
 
 The ``Firestore`` module allows for easy configuration of Firebase Firestore.
 
-You can configure the ``Firestore`` module in the `SpeziAppDelegate`, e.g. the configure it using the Firebase emulator.
+You can configure the `Firestore` module in the `SpeziAppDelegate`, e.g. the configure it using the Firebase emulator.
 ```swift
+import SpeziFirestore
+
 class FirestoreExampleDelegate: SpeziAppDelegate {
     override var configuration: Configuration {
         Configuration {
@@ -30,7 +32,17 @@ class FirestoreExampleDelegate: SpeziAppDelegate {
 
 ## Topics
 
-### Firestore
+### Configuration
 
 - ``Firestore``
+- ``FirebaseFirestoreInternal/FirestoreSettings/emulator``
+
+### Document Reference
+
+- ``FirebaseFirestoreInternal/DocumentReference/setData(from:encoder:)``
+- ``FirebaseFirestoreInternal/DocumentReference/setData(from:merge:encoder:)``
+- ``FirebaseFirestoreInternal/DocumentReference/setData(from:mergeFields:encoder:)``
+
+### Errors
+
 - ``FirestoreError``
