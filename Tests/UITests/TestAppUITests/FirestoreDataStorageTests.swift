@@ -48,11 +48,9 @@ final class FirestoreDataStorageTests: XCTestCase {
     
     @MainActor
     override func setUp() async throws {
-        try await super.setUp()
-
         continueAfterFailure = false
 
-        try await deleteAllDocuments()
+        try await Self.deleteAllDocuments()
         try await Task.sleep(for: .seconds(0.5))
     }
     
@@ -63,13 +61,13 @@ final class FirestoreDataStorageTests: XCTestCase {
         app.launch()
         app.buttons["FirestoreDataStorage"].tap()
         
-        var documents = try await getAllDocuments()
+        var documents = try await Self.getAllDocuments()
         XCTAssert(documents.isEmpty)
         
         try add(id: "Identifier1", content: "1")
         
         try await Task.sleep(for: .seconds(0.5))
-        documents = try await getAllDocuments()
+        documents = try await Self.getAllDocuments()
         XCTAssertEqual(
             documents.sorted(by: { $0.name < $1.name }),
             [
@@ -87,13 +85,13 @@ final class FirestoreDataStorageTests: XCTestCase {
         app.launch()
         app.buttons["FirestoreDataStorage"].tap()
         
-        var documents = try await getAllDocuments()
+        var documents = try await Self.getAllDocuments()
         XCTAssert(documents.isEmpty)
         
         try merge(id: "Identifier1", content: "1")
         
         try await Task.sleep(for: .seconds(0.5))
-        documents = try await getAllDocuments()
+        documents = try await Self.getAllDocuments()
         XCTAssertEqual(
             documents.sorted(by: { $0.name < $1.name }),
             [
@@ -111,13 +109,13 @@ final class FirestoreDataStorageTests: XCTestCase {
         app.launch()
         app.buttons["FirestoreDataStorage"].tap()
         
-        var documents = try await getAllDocuments()
+        var documents = try await Self.getAllDocuments()
         XCTAssert(documents.isEmpty)
         
         try add(id: "Identifier1", content: "1")
         
         try await Task.sleep(for: .seconds(0.5))
-        documents = try await getAllDocuments()
+        documents = try await Self.getAllDocuments()
         XCTAssertEqual(
             documents.sorted(by: { $0.name < $1.name }),
             [
@@ -131,7 +129,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         try add(id: "Identifier1", content: "2")
         
         try await Task.sleep(for: .seconds(0.5))
-        documents = try await getAllDocuments()
+        documents = try await Self.getAllDocuments()
         XCTAssertEqual(
             documents.sorted(by: { $0.name < $1.name }),
             [
@@ -150,13 +148,13 @@ final class FirestoreDataStorageTests: XCTestCase {
         app.launch()
         app.buttons["FirestoreDataStorage"].tap()
         
-        var documents = try await getAllDocuments()
+        var documents = try await Self.getAllDocuments()
         XCTAssert(documents.isEmpty)
         
         try add(id: "Identifier1", content: "1")
         
         try await Task.sleep(for: .seconds(0.5))
-        documents = try await getAllDocuments()
+        documents = try await Self.getAllDocuments()
         XCTAssertEqual(
             documents.sorted(by: { $0.name < $1.name }),
             [
@@ -169,26 +167,30 @@ final class FirestoreDataStorageTests: XCTestCase {
         
         try remove(id: "Identifier1", content: "1")
         
-        documents = try await getAllDocuments()
+        documents = try await Self.getAllDocuments()
         XCTAssert(documents.isEmpty)
     }
     
-    
+
+    @MainActor
     private func add(id: String, content: String) throws {
         try enterFirestoreElement(id: id, content: content)
         XCUIApplication().buttons["Upload Element"].tap()
     }
-    
+
+    @MainActor
     private func merge(id: String, content: String) throws {
         try enterFirestoreElement(id: id, content: content)
         XCUIApplication().buttons["Merge Element"].tap()
     }
-    
+
+    @MainActor
     private func remove(id: String, content: String) throws {
         try enterFirestoreElement(id: id, content: content)
         XCUIApplication().buttons["Delete Element"].tap()
     }
-    
+
+    @MainActor
     private func enterFirestoreElement(id: String, content: String) throws {
         let app = XCUIApplication()
         
@@ -201,7 +203,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         try app.textFields[contentFieldIdentifier].enter(value: content)
     }
     
-    private func deleteAllDocuments() async throws {
+    private static func deleteAllDocuments() async throws {
         let emulatorDocumentsURL = try XCTUnwrap(
             URL(string: "http://localhost:8080/emulator/v1/projects/spezifirebaseuitests/databases/(default)/documents")
         )
@@ -224,7 +226,7 @@ final class FirestoreDataStorageTests: XCTestCase {
         }
     }
 
-    private func getAllDocuments() async throws -> [FirestoreElement] {
+    private static func getAllDocuments() async throws -> [FirestoreElement] {
         let documentsURL = try XCTUnwrap(
             URL(string: "http://localhost:8080/v1/projects/spezifirebaseuitests/databases/(default)/documents/")
         )

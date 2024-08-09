@@ -23,11 +23,9 @@ final class FirebaseStorageTests: XCTestCase {
    
     @MainActor
     override func setUp() async throws {
-        try await super.setUp()
-
         continueAfterFailure = false
 
-        try await deleteAllFiles()
+        try await Self.deleteAllFiles()
         try await Task.sleep(for: .seconds(0.5))
     }
     
@@ -38,18 +36,18 @@ final class FirebaseStorageTests: XCTestCase {
         XCTAssert(app.buttons["FirebaseStorage"].waitForExistence(timeout: 2.0))
         app.buttons["FirebaseStorage"].tap()
         
-        var documents = try await getAllFiles()
+        var documents = try await Self.getAllFiles()
         XCTAssert(documents.isEmpty)
         
         XCTAssert(app.buttons["Upload"].waitForExistence(timeout: 2.0))
         app.buttons["Upload"].tap()
         
         try await Task.sleep(for: .seconds(2.0))
-        documents = try await getAllFiles()
+        documents = try await Self.getAllFiles()
         XCTAssertEqual(documents.count, 1)
     }
     
-    private func getAllFiles() async throws -> [FirebaseStorageItem] {
+    private static func getAllFiles() async throws -> [FirebaseStorageItem] {
         let documentsURL = try XCTUnwrap(
             URL(string: "http://localhost:9199/v0/b/STORAGE_BUCKET/o")
         )
@@ -79,7 +77,7 @@ final class FirebaseStorageTests: XCTestCase {
         }
     }
     
-    private func deleteAllFiles() async throws {
+    private static func deleteAllFiles() async throws {
         for storageItem in try await getAllFiles() {
             let url = try XCTUnwrap(
                 URL(string: "http://localhost:9199/v0/b/STORAGE_BUCKET/o/\(storageItem.name)")
