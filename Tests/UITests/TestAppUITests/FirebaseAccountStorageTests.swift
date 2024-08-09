@@ -31,11 +31,6 @@ final class FirebaseAccountStorageTests: XCTestCase {
         XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
         app.buttons["FirebaseAccount"].tap()
 
-        if app.buttons["Logout"].waitForExistence(timeout: 2.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
-
-
         try app.signup(
             username: "test@username1.edu",
             password: "TestPassword1",

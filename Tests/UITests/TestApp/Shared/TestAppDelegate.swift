@@ -18,6 +18,29 @@ import SwiftUI
 
 
 class TestAppDelegate: SpeziAppDelegate {
+    private class Logout: Module {
+        @Application(\.logger)
+        private var logger
+
+        @Dependency(Account.self)
+        private var account
+        @Dependency(FirebaseAccountService.self)
+        private var service
+
+        func configure() {
+            if account.signedIn {
+                Task { [logger, service] in
+                    do {
+                        logger.info("Performing initial logout!")
+                        try await service.logout()
+                    } catch {
+                        logger.error("Failed initial logout")
+                    }
+                }
+            }
+        }
+    }
+
     override var configuration: Configuration {
         Configuration {
             let configuration: AccountValueConfiguration = FeatureFlags.accountStorageTests
@@ -45,6 +68,8 @@ class TestAppDelegate: SpeziAppDelegate {
             } else {
                 AccountConfiguration(service: service, configuration: configuration)
             }
+
+            Logout()
 
             Firestore(settings: .emulator)
             FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))

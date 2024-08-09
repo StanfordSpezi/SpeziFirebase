@@ -126,10 +126,10 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     @MainActor private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
     @MainActor private var lastNonce: String?
 
-    private var isConfiguring = false
     private var shouldQueue = false
     private var queuedUpdates: [UserUpdate] = []
     private var actionSemaphore = AsyncSemaphore()
+    private var skipNextStateChange = false
 
 
     private var unsupportedKeys: AccountKeyCollection {
@@ -179,13 +179,12 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             Auth.auth().useEmulator(withHost: emulatorSettings.host, port: emulatorSettings.port)
         }
 
-        isConfiguring = true
-        defer {
-            isConfiguring = false
-        }
+        checkForInitialUserAccount()
 
         // get notified about changes of the User reference
         authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] auth, user in
+            // We could safely assume main actor isolation here, see
+            // https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/Auth#/c:@M@FirebaseAuth@objc(cs)FIRAuth(im)addAuthStateDidChangeListener:
             self?.handleStateDidChange(auth: auth, user: user)
         }
 
@@ -528,32 +527,30 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
 extension FirebaseAccountService {
     @MainActor
-    private func handleStateDidChange(auth: Auth, user: User?) {
-        if isConfiguring {
-            // We can safely assume main actor isolation, see
-            // https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/Auth#/c:@M@FirebaseAuth@objc(cs)FIRAuth(im)addAuthStateDidChangeListener:
-            let skip = MainActor.assumeIsolated {
-                // Ensure that there are details associated as soon as possible.
-                // Mark them as incomplete if we know there might be account details that are stored externally,
-                // we update the details later anyways, even if we might be wrong.
-                if let user {
-                    var details = buildUser(user, isNewUser: false)
-                    details.isIncomplete = !self.unsupportedKeys.isEmpty
-
-                    logger.debug("Supply initial user details of associated Firebase account.")
-                    account.supplyUserDetails(details)
-                    return !details.isIncomplete
-                } else {
-                    account.removeUserDetails()
-                    return true
-                }
-            }
-
-            guard !skip else {
-                return // don't spin of the task below if we know it wouldn't change anything.
-            }
+    private func checkForInitialUserAccount() {
+        guard let user = Auth.auth().currentUser else {
+            skipNextStateChange = true
+            return
         }
 
+        // Ensure that there are details associated as soon as possible.
+        // Mark them as incomplete if we know there might be account details that are stored externally,
+        // we update the details later anyways, even if we might be wrong.
+
+        var details = buildUser(user, isNewUser: false)
+        details.isIncomplete = !self.unsupportedKeys.isEmpty
+
+        logger.debug("Supply initial user details of associated Firebase account.")
+        account.supplyUserDetails(details)
+        skipNextStateChange = !details.isIncomplete
+    }
+
+    @MainActor
+    private func handleStateDidChange(auth: Auth, user: User?) {
+        if skipNextStateChange {
+            skipNextStateChange = false
+            return
+        }
 
         Task {
             do {
