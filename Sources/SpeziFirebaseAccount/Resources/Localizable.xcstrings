@@ -1,8 +1,30 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Anonymous Signup" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonym Registrieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anonymous Signup"
+          }
+        }
+      }
+    },
     "Authentication Required" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bestätigung Erforderlich"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -13,26 +35,16 @@
     },
     "Cancel" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
-          }
-        }
-      }
-    },
-    "E-Mail Verified" : {
-      "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E-Mail verifiziert"
+            "value" : "Abbrechen"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E-Mail Verified"
+            "value" : "Cancel"
           }
         }
       }
@@ -183,6 +195,12 @@
     },
     "FIREBASE_ACCOUNT_LINK_FAILED_ALREADY_IN_USE" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden der Anmeldedaten fehlgeschlagen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -193,6 +211,12 @@
     },
     "FIREBASE_ACCOUNT_LINK_FAILED_ALREADY_IN_USE_SUGGESTION" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Zugangsdaten sind bereits mit einem anderen Konto verbunden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -203,6 +227,12 @@
     },
     "FIREBASE_ACCOUNT_LINK_FAILED_DUPLICATE" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinden der Anmeldedaten fehlgeschlagen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -213,6 +243,12 @@
     },
     "FIREBASE_ACCOUNT_LINK_FAILED_DUPLICATE_SUGGESTION" : {
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es sind bereits Zugangsdaten dieser Art mit dem Benutzerkonto verbunden."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -349,6 +385,38 @@
         }
       }
     },
+    "FIREBASE_ACCOUNT_UNSUPPORTED_PROVIDER_ERROR" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anbieter nicht unterstützt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported Provider"
+          }
+        }
+      }
+    },
+    "FIREBASE_ACCOUNT_UNSUPPORTED_PROVIDER_ERROR_SUGGESTION" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es wurde kein unterstützer Anbieter gefunden, um deine Identität zu bestätigen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Found an unsupported provider when trying to re-authenticate."
+          }
+        }
+      }
+    },
     "FIREBASE_ACCOUNT_WEAK_PASSWORD" : {
       "localizations" : {
         "de" : {
@@ -413,59 +481,37 @@
         }
       }
     },
-    "FIREBASE_EMAIL_AND_PASSWORD" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-Mail und Password"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "E-Mail and Password"
-          }
-        }
-      }
-    },
-    "FIREBASE_IDENTITY_PROVIDER" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Single Sign-On"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Single Sign-On"
-          }
-        }
-      }
-    },
     "Login" : {
-
-    },
-    "OAuth Credential" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OAuth Berechtigung"
+            "value" : "Anmelden"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OAuth Credential"
+            "value" : "Login"
           }
         }
       }
     },
     "Please enter your password for %@." : {
-
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bitte bestätige dein Passwort für %@."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please enter your password for %@."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

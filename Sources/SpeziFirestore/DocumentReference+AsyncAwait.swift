@@ -6,13 +6,14 @@
 // SPDX-License-Identifier: MIT
 //
 
-
 @_exported import FirebaseFirestore
 @_exported import FirebaseFirestoreSwift
 import Foundation
 
 
 extension DocumentReference {
+    /// Overwrite the data of a document with an encodable value.
+    ///
     /// Encodes an instance of `Encodable` and overwrites the encoded data
     /// to the document referred by this `DocumentReference`. If no document exists,
     /// it is created. If a document already exists, it is overwritten.
@@ -37,6 +38,8 @@ extension DocumentReference {
         }
     }
     
+    /// Write the data of a document with an encodable value.
+    ///
     /// Encodes an instance of `Encodable` and overwrites the encoded data
     /// to the document referred by this `DocumentReference`. If no document exists,
     /// it is created. If a document already exists, it is overwritten.  If you pass
@@ -65,6 +68,8 @@ extension DocumentReference {
         }
     }
     
+    /// Write the data of a document by merging a set of fields.
+    ///
     /// Encodes an instance of `Encodable` and writes the encoded data to the document referred
     /// by this `DocumentReference` by only replacing the fields specified under `mergeFields`.
     /// Any field that is not specified in mergeFields is ignored and remains untouched. If the

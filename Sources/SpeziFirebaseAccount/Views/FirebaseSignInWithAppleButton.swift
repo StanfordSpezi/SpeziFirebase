@@ -6,47 +6,29 @@
 // SPDX-License-Identifier: MIT
 //
 
-import AuthenticationServices
+import SpeziAccount
 import SpeziViews
 import SwiftUI
 
 
 struct FirebaseSignInWithAppleButton: View {
-    private let accountService: FirebaseIdentityProviderAccountService
+    @Environment(FirebaseAccountService.self)
+    private var service
 
     @Environment(\.colorScheme)
     private var colorScheme
-    @Environment(\.defaultErrorDescription)
-    private var defaultErrorDescription
 
     @State private var viewState: ViewState = .idle
 
     var body: some View {
-        SignInWithAppleButton(onRequest: { request in
-            accountService.onAppleSignInRequest(request: request)
-        }, onCompletion: { result in
-            Task {
-                do {
-                    try await accountService.onAppleSignInCompletion(result: result)
-                } catch {
-                    if let localizedError = error as? LocalizedError {
-                        viewState = .error(localizedError)
-                    } else {
-                        viewState = .error(AnyLocalizedError(
-                            error: error,
-                            defaultErrorDescription: defaultErrorDescription
-                        ))
-                    }
-                }
-            }
-        })
+        SignInWithAppleButton(state: $viewState) { request in
+            service.onAppleSignInRequest(request: request)
+        } onCompletion: { result in
+            try await service.onAppleSignInCompletion(result: result)
+        }
             .frame(height: 55)
-            .signInWithAppleButtonStyle(colorScheme == .light ? .black : .white)
             .viewStateAlert(state: $viewState)
     }
 
-
-    init(service: FirebaseIdentityProviderAccountService) {
-        self.accountService = service
-    }
+    nonisolated init() {}
 }

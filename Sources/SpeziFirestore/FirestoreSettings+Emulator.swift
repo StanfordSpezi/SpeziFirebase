@@ -9,8 +9,11 @@
 import FirebaseFirestore
 
 
-extension FirestoreSettings: @unchecked Sendable {
-    /// The emulator settings define the default settings when using the Firebase emulator suite as described at [Connect your app to the Cloud Firestore Emulator](https://firebase.google.com/docs/emulator-suite/connect_firestore).
+extension FirestoreSettings {
+    /// Firestore settings that specify emulator support.
+    ///
+    /// The emulator settings define the default settings when using the Firebase emulator suite as described at
+    /// [Connect your app to the Cloud Firestore Emulator](https://firebase.google.com/docs/emulator-suite/connect_firestore).
     public static var emulator: FirestoreSettings {
         let settings = FirestoreSettings()
         settings.host = "localhost:8080"

@@ -10,19 +10,21 @@ SPDX-License-Identifier: MIT
              
 -->
 
-Module to configure the Firebase set of dependencies.
+Configure the Firebase application.
 
 ## Overview
 
-The ``ConfigureFirebaseApp/configure()`` method calls `FirebaseApp.configure()`.
+The `FirebaseApp.configure()` method will be called upon configuration of the ``ConfigureFirebaseApp`` `Module`.
 
 Use the `@Dependency` property wrapper to define a dependency on this module and ensure that `FirebaseApp.configure()` is called before any
-other Firebase-related modules:
+other Firebase-related modules and to ensure it is called exactly once.
 
 ```swift
-public final class YourFirebaseModule: Module {
-    @Dependency private var configureFirebaseApp: ConfigureFirebaseApp
+import Spezi
+import SpeziFirebaseConfiguration
 
-    // ...
+public final class MyFirebaseModule: Module {
+    @Dependency(ConfigureFirebaseApp.self)
+    private var configureFirebaseApp
 }
 ```

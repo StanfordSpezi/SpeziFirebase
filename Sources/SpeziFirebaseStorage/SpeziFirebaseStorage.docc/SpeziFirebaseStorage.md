@@ -30,6 +30,6 @@ class ExampleAppDelegate: SpeziAppDelegate {
 
 ## Topics
 
-### Firebase Storage
+### Configuration
 
 - ``FirebaseStorageConfiguration``

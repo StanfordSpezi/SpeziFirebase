@@ -18,59 +18,40 @@ Certain account services, like the account services provided by Firebase, can on
 The ``FirestoreAccountStorage`` can be used to store additional account details, that are not supported out of the box by your account services,
 inside Firestore in a custom user collection.
 
-For more detailed information, refer to the documentation of ``FirestoreAccountStorage``.
+> Important: The `FirestoreAccountStorage` uses the [`accountId`](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountdetails/accountid)
+  of the user for the document identifier. When using the `FirebaseAccountService`, this is the primary, firebase user identifier. Make sure to configure your firestore security rules respectively.
 
-### Example
+To configure Firestore as your external storage provider, just supply the ``FirestoreAccountStorage`` as an argument to the `AccountConfiguration`.
 
-Once you have [AccountConfiguration](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/initial-setup#Account-Configuration)
-and the [FirebaseAccountConfiguration](https://swiftpackageindex.com/stanfordspezi/spezifirebase/documentation/spezifirebaseaccount/firebaseaccountconfiguration)
-set up, you can adopt the [AccountStorageConstraint](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/accountstorageconstraint)
-protocol to provide a custom storage for SpeziAccount.
+> Note: For more information refer to the
+ [Account Configuration](https://swiftpackageindex.com/stanfordspezi/speziaccount/documentation/speziaccount/initial-setup#Account-Configuration) article.
 
+The example below illustrates a configuration example, setting up the `FirebaseAccountService` in combination with the `FirestoreAccountStorage` provider.
 
 ```swift
-import FirebaseFirestore
 import Spezi
 import SpeziAccount
+import SpeziFirebase
+import SpeziFirebaseAccount
 import SpeziFirebaseAccountStorage
 
-
-actor ExampleStandard: Standard, AccountStorageConstraint {
-    // Define the collection where you want to store your additional user data, ...
-    static var collection: CollectionReference {
-        Firestore.firestore().collection("users")
-    }
-
-    // ... define and initialize the `FirestoreAccountStorage` dependency ...
-    @Dependency private var accountStorage = FirestoreAccountStorage(storedIn: Self.collection)
-
-
-    // ... and forward all implementations of `AccountStorageConstraint` to the `FirestoreAccountStorage`.
-
-    public func create(_ identifier: AdditionalRecordId, _ details: SignupDetails) async throws {
-        try await accountStorage.create(identifier, details)
-    }
-
-    public func load(_ identifier: AdditionalRecordId, _ keys: [any AccountKey.Type]) async throws -> PartialAccountDetails {
-        try await accountStorage.load(identifier, keys)
-    }
-
-    public func modify(_ identifier: AdditionalRecordId, _ modifications: AccountModifications) async throws {
-        try await accountStorage.modify(identifier, modifications)
-    }
-
-    public func clear(_ identifier: AdditionalRecordId) async {
-        await accountStorage.clear(identifier)
-    }
-
-    public func delete(_ identifier: AdditionalRecordId) async throws {
-        try await accountStorage.delete(identifier)
+class ExampleAppDelegate: SpeziAppDelegate {
+override var configuration: Configuration {
+    Configuration {
+        AccountConfiguration(
+            service: FirebaseAccountService(),
+            storageProvider: FirestoreAccountStorage(storeIn: Firestore.firestore().collection("users"))
+            configuration: [/* ... */]
+        )
     }
 }
 ```
 
+> Important: In order to use the `FirestoreAccountStorage`, you must have [`Firestore`](https://swiftpackageindex.com/stanfordspezi/spezifirebase/main/documentation/spezifirestore/firestore)
+    configured in your app. Refer to the documentation page for more information.
+
 ## Topics
 
-### Storage
+### Configuration
 
 - ``FirestoreAccountStorage``

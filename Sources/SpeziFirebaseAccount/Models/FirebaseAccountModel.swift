@@ -12,13 +12,14 @@ import SwiftUI
 
 
 @Observable
+@MainActor
 class FirebaseAccountModel {
     var authorizationController: AuthorizationController?
 
     var isPresentingReauthentication = false
     var reauthenticationContext: ReauthenticationContext?
 
-    init() {}
+    nonisolated init() {}
 
 
     func reauthenticateUser(userId: String) async -> ReauthenticationResult {
@@ -33,3 +34,6 @@ class FirebaseAccountModel {
         }
     }
 }
+
+
+extension FirebaseAccountModel: Sendable {}
