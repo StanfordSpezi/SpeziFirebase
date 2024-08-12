@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-import FirebaseAuth
+@preconcurrency import FirebaseAuth
 import Foundation
 
 
@@ -39,13 +39,13 @@ public enum FirebaseAccountError {
     /// Encountered an unrecognized provider when trying to re-authenticate the user.
     case unsupportedProvider
     /// Unrecognized Firebase account error.
-    case unknown(AuthErrorCode.Code)
+    case unknown(AuthErrorCode)
 
 
     /// Derive the error from the Firebase `AuthErrorCode`.
     /// - Parameter authErrorCode: The error code from the NSError reported by Firebase Auth.
     public init(authErrorCode: AuthErrorCode) {
-        switch authErrorCode.code {
+        switch authErrorCode {
         case .invalidEmail, .invalidRecipientEmail:
             self = .invalidEmail
         case .emailAlreadyInUse:
@@ -65,7 +65,7 @@ public enum FirebaseAccountError {
         case .credentialAlreadyInUse:
             self = .linkFailedAlreadyInUse
         default:
-            self = .unknown(authErrorCode.code)
+            self = .unknown(authErrorCode)
         }
     }
 }

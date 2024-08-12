@@ -6,8 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-@_exported import FirebaseFirestore
-@_exported import FirebaseFirestoreSwift
+@preconcurrency import FirebaseFirestore
 import Foundation
 
 
@@ -26,7 +25,8 @@ extension DocumentReference {
     /// - Parameters:
     ///   - value: An instance of `Encodable` to be encoded to a document.
     ///   - encoder: An encoder instance to use to run the encoding.
-    public func setData<T: Encodable>(
+    public func setData<T: Encodable>( // swiftlint:disable:this function_default_parameter_at_end
+        isolation: isolated (any Actor)? = #isolation,
         from value: T,
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
@@ -37,7 +37,7 @@ extension DocumentReference {
             throw FirestoreError(error)
         }
     }
-    
+
     /// Write the data of a document with an encodable value.
     ///
     /// Encodes an instance of `Encodable` and overwrites the encoded data
@@ -55,7 +55,8 @@ extension DocumentReference {
     ///   - merge: Whether to merge the provided `Encodable` into any existing
     ///            document.
     ///   - encoder: An encoder instance to use to run the encoding.
-    public func setData<T: Encodable>(
+    public func setData<T: Encodable>( // swiftlint:disable:this function_default_parameter_at_end
+        isolation: isolated (any Actor)? = #isolation,
         from value: T,
         merge: Bool,
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
@@ -89,7 +90,8 @@ extension DocumentReference {
     ///                  merge. Fields can contain dots to reference nested fields within the
     ///                  document.
     ///   - encoder: An encoder instance to use to run the encoding.
-    public func setData<T: Encodable>(
+    public func setData<T: Encodable>( // swiftlint:disable:this function_default_parameter_at_end
+        isolation: isolated (any Actor)? = #isolation,
         from value: T,
         mergeFields: [Any],
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()

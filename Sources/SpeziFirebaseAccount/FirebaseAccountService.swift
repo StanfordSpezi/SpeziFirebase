@@ -62,7 +62,7 @@ private struct UserUpdate {
 /// ### Signup
 /// - ``signUpAnonymously()``
 /// - ``signUp(with:)-6qeht``
-/// - ``signup(with:)-3bvwo``
+/// - ``signUp(with:)-rpy``
 ///
 /// ### Login
 /// - ``login(userId:password:)``
@@ -191,9 +191,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         // if there is a cached user, we refresh the authentication token
         Auth.auth().currentUser?.getIDTokenForcingRefresh(true) { _, error in
             if let error {
-                let code = AuthErrorCode(_nsError: error as NSError)
-
-                guard code.code != .networkError else {
+                guard (error as NSError).code != AuthErrorCode.networkError.rawValue else {
                     return // we make sure that we don't remove the account when we don't have network (e.g., flight mode)
                 }
 
@@ -294,7 +292,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     /// Sign up with an O-Auth credential, like one received from Sign in with Apple.
     /// - Parameter credential: The o-auth credential.
     /// - Throws: Throws an ``FirebaseAccountError`` if the operation fails.
-    public func signup(with credential: OAuthCredential) async throws {
+    public func signUp(with credential: OAuthCredential) async throws {
         try await dispatchFirebaseAuthAction { @MainActor in
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
@@ -319,14 +317,18 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         do {
             try await Auth.auth().sendPasswordReset(withEmail: userId)
             logger.debug("sendPasswordReset(withEmail:) for user.")
-        } catch let error as NSError {
-            let firebaseError = FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
-            if case .invalidCredentials = firebaseError {
-                return // make sure we don't leak any information
-            } else {
-                throw firebaseError
-            }
         } catch {
+            let nsError = error as NSError
+            if nsError.domain == AuthErrors.domain,
+               let code = AuthErrorCode(rawValue: nsError.code) {
+                let accountError = FirebaseAccountError(authErrorCode: code)
+
+                if case .invalidCredentials = accountError {
+                    return // make sure we don't leak any information
+                } else {
+                    throw accountError
+                }
+            }
             throw FirebaseAccountError.unknown(.internalError)
         }
     }
@@ -374,7 +376,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             let result = try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
             guard case .success = result else {
                 logger.debug("Re-authentication was cancelled by user. Not deleting the account.")
-                return // cancelled
+                return// cancelled
             }
 
             if let credential = result.credential {
@@ -397,7 +399,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
                     // token revocation for Sign in with Apple is currently unsupported for Firebase
                     // see https://github.com/firebase/firebase-tools/issues/6028
                     // and https://github.com/firebase/firebase-tools/pull/6050
-                    if AuthErrorCode(_nsError: error).code != .invalidCredential {
+                    if error.code != AuthErrorCode.invalidCredential.rawValue {
                         throw error
                     }
 #else
@@ -466,11 +468,13 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
             // None of the above requests will trigger our state change listener, therefore, we just call it manually.
             try await notifyUserSignIn(user: currentUser)
-        } catch let error as NSError {
-            logger.error("Received NSError on firebase dispatch: \(error)")
-            throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
             logger.error("Received error on firebase dispatch: \(error)")
+            let nsError = error as NSError
+            if nsError.domain == AuthErrors.domain,
+               let code = AuthErrorCode(rawValue: nsError.code) {
+                throw FirebaseAccountError(authErrorCode: code)
+            }
             throw FirebaseAccountError.unknown(.internalError)
         }
     }
@@ -540,7 +544,7 @@ extension FirebaseAccountService {
         var details = buildUser(user, isNewUser: false)
         details.isIncomplete = !self.unsupportedKeys.isEmpty
 
-        logger.debug("Supply initial user details of associated Firebase account.")
+        logger.debug("Found existing Firebase account. Supplying initial user details of associated Firebase account.")
         account.supplyUserDetails(details)
         skipNextStateChange = !details.isIncomplete
     }
@@ -619,7 +623,7 @@ extension FirebaseAccountService {
 
             logger.info("onAppleSignInCompletion creating firebase apple credential from authorization credential")
 
-            try await signup(with: credential)
+            try await signUp(with: credential)
         case let .failure(error):
             guard let authorizationError = error as? ASAuthorizationError else {
                 logger.error("onAppleSignInCompletion received unknown error: \(error)")
@@ -754,11 +758,13 @@ extension FirebaseAccountService {
             let result = try await action()
 
             try await dispatchQueuedChanges(result: result)
-        } catch let error as NSError {
-            logger.error("Received NSError on firebase dispatch: \(error)")
-            throw FirebaseAccountError(authErrorCode: AuthErrorCode(_nsError: error))
         } catch {
             logger.error("Received error on firebase dispatch: \(error)")
+            let nsError = error as NSError
+            if nsError.domain == AuthErrors.domain,
+               let code = AuthErrorCode(rawValue: nsError.code) {
+                throw FirebaseAccountError(authErrorCode: code)
+            }
             throw FirebaseAccountError.unknown(.internalError)
         }
     }
