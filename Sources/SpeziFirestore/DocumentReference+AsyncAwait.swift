@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
-@preconcurrency import FirebaseFirestore
+import FirebaseFirestore
 import Foundation
 
 

@@ -33,9 +33,9 @@ let package = Package(
         .library(name: "SpeziFirebaseAccountStorage", targets: ["SpeziFirebaseAccountStorage"])
     ],
     dependencies: [
-        .package(url: "https://github.com/StanfordSpezi/SpeziFoundation.git", from: "1.1.3"),
-        .package(url: "https://github.com/StanfordSpezi/Spezi", branch: "feature/dependency-restructure"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", from: "1.5.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziFoundation.git", from: "2.0.0-beta.1"),
+        .package(url: "https://github.com/StanfordSpezi/Spezi", branch: "feature/upgrade-spezi"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", from: "1.6.0"),
         .package(url: "https://github.com/StanfordSpezi/SpeziAccount", branch: "feature/account-service-singleton"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.0.0")
     ] + swiftLintPackage(),
@@ -131,7 +131,7 @@ func swiftLintPlugin() -> [Target.PluginUsage] {
 
 func swiftLintPackage() -> [PackageDescription.Package.Dependency] {
     if ProcessInfo.processInfo.environment["SPEZI_DEVELOPMENT_SWIFTLINT"] != nil {
-        [.package(url: "https://github.com/realm/SwiftLint.git", .upToNextMinor(from: "0.55.1"))]
+        [.package(url: "https://github.com/realm/SwiftLint.git", from: "0.55.1")]
     } else {
         []
     }

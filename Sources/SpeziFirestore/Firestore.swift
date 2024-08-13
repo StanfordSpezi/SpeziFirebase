@@ -8,7 +8,6 @@
 
 import FirebaseCore
 import FirebaseFirestore
-import FirebaseFirestoreSwift
 import Spezi
 import SpeziFirebaseConfiguration
 import SwiftUI
