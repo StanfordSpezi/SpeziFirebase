@@ -140,7 +140,7 @@ extension DocumentReference {
     /// - Parameters:
     ///   - value: An instance of `Encodable` to be encoded to a document.
     ///   - encoder: An encoder instance to use to run the encoding.
-    public func setData<T: Encodable>( // swiftlint:disable:this function_default_parameter_at_end
+    public func setData<T: Encodable>(
         from value: T,
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
@@ -169,7 +169,7 @@ extension DocumentReference {
     ///   - merge: Whether to merge the provided `Encodable` into any existing
     ///            document.
     ///   - encoder: An encoder instance to use to run the encoding.
-    public func setData<T: Encodable>( // swiftlint:disable:this function_default_parameter_at_end
+    public func setData<T: Encodable>(
         from value: T,
         merge: Bool,
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
@@ -203,7 +203,7 @@ extension DocumentReference {
     ///                  merge. Fields can contain dots to reference nested fields within the
     ///                  document.
     ///   - encoder: An encoder instance to use to run the encoding.
-    public func setData<T: Encodable>( // swiftlint:disable:this function_default_parameter_at_end
+    public func setData<T: Encodable>(
         from value: T,
         mergeFields: [Any],
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
