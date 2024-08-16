@@ -33,11 +33,12 @@ let package = Package(
         .library(name: "SpeziFirebaseAccountStorage", targets: ["SpeziFirebaseAccountStorage"])
     ],
     dependencies: [
-        .package(url: "https://github.com/StanfordSpezi/SpeziFoundation.git", from: "2.0.0-beta.1"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziFoundation", from: "2.0.0-beta.1"),
         .package(url: "https://github.com/StanfordSpezi/Spezi", from: "1.7.1"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", from: "1.6.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziViews", from: "1.6.0"),
         .package(url: "https://github.com/StanfordSpezi/SpeziAccount", from: "2.0.0-beta.2"),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.0.0")
+        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.0.0"),
+        .package(url: "https://github.com/apple/swift-atomics.git", from: "1.2.0")
     ] + swiftLintPackage(),
     targets: [
         .target(
@@ -71,7 +72,8 @@ let package = Package(
             dependencies: [
                 .target(name: "SpeziFirebaseConfiguration"),
                 .product(name: "Spezi", package: "Spezi"),
-                .product(name: "FirebaseFirestore", package: "firebase-ios-sdk")
+                .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
+                .product(name: "Atomics", package: "swift-atomics")
             ],
             swiftSettings: [
                 swiftConcurrency
@@ -108,8 +110,7 @@ let package = Package(
             dependencies: [
                 .target(name: "SpeziFirebaseAccount"),
                 .target(name: "SpeziFirebaseConfiguration"),
-                .target(name: "SpeziFirestore"),
-                .product(name: "XCTSpezi", package: "Spezi")
+                .target(name: "SpeziFirestore")
             ],
             swiftSettings: [
                 swiftConcurrency

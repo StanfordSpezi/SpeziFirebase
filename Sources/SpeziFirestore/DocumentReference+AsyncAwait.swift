@@ -6,8 +6,61 @@
 // SPDX-License-Identifier: MIT
 //
 
+import Atomics
 import FirebaseFirestore
 import Foundation
+import OSLog
+
+
+#if compiler(>=6)
+private struct FirestoreCompletion: Sendable {
+    private static var logger: Logger {
+        Logger(subsystem: "edu.stanford.spezi.firebase", category: "FirestoreCompletion")
+    }
+
+    private let continuation: UnsafeContinuation<Void, Error>
+    private let resumed: ManagedAtomic<Bool>
+
+    private init(continuation: UnsafeContinuation<Void, Error>) {
+        self.continuation = continuation
+        self.resumed = ManagedAtomic(false)
+    }
+
+    static func perform(
+        isolation: isolated (any Actor)? = #isolation,
+        file: StaticString = #filePath,
+        line: Int = #line,
+        action: (FirestoreCompletion) throws -> Void
+    ) async throws {
+        try await withUnsafeThrowingContinuation { continuation in
+            let completion = FirestoreCompletion(continuation: continuation)
+            do {
+                try action(completion)
+            } catch {
+                completion.complete(with: error, file: file, line: line)
+            }
+        }
+    }
+
+    func complete(
+        with error: Error?,
+        file: StaticString = #filePath,
+        line: Int = #line
+    ) {
+        let (exchanged, _) = resumed.compareExchange(expected: false, desired: true, ordering: .relaxed)
+        if !exchanged {
+            Self.logger.warning("\(file):\(line): Firestore completion handler completed twice. This time with: \(error)")
+            return
+        }
+
+        if let error {
+            continuation.resume(throwing: FirestoreError(error))
+        } else {
+            continuation.resume()
+        }
+    }
+}
+#endif
 
 
 extension DocumentReference {
@@ -31,17 +84,9 @@ extension DocumentReference {
         from value: T,
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            do {
-                try setData(from: value, encoder: encoder) { error in
-                    if let error {
-                        continuation.resume(throwing: FirestoreError(error))
-                    } else {
-                        continuation.resume()
-                    }
-                }
-            } catch {
-                continuation.resume(throwing: FirestoreError(error))
+        try await FirestoreCompletion.perform { completion in
+            try setData(from: value, encoder: encoder) { error in
+                completion.complete(with: error)
             }
         }
     }
@@ -69,17 +114,9 @@ extension DocumentReference {
         merge: Bool,
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            do {
-                try setData(from: value, merge: merge, encoder: encoder) { error in
-                    if let error {
-                        continuation.resume(throwing: FirestoreError(error))
-                    } else {
-                        continuation.resume()
-                    }
-                }
-            } catch {
-                continuation.resume(throwing: FirestoreError(error))
+        try await FirestoreCompletion.perform { completion in
+            try setData(from: value, merge: merge, encoder: encoder) { error in
+                completion.complete(with: error)
             }
         }
     }
@@ -111,17 +148,9 @@ extension DocumentReference {
         mergeFields: [Any],
         encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder()
     ) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            do {
-                try setData(from: value, mergeFields: mergeFields, encoder: encoder) { error in
-                    if let error {
-                        continuation.resume(throwing: FirestoreError(error))
-                    } else {
-                        continuation.resume()
-                    }
-                }
-            } catch {
-                continuation.resume(throwing: FirestoreError(error))
+        try await FirestoreCompletion.perform { completion in
+            try setData(from: value, mergeFields: mergeFields, encoder: encoder) { error in
+                completion.complete(with: error)
             }
         }
     }
