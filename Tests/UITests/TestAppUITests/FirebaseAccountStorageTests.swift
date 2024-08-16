@@ -20,6 +20,7 @@ final class FirebaseAccountStorageTests: XCTestCase {
         try await Task.sleep(for: .seconds(0.5))
     }
 
+
     @MainActor
     func testAdditionalAccountStorage() async throws {
         let app = XCUIApplication()
