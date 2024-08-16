@@ -130,6 +130,7 @@ func swiftLintPlugin() -> [Target.PluginUsage] {
     }
 }
 
+
 func swiftLintPackage() -> [PackageDescription.Package.Dependency] {
     if ProcessInfo.processInfo.environment["SPEZI_DEVELOPMENT_SWIFTLINT"] != nil {
         [.package(url: "https://github.com/realm/SwiftLint.git", from: "0.55.1")]
