@@ -730,8 +730,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/StanfordSpezi/XCTestExtensions";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.10;
+				branch = "feature/improved-text-entry";
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
