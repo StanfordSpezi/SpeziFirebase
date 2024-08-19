@@ -207,8 +207,8 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.buttons["Name, Username Test"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["Name"].waitForExistence(timeout: 10.0))
 
-        try app.textFields["enter last name"].delete(count: 4)
-        try app.textFields["enter last name"].enter(value: "Test1")
+        try app.textFields["enter last name"].delete(count: 4, options: .disableKeyboardDismiss)
+        try app.textFields["enter last name"].enter(value: "Test1", options: .skipTextFieldSelection)
 
         app.buttons["Done"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["Name, E-Mail Address"].waitForExistence(timeout: 4.0))
@@ -218,8 +218,8 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.buttons["E-Mail Address, test@username.edu"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["E-Mail Address"].waitForExistence(timeout: 10.0))
 
-        try app.textFields["E-Mail Address"].delete(count: 3)
-        try app.textFields["E-Mail Address"].enter(value: "de", checkIfTextWasEnteredCorrectly: false)
+        try app.textFields["E-Mail Address"].delete(count: 3, options: .disableKeyboardDismiss)
+        try app.textFields["E-Mail Address"].enter(value: "de", options: .skipTextFieldSelection)
 
         app.buttons["Done"].tap()
 
@@ -269,10 +269,7 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssertTrue(app.navigationBars.staticTexts["Change Password"].waitForExistence(timeout: 2.0))
 
         try app.secureTextFields["enter password"].enter(value: "1234567890")
-        app.dismissKeyboard()
-
         try app.secureTextFields["re-enter password"].enter(value: "1234567890")
-        app.dismissKeyboard()
 
         app.buttons["Done"].tap()
     }
