@@ -140,7 +140,7 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "--account-storage"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
       <LocationScenarioReference

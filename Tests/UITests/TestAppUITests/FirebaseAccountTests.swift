@@ -15,36 +15,32 @@ import XCTestExtensions
 /// Refer to https://firebase.google.com/docs/emulator-suite/connect_auth about more information about the
 /// Firebase Local Emulator Suite.
 final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_body_length
-    @MainActor
-    override func setUp() async throws {
-        try await super.setUp()
-
+    override func setUp() {
         continueAfterFailure = false
+    }
 
+    override func setUp() async throws {
         try await FirebaseClient.deleteAllAccounts()
         try await Task.sleep(for: .seconds(0.5))
     }
 
-    
     @MainActor
     func testAccountSignUp() async throws {
         let app = XCUIApplication()
         app.launchArguments = ["--firebaseAccount"]
         app.launch()
-        
-        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 2.0))
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
         app.buttons["FirebaseAccount"].tap()
 
         var accounts = try await FirebaseClient.getAllAccounts()
         XCTAssert(accounts.isEmpty)
-
-        if app.buttons["Logout"].waitForExistence(timeout: 5.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
         
         try app.signup(username: "test@username1.edu", password: "TestPassword1", givenName: "Test1", familyName: "Username1")
         
-        XCTAssert(app.buttons["Logout"].waitForExistence(timeout: 10.0))
+        XCTAssert(app.buttons["Logout"].waitForExistence(timeout: 2.0))
         app.buttons["Logout"].tap()
         
         try app.signup(username: "test@username2.edu", password: "TestPassword2", givenName: "Test2", familyName: "Username2")
@@ -60,7 +56,7 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
             ]
         )
         
-        XCTAssert(app.buttons["Logout"].waitForExistence(timeout: 10.0))
+        XCTAssert(app.buttons["Logout"].waitForExistence(timeout: 2.0))
         app.buttons["Logout"].tap()
     }
 
@@ -83,23 +79,19 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.launchArguments = ["--firebaseAccount"]
         app.launch()
         
-        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
         app.buttons["FirebaseAccount"].tap()
-
-        if app.buttons["Logout"].waitForExistence(timeout: 3.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
         
         try app.login(username: "test@username1.edu", password: "TestPassword1")
-        XCTAssert(app.staticTexts["test@username1.edu"].waitForExistence(timeout: 10.0))
-        
-        XCTAssert(app.buttons["Logout"].waitForExistence(timeout: 10.0))
+        XCTAssert(app.staticTexts["test@username1.edu"].waitForExistence(timeout: 2.0))
+
+        XCTAssert(app.buttons["Logout"].exists)
         app.buttons["Logout"].tap()
         
         try app.login(username: "test@username2.edu", password: "TestPassword2")
-        XCTAssert(app.staticTexts["test@username2.edu"].waitForExistence(timeout: 10.0))
-        
-        XCTAssert(app.buttons["Logout"].waitForExistence(timeout: 10.0))
+        XCTAssert(app.staticTexts["test@username2.edu"].waitForExistence(timeout: 2.0))
+
+        XCTAssert(app.buttons["Logout"].exists)
         app.buttons["Logout"].tap()
     }
 
@@ -116,10 +108,6 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
         XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
         app.buttons["FirebaseAccount"].tap()
-
-        if app.buttons["Logout"].waitForExistence(timeout: 5.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
 
         try app.login(username: "test@username.edu", password: "TestPassword")
         XCTAssert(app.staticTexts["test@username.edu"].waitForExistence(timeout: 10.0))
@@ -139,9 +127,7 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         let accounts2 = try await FirebaseClient.getAllAccounts()
         XCTAssertEqual(
             accounts2.sorted(by: { $0.email < $1.email }),
-            [
-                FirestoreAccount(email: "test@username.edu", displayName: "Test Username")
-            ]
+            [FirestoreAccount(email: "test@username.edu", displayName: "Test Username")]
         )
     }
 
@@ -156,12 +142,10 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.launchArguments = ["--firebaseAccount"]
         app.launch()
 
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 4.0))
+
         XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
         app.buttons["FirebaseAccount"].tap()
-
-        if app.buttons["Logout"].waitForExistence(timeout: 5.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
 
         try app.login(username: "test@username.edu", password: "TestPassword")
         XCTAssert(app.staticTexts["test@username.edu"].waitForExistence(timeout: 10.0))
@@ -205,12 +189,10 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.launchArguments = ["--firebaseAccount"]
         app.launch()
 
-        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
-        app.buttons["FirebaseAccount"].tap()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 4.0))
 
-        if app.buttons["Logout"].waitForExistence(timeout: 5.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
+        app.buttons["FirebaseAccount"].tap()
 
         try app.login(username: "test@username.edu", password: "TestPassword")
         XCTAssert(app.staticTexts["test@username.edu"].waitForExistence(timeout: 10.0))
@@ -225,19 +207,19 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.buttons["Name, Username Test"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["Name"].waitForExistence(timeout: 10.0))
 
-        try app.textFields["enter last name"].delete(count: 4)
-        try app.textFields["enter last name"].enter(value: "Test1")
+        try app.textFields["enter last name"].delete(count: 4, options: .disableKeyboardDismiss)
+        try app.textFields["enter last name"].enter(value: "Test1", options: .skipTextFieldSelection)
 
         app.buttons["Done"].tap()
-        sleep(3)
-        XCTAssertTrue(app.staticTexts["Username Test1"].waitForExistence(timeout: 5.0))
+        XCTAssertTrue(app.navigationBars.staticTexts["Name, E-Mail Address"].waitForExistence(timeout: 4.0))
+        XCTAssertTrue(app.staticTexts["Name, Username Test1"].exists)
 
         // CHANGE EMAIL ADDRESS
         app.buttons["E-Mail Address, test@username.edu"].tap()
         XCTAssertTrue(app.navigationBars.staticTexts["E-Mail Address"].waitForExistence(timeout: 10.0))
 
-        try app.textFields["E-Mail Address"].delete(count: 3)
-        try app.textFields["E-Mail Address"].enter(value: "de", checkIfTextWasEnteredCorrectly: false)
+        try app.textFields["E-Mail Address"].delete(count: 3, options: .disableKeyboardDismiss)
+        try app.textFields["E-Mail Address"].enter(value: "de", options: .skipTextFieldSelection)
 
         app.buttons["Done"].tap()
 
@@ -247,8 +229,8 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssertTrue(app.alerts["Authentication Required"].buttons["Login"].waitForExistence(timeout: 0.5))
         app.alerts["Authentication Required"].buttons["Login"].tap()
 
-        sleep(3)
-        XCTAssertTrue(app.staticTexts["test@username.de"].waitForExistence(timeout: 5.0))
+        XCTAssertTrue(app.navigationBars.staticTexts["Name, E-Mail Address"].waitForExistence(timeout: 4.0))
+        XCTAssertTrue(app.staticTexts["E-Mail Address, test@username.de"].exists)
 
 
         let newAccounts = try await FirebaseClient.getAllAccounts()
@@ -266,31 +248,28 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.launchArguments = ["--firebaseAccount"]
         app.launch()
 
-        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
         app.buttons["FirebaseAccount"].tap()
 
-        if app.buttons["Logout"].waitForExistence(timeout: 5.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
-
         try app.login(username: "test@username.edu", password: "TestPassword")
-        XCTAssert(app.staticTexts["test@username.edu"].waitForExistence(timeout: 10.0))
+        XCTAssert(app.staticTexts["test@username.edu"].waitForExistence(timeout: 2.0))
 
+        XCTAssertTrue(app.buttons["Account Overview"].exists)
         app.buttons["Account Overview"].tap()
-        XCTAssertTrue(app.staticTexts["test@username.edu"].waitForExistence(timeout: 5.0))
+        XCTAssertTrue(app.staticTexts["test@username.edu"].waitForExistence(timeout: 2.0))
 
+        XCTAssertTrue(app.buttons["Sign-In & Security"].exists)
         app.buttons["Sign-In & Security"].tap()
-        XCTAssertTrue(app.navigationBars.staticTexts["Sign-In & Security"].waitForExistence(timeout: 10.0))
+        XCTAssertTrue(app.navigationBars.staticTexts["Sign-In & Security"].waitForExistence(timeout: 2.0))
 
+        XCTAssertTrue(app.buttons["Change Password"].exists)
         app.buttons["Change Password"].tap()
-        XCTAssertTrue(app.navigationBars.staticTexts["Change Password"].waitForExistence(timeout: 10.0))
-        sleep(2)
+
+
+        XCTAssertTrue(app.navigationBars.staticTexts["Change Password"].waitForExistence(timeout: 2.0))
 
         try app.secureTextFields["enter password"].enter(value: "1234567890")
-        app.dismissKeyboard()
-
         try app.secureTextFields["re-enter password"].enter(value: "1234567890")
-        app.dismissKeyboard()
 
         app.buttons["Done"].tap()
     }
@@ -308,11 +287,13 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssertTrue(app.alerts["Authentication Required"].buttons["Login"].waitForExistence(timeout: 0.5))
         app.alerts["Authentication Required"].buttons["Login"].tap()
 
-        sleep(1)
+        XCTAssertTrue(app.navigationBars.buttons["Account Overview"].waitForExistence(timeout: 2.0))
         app.navigationBars.buttons["Account Overview"].tap() // back button
-        sleep(1)
-        app.buttons["Close"].tap()
-        sleep(1)
+
+        XCTAssertTrue(app.navigationBars.buttons["Close"].waitForExistence(timeout: 2.0))
+        app.navigationBars.buttons["Close"].tap()
+
+        XCTAssertTrue(app.buttons["Logout"].waitForExistence(timeout: 2.0))
         app.buttons["Logout"].tap() // we tap the custom button to be lest dependent on the other tests and not deal with the alert
 
         try app.login(username: "test@username.edu", password: "1234567890", close: false)
@@ -347,11 +328,13 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssertTrue(app.alerts["Authentication Required"].buttons["Cancel"].waitForExistence(timeout: 0.5))
         app.alerts["Authentication Required"].buttons["Cancel"].tap()
 
-        sleep(1)
+        XCTAssertTrue(app.navigationBars.buttons["Account Overview"].waitForExistence(timeout: 2.0))
         app.navigationBars.buttons["Account Overview"].tap() // back button
-        sleep(1)
-        app.buttons["Close"].tap()
-        sleep(1)
+
+        XCTAssertTrue(app.navigationBars.buttons["Close"].waitForExistence(timeout: 2.0))
+        app.navigationBars.buttons["Close"].tap()
+
+        XCTAssertTrue(app.buttons["Logout"].waitForExistence(timeout: 2.0))
         app.buttons["Logout"].tap() // we tap the custom button to be lest dependent on the other tests and not deal with the alert
 
         try app.login(username: "test@username.edu", password: "TestPassword", close: false) // login with previous password!
@@ -366,10 +349,6 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
         XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
         app.buttons["FirebaseAccount"].tap()
-
-        if app.buttons["Logout"].waitForExistence(timeout: 5.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
 
         app.buttons["Account Setup"].tap()
 
@@ -399,18 +378,18 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.launchArguments = ["--firebaseAccount"]
         app.launch()
 
-        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
         app.buttons["FirebaseAccount"].tap()
 
-        if app.buttons["Logout"].waitForExistence(timeout: 5.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
-
         try app.login(username: "unknown@example.de", password: "HelloWorld", close: false)
-        XCTAssertTrue(app.alerts["Invalid Credentials"].waitForExistence(timeout: 6.0))
-        app.alerts["Invalid Credentials"].scrollViews.otherElements.buttons["OK"].tap()
+        XCTAssertTrue(app.alerts["Invalid Credentials"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(app.alerts["Invalid Credentials"].scrollViews.buttons["OK"].exists)
+        app.alerts["Invalid Credentials"].scrollViews.buttons["OK"].tap()
+
+        XCTAssertTrue(app.buttons["Close"].exists)
         app.buttons["Close"].tap()
-        sleep(2)
+
+        XCTAssertTrue(app.buttons["Account Setup"].waitForExistence(timeout: 2.0))
 
         // signing in with unknown credentials or credentials with a incorrect password are two different errors
         // that should, nonetheless, be treated equally in UI.
@@ -428,10 +407,6 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
         app.buttons["FirebaseAccount"].tap()
 
-        if app.buttons["Logout"].waitForExistence(timeout: 3.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
-
         app.buttons["Account Setup"].tap()
 
         addUIInterruptionMonitor(withDescription: "Apple Sign In") { element in
@@ -446,22 +421,27 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.tap() // that triggers the interruption monitor closure
     }
 
+    @MainActor
     func testSignupAccountLinking() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--account-storage"]
         app.launch()
 
-        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 2.0))
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
         app.buttons["FirebaseAccount"].tap()
 
-        if app.buttons["Logout"].waitForExistence(timeout: 3.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
+        XCTAssertTrue(app.buttons["Account Setup"].exists)
+        app.buttons["Account Setup"].tap()
 
-        XCTAssertTrue(app.buttons["Login Anonymously"].waitForExistence(timeout: 2.0))
-        app.buttons["Login Anonymously"].tap()
+        XCTAssertTrue(app.buttons["Anonymous Signup"].waitForExistence(timeout: 4.0))
+        app.buttons["Anonymous Signup"].tap()
 
-        XCTAssertTrue(app.staticTexts["User, Anonymous"].waitForExistence(timeout: 5.0))
+        XCTAssertTrue(app.buttons["Close"].exists)
+        app.buttons["Close"].tap()
+
+        XCTAssertTrue(app.staticTexts["User, Anonymous"].waitForExistence(timeout: 2.0))
 
         try app.signup(username: "test@username2.edu", password: "TestPassword2", givenName: "Leland", familyName: "Stanford", biography: "Bio")
 
@@ -474,48 +454,44 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
 extension XCUIApplication {
     func login(username: String, password: String, close: Bool = true) throws {
+        XCTAssertTrue(buttons["Account Setup"].exists)
         buttons["Account Setup"].tap()
         XCTAssertTrue(self.buttons["Login"].waitForExistence(timeout: 2.0))
         
         try textFields["E-Mail Address"].enter(value: username)
         try secureTextFields["Password"].enter(value: password)
-        
-        swipeUp()
 
         scrollViews.buttons["Login"].tap()
 
+
         if close {
-            sleep(3)
+            XCTAssertTrue(staticTexts[username].waitForExistence(timeout: 5.0))
             self.buttons["Close"].tap()
         }
     }
 
     func signup(username: String, password: String, givenName: String, familyName: String, biography: String? = nil) throws {
+        XCTAssertTrue(buttons["Account Setup"].exists)
         buttons["Account Setup"].tap()
+        XCTAssertTrue(buttons["Signup"].waitForExistence(timeout: 2.0))
         buttons["Signup"].tap()
 
         XCTAssertTrue(staticTexts["Please fill out the details below to create your new account."].waitForExistence(timeout: 6.0))
-        sleep(2)
 
         try collectionViews.textFields["E-Mail Address"].enter(value: username)
         try collectionViews.secureTextFields["Password"].enter(value: password)
         
-        swipeUp()
-        
         try textFields["enter first name"].enter(value: givenName)
-        swipeUp()
-        
         try textFields["enter last name"].enter(value: familyName)
-        swipeUp()
 
         if let biography {
             try textFields["Biography"].enter(value: biography)
         }
 
+        XCTAssertTrue(buttons["Signup"].exists)
         collectionViews.buttons["Signup"].tap()
 
-        sleep(3)
+        XCTAssertTrue(buttons["Close"].waitForExistence(timeout: 2.0))
         buttons["Close"].tap()
     }
 }
-// swiftlint:disable:this file_length

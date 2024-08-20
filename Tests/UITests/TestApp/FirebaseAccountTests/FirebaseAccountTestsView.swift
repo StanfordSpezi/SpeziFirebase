@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: MIT
 //
 
-@preconcurrency import FirebaseAuth
 import Spezi
 import SpeziAccount
 import SpeziFirebaseAccount
@@ -23,28 +22,23 @@ struct FirebaseAccountTestsView: View {
 
     @State var showSetup = false
     @State var showOverview = false
-    @State var isEditing = false
-
-    @State var uiUpdates: Int = 0
 
     var body: some View {
         List {
-            if uiUpdates > 0, // register to UI updates
-               let user = Auth.auth().currentUser,
-               user.isAnonymous {
-                ListRow("User") {
-                    Text("Anonymous")
-                }
-            }
             if let details = account.details {
                 HStack {
                     UserProfileView(name: details.name ?? .init(givenName: "NOT FOUND"))
                         .frame(height: 30)
                     Text(details.userId)
                 }
+                if details.isAnonymous {
+                    ListRow("User") {
+                        Text("Anonymous")
+                    }
+                }
 
                 AsyncButton("Logout", role: .destructive, state: $viewState) {
-                    try await details.accountService.logout()
+                    try await account.accountService.logout()
                 }
             }
             Button("Account Setup") {
@@ -52,15 +46,6 @@ struct FirebaseAccountTestsView: View {
             }
             Button("Account Overview") {
                 showOverview = true
-            }
-            if !account.signedIn {
-                AsyncButton("Login Anonymously", state: $viewState) {
-                    if Auth.auth().currentUser != nil {
-                        try Auth.auth().signOut()
-                    }
-                    try await Auth.auth().signInAnonymously()
-                    uiUpdates += 1
-                }
             }
         }
             .sheet(isPresented: $showSetup) {
@@ -73,22 +58,17 @@ struct FirebaseAccountTestsView: View {
             }
             .sheet(isPresented: $showOverview) {
                 NavigationStack {
-                    AccountOverview(isEditing: $isEditing)
-                        .toolbar {
-                            toolbar(closing: $showOverview, isEditing: $isEditing)
-                        }
+                    AccountOverview(close: .showCloseButton)
                 }
             }
     }
 
 
     @ToolbarContentBuilder
-    func toolbar(closing flag: Binding<Bool>, isEditing: Binding<Bool> = .constant(false)) -> some ToolbarContent {
-        if isEditing.wrappedValue == false {
-            ToolbarItemGroup(placement: .cancellationAction) {
-                Button("Close") {
-                    flag.wrappedValue = false
-                }
+    func toolbar(closing flag: Binding<Bool>) -> some ToolbarContent {
+        ToolbarItemGroup(placement: .cancellationAction) {
+            Button("Close") {
+                flag.wrappedValue = false
             }
         }
     }

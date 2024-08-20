@@ -28,7 +28,7 @@ struct FirebaseAccountModifier: ViewModifier {
         content
             .task {
                 firebaseModel.authorizationController = authorizationController
-                Self.logger.debug("Retrieved the authorization controller from the environment!")
+                Self.logger.debug("Retrieved the Sign in With Apple authorization controller from the SwiftUI environment!")
             }
     }
 }

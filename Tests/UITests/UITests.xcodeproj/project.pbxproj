@@ -21,7 +21,6 @@
 		2FB07597299DF96E00C0B37F /* SpeziFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07596299DF96E00C0B37F /* SpeziFirestore */; };
 		2FE62C3D2966074F00FCBE7F /* FirestoreDataStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FE62C3C2966074F00FCBE7F /* FirestoreDataStorageTests.swift */; };
 		97359F642ADB27500080CB11 /* FirebaseStorageTestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97359F632ADB27500080CB11 /* FirebaseStorageTestsView.swift */; };
-		97359F662ADB286D0080CB11 /* StorageMetadata+Sendable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97359F652ADB286D0080CB11 /* StorageMetadata+Sendable.swift */; };
 		978DFE922ADB1E1600E2B9B5 /* SpeziFirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 978DFE912ADB1E1600E2B9B5 /* SpeziFirebaseStorage */; };
 		978E198E2ADB40A300732324 /* FirebaseStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 978E198D2ADB40A300732324 /* FirebaseStorageTests.swift */; };
 		A95D60D02AA35E2200EB5968 /* FirebaseClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A95D60CF2AA35E2200EB5968 /* FirebaseClient.swift */; };
@@ -29,7 +28,6 @@
 		A9D83F9B2B0BDB1D000D0C78 /* BiographyKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D83F9A2B0BDB1D000D0C78 /* BiographyKey.swift */; };
 		A9D83F9D2B0BDB3A000D0C78 /* FirebaseAccountStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D83F9C2B0BDB3A000D0C78 /* FirebaseAccountStorageTests.swift */; };
 		A9D83F9F2B0BDCC7000D0C78 /* SpeziFirebaseAccountStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A9D83F9E2B0BDCC7000D0C78 /* SpeziFirebaseAccountStorage */; };
-		A9D83FA22B0BE048000D0C78 /* AccountStorageTestStandard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D83FA12B0BE048000D0C78 /* AccountStorageTestStandard.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,13 +58,11 @@
 		2FC42FD7290ADD5E00B08F18 /* SpeziFirebase */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = SpeziFirebase; path = ../..; sourceTree = "<group>"; };
 		2FE62C3C2966074F00FCBE7F /* FirestoreDataStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreDataStorageTests.swift; sourceTree = "<group>"; };
 		97359F632ADB27500080CB11 /* FirebaseStorageTestsView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FirebaseStorageTestsView.swift; sourceTree = "<group>"; };
-		97359F652ADB286D0080CB11 /* StorageMetadata+Sendable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "StorageMetadata+Sendable.swift"; sourceTree = "<group>"; };
 		978E198D2ADB40A300732324 /* FirebaseStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseStorageTests.swift; sourceTree = "<group>"; };
 		A95D60CF2AA35E2200EB5968 /* FirebaseClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseClient.swift; sourceTree = "<group>"; };
 		A9D83F982B0BDB13000D0C78 /* FeatureFlags.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
 		A9D83F9A2B0BDB1D000D0C78 /* BiographyKey.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BiographyKey.swift; sourceTree = "<group>"; };
 		A9D83F9C2B0BDB3A000D0C78 /* FirebaseAccountStorageTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FirebaseAccountStorageTests.swift; sourceTree = "<group>"; };
-		A9D83FA12B0BE048000D0C78 /* AccountStorageTestStandard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountStorageTestStandard.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -181,7 +177,6 @@
 			isa = PBXGroup;
 			children = (
 				97359F632ADB27500080CB11 /* FirebaseStorageTestsView.swift */,
-				97359F652ADB286D0080CB11 /* StorageMetadata+Sendable.swift */,
 			);
 			path = FirebaseStorageTests;
 			sourceTree = "<group>";
@@ -190,7 +185,6 @@
 			isa = PBXGroup;
 			children = (
 				A9D83F9A2B0BDB1D000D0C78 /* BiographyKey.swift */,
-				A9D83FA12B0BE048000D0C78 /* AccountStorageTestStandard.swift */,
 			);
 			path = FirebaseAccountStorage;
 			sourceTree = "<group>";
@@ -308,11 +302,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				97359F662ADB286D0080CB11 /* StorageMetadata+Sendable.swift in Sources */,
 				2F148C00298BB15900031B7F /* FirebaseAccountTestsView.swift in Sources */,
 				2FA7382C290ADFAA007ACEB9 /* TestApp.swift in Sources */,
 				2FE62C3D2966074F00FCBE7F /* FirestoreDataStorageTests.swift in Sources */,
-				A9D83FA22B0BE048000D0C78 /* AccountStorageTestStandard.swift in Sources */,
 				2F8A431729130BBC005D2B8F /* TestAppType.swift in Sources */,
 				2F9F07F129090B0500CDC598 /* TestAppDelegate.swift in Sources */,
 				A9D83F992B0BDB13000D0C78 /* FeatureFlags.swift in Sources */,
@@ -402,6 +394,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
 			};
 			name = Debug;
 		};
@@ -456,6 +449,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -634,6 +628,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = TEST;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
 			};
 			name = Test;
 		};
@@ -735,8 +730,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/StanfordSpezi/XCTestExtensions";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.4.10;
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

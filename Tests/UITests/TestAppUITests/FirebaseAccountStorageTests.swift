@@ -11,15 +11,15 @@ import XCTestExtensions
 
 
 final class FirebaseAccountStorageTests: XCTestCase {
-    @MainActor
-    override func setUp() async throws {
-        try await super.setUp()
-
+    override func setUp() {
         continueAfterFailure = false
+    }
 
+    override func setUp() async throws {
         try await FirebaseClient.deleteAllAccounts()
         try await Task.sleep(for: .seconds(0.5))
     }
+
 
     @MainActor
     func testAdditionalAccountStorage() async throws {
@@ -27,13 +27,10 @@ final class FirebaseAccountStorageTests: XCTestCase {
         app.launchArguments = ["--account-storage"]
         app.launch()
 
-        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 10.0))
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 2.0))
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
         app.buttons["FirebaseAccount"].tap()
-
-        if app.buttons["Logout"].waitForExistence(timeout: 5.0) && app.buttons["Logout"].isHittable {
-            app.buttons["Logout"].tap()
-        }
-
 
         try app.signup(
             username: "test@username1.edu",
