@@ -12,6 +12,30 @@ import SpeziAccount
 import SpeziFirestore
 
 
+private struct AccountDetailsConfiguration: DecodingConfigurationProviding, EncodingConfigurationProviding {
+    @TaskLocal static var decodingConfiguration = AccountDetails.DecodingConfiguration(keys: [])
+    @TaskLocal static var encodingConfiguration = AccountDetails.EncodingConfiguration()
+}
+
+
+// Firebase doesn't support DecodableWithConfiguration yet. So that's our workaround
+private struct AccountDetailsWrapper: Codable {
+    let details: AccountDetails
+
+    init(details: AccountDetails) {
+        self.details = details
+    }
+
+    init(from decoder: any Decoder) throws {
+        self.details = try AccountDetails(from: decoder, configuration: AccountDetailsConfiguration.decodingConfiguration)
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        try details.encode(to: encoder, configuration: AccountDetailsConfiguration.encodingConfiguration)
+    }
+}
+
+
 /// Store additional account details directly in Firestore.
 ///
 /// Certain account services, like the account services provided by Firebase, can only store certain account details.
@@ -154,13 +178,12 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
         }
 
         let decoder = Firestore.Decoder()
-        decoder.userInfo[.accountDetailsKeys] = keys
-        if let identifierMapping {
-            decoder.userInfo[.accountKeyIdentifierMapping] = identifierMapping
-        }
+        let configuration = AccountDetails.DecodingConfiguration(keys: keys, identifierMapping: identifierMapping)
 
         do {
-            return try snapshot.data(as: AccountDetails.self, decoder: decoder)
+            return try AccountDetailsConfiguration.$decodingConfiguration.withValue(configuration) {
+                try snapshot.data(as: AccountDetailsWrapper.self, decoder: decoder).details
+            }
         } catch {
             logger.error("Failed to decode account details from firestore snapshot: \(error)")
             return AccountDetails()
@@ -186,10 +209,12 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
         if !modifications.modifiedDetails.isEmpty {
             do {
                 let encoder = Firestore.Encoder()
-                if let identifierMapping {
-                    encoder.userInfo[.accountKeyIdentifierMapping] = identifierMapping
+                let configuration = AccountDetails.EncodingConfiguration(identifierMapping: identifierMapping)
+
+                try await AccountDetailsConfiguration.$encodingConfiguration.withValue(configuration) {
+                    let wrapper = AccountDetailsWrapper(details: modifications.modifiedDetails)
+                    try await document.setData(from: wrapper, merge: true, encoder: encoder)
                 }
-                try await document.setData(from: modifications.modifiedDetails, merge: true, encoder: encoder)
             } catch {
                 throw FirestoreError(error)
             }
