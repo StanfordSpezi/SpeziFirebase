@@ -18,7 +18,8 @@ private struct AccountDetailsConfiguration: DecodingConfigurationProviding, Enco
 }
 
 
-// Firebase doesn't support DecodableWithConfiguration yet. So that's our workaround
+// Firebase doesn't support DecodableWithConfiguration yet. So that's our workaround.
+// Feature is tracked as https://github.com/firebase/firebase-ios-sdk/issues/13552
 private struct AccountDetailsWrapper: Codable {
     let details: AccountDetails
 
