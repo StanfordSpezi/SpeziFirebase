@@ -195,12 +195,12 @@ final class FirestoreDataStorageTests: XCTestCase {
         let app = XCUIApplication()
         
         let identifierTextFieldIdentifier = "Enter the element's identifier."
-        try app.textFields[identifierTextFieldIdentifier].delete(count: 42)
-        try app.textFields[identifierTextFieldIdentifier].enter(value: id)
-        
+        try app.textFields[identifierTextFieldIdentifier].delete(count: 42, options: .disableKeyboardDismiss)
+        try app.textFields[identifierTextFieldIdentifier].enter(value: id, options: .skipTextFieldSelection)
+
         let contentFieldIdentifier = "Enter the element's optional content."
-        try app.textFields[contentFieldIdentifier].delete(count: 100)
-        try app.textFields[contentFieldIdentifier].enter(value: content)
+        try app.textFields[contentFieldIdentifier].delete(count: 100, options: .disableKeyboardDismiss)
+        try app.textFields[contentFieldIdentifier].enter(value: content, options: .skipTextFieldSelection)
     }
 }
 
