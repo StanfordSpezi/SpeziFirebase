@@ -442,9 +442,14 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.buttons["Close"].tap()
 
         XCTAssertTrue(app.staticTexts["User, Anonymous"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.staticTexts["New User, Yes"].exists)
 
         try app.signup(username: "test@username2.edu", password: "TestPassword2", givenName: "Leland", familyName: "Stanford", biography: "Bio")
 
+        XCTAssertTrue(app.staticTexts["test@username2.edu"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.staticTexts["New User, Yes"].exists) // ensure new user flag persists
+
+        // TODO: ensure account id is stable!
         app.buttons["Account Overview"].tap()
         XCTAssert(app.staticTexts["Leland Stanford"].waitForExistence(timeout: 2.0))
         XCTAssert(app.staticTexts["Biography, Bio"].exists)

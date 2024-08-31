@@ -192,7 +192,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     }
 
     @_documentation(visibility: internal)
-    public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async throws -> AccountDetails? {
+    public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async -> AccountDetails? {
         let localCache = localCache
         let cached = await localCache.loadEntry(for: accountId, keys)
 

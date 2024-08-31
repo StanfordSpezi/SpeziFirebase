@@ -37,6 +37,10 @@ struct FirebaseAccountTestsView: View {
                     }
                 }
 
+                ListRow("New User") {
+                    Text(details.isNewUser ? "Yes" : "No")
+                }
+
                 AsyncButton("Logout", role: .destructive, state: $viewState) {
                     try await account.accountService.logout()
                 }
