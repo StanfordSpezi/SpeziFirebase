@@ -227,19 +227,24 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     ///   - password: The user's password.
     /// - Throws: Throws an ``FirebaseAccountError`` if the operation fails.
     public func login(userId: String, password: String) async throws {
-        logger.debug("Received new login request...")
+        logger.debug("Received new login request ...")
+        try ensureSignedOutBeforeLogin()
 
         try await dispatchFirebaseAuthAction { @MainActor in
             try await Auth.auth().signIn(withEmail: userId, password: password)
-            logger.debug("signIn(withEmail:password:)")
+            logger.debug("Successfully returned from Auth/signIn(withEmail:password:)")
         }
     }
 
     /// Sign in with an anonymous user account.
     /// - Throws: Throws an ``FirebaseAccountError`` if the operation fails.
     public func signUpAnonymously() async throws {
+        logger.debug("Signing up anonymously ...")
+        try ensureSignedOutBeforeLogin()
+
         try await dispatchFirebaseAuthAction {
             try await Auth.auth().signInAnonymously()
+            logger.debug("Successfully signed up anonymously ...")
         }
     }
 
@@ -249,7 +254,8 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     /// - Throws: Trows an ``FirebaseAccountError`` if the operation fails. A ``FirebaseAccountError/invalidCredentials`` is thrown if
     ///  the `userId` or `password` keys are not present.
     public func signUp(with signupDetails: AccountDetails) async throws {
-        logger.debug("Received new signup request...")
+        logger.debug("Received new signup request with details ...")
+        try ensureSignedOutBeforeLogin()
 
         guard let password = signupDetails.password, signupDetails.contains(AccountKeys.userId) else {
             throw FirebaseAccountError.invalidCredentials
@@ -293,10 +299,13 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     /// - Parameter credential: The o-auth credential.
     /// - Throws: Throws an ``FirebaseAccountError`` if the operation fails.
     public func signUp(with credential: OAuthCredential) async throws {
+        logger.debug("Received new signup request with OAuth credential ...")
+        try ensureSignedOutBeforeLogin()
+
         try await dispatchFirebaseAuthAction { @MainActor in
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
-                logger.debug("Linking oauth credentials with current anonymous user account ...")
+                logger.debug("Linking O-Auth credentials with current anonymous user account ...")
                 let result = try await currentUser.link(with: credential)
 
                 try await notifyUserSignIn(user: currentUser, isNewUser: true)
@@ -305,11 +314,18 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             }
 
             let authResult = try await Auth.auth().signIn(with: credential)
-            logger.debug("signIn(with:) credential for user.")
+            logger.debug("Successfully returned from Auth/signIn(with:).")
 
             // nothing to store externally
 
             return authResult
+        }
+    }
+
+    private func ensureSignedOutBeforeLogin() throws {
+        if Auth.auth().currentUser != nil {
+            logger.debug("Found existing user associated. Performing signOut() first ...")
+            try Auth.auth().signOut()
         }
     }
 
@@ -534,6 +550,7 @@ extension FirebaseAccountService {
     private func checkForInitialUserAccount() {
         guard let user = Auth.auth().currentUser else {
             skipNextStateChange = true
+            logger.debug("There is no existing Firebase account. Skipping the next/initial stateDidChange call.")
             return
         }
 
@@ -553,6 +570,11 @@ extension FirebaseAccountService {
     private func handleStateDidChange(auth: Auth, user: User?) {
         if skipNextStateChange {
             skipNextStateChange = false
+            if user != nil {
+                logger.debug("Skipping the initial stateDidChange handler once. User is associated.")
+            } else {
+                logger.debug("Skipping the initial stateDidChange handler once. No user associated.")
+            }
             return
         }
 
