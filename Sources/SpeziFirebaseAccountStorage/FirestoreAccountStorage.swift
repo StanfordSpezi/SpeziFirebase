@@ -192,7 +192,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     }
 
     @_documentation(visibility: internal)
-    public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async throws -> AccountDetails? {
+    public func load(_ accountId: String, _ keys: [any AccountKey.Type]) async -> AccountDetails? {
         let localCache = localCache
         let cached = await localCache.loadEntry(for: accountId, keys)
 
@@ -206,18 +206,17 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     @_documentation(visibility: internal)
     public func store(_ accountId: String, _ modifications: SpeziAccount.AccountModifications) async throws {
         let document = userDocument(for: accountId)
+        let batch = Firestore.firestore().batch()
 
         if !modifications.modifiedDetails.isEmpty {
-            do {
-                let encoder = Firestore.Encoder()
-                let configuration = AccountDetails.EncodingConfiguration(identifierMapping: identifierMapping)
+            let encoder = Firestore.Encoder()
+            let configuration = AccountDetails.EncodingConfiguration(identifierMapping: identifierMapping)
 
-                try await AccountDetailsConfiguration.$encodingConfiguration.withValue(configuration) {
-                    let wrapper = AccountDetailsWrapper(details: modifications.modifiedDetails)
-                    try await document.setData(from: wrapper, merge: true, encoder: encoder)
-                }
-            } catch {
-                throw FirestoreError(error)
+            try AccountDetailsConfiguration.$encodingConfiguration.withValue(configuration) {
+                let wrapper = AccountDetailsWrapper(details: modifications.modifiedDetails)
+                let encoded = try encoder.encode(wrapper)
+
+                batch.setData(encoded, forDocument: document, merge: true)
             }
         }
 
@@ -226,11 +225,13 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
         }
 
         if !removedFields.isEmpty {
-            do {
-                try await document.updateData(removedFields)
-            } catch {
-                throw FirestoreError(error)
-            }
+            batch.updateData(removedFields, forDocument: document)
+        }
+
+        do {
+            try await batch.commit()
+        } catch {
+            throw FirestoreError(error)
         }
 
 

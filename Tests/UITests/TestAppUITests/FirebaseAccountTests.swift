@@ -15,11 +15,9 @@ import XCTestExtensions
 /// Refer to https://firebase.google.com/docs/emulator-suite/connect_auth about more information about the
 /// Firebase Local Emulator Suite.
 final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_body_length
-    override func setUp() {
-        continueAfterFailure = false
-    }
-
     override func setUp() async throws {
+        continueAfterFailure = false
+
         try await FirebaseClient.deleteAllAccounts()
         try await Task.sleep(for: .seconds(0.5))
     }
@@ -328,6 +326,10 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssertTrue(app.alerts["Authentication Required"].buttons["Cancel"].waitForExistence(timeout: 0.5))
         app.alerts["Authentication Required"].buttons["Cancel"].tap()
 
+        XCTAssertTrue(app.navigationBars.staticTexts["Change Password"].exists) // ensure we stay in the sheet
+        XCTAssertTrue(app.navigationBars.buttons["Cancel"].exists)
+        app.navigationBars.buttons["Cancel"].tap()
+
         XCTAssertTrue(app.navigationBars.buttons["Account Overview"].waitForExistence(timeout: 2.0))
         app.navigationBars.buttons["Account Overview"].tap() // back button
 
@@ -442,8 +444,14 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         app.buttons["Close"].tap()
 
         XCTAssertTrue(app.staticTexts["User, Anonymous"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.staticTexts["New User, Yes"].exists)
+        XCTAssertTrue(app.staticTexts["Account Id, Stable"].exists)
 
         try app.signup(username: "test@username2.edu", password: "TestPassword2", givenName: "Leland", familyName: "Stanford", biography: "Bio")
+
+        XCTAssertTrue(app.staticTexts["test@username2.edu"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(app.staticTexts["New User, Yes"].exists) // ensure new user flag persists
+        XCTAssertTrue(app.staticTexts["Account Id, Stable"].exists) // ensure we actually linked the account and not accidentally created a new one
 
         app.buttons["Account Overview"].tap()
         XCTAssert(app.staticTexts["Leland Stanford"].waitForExistence(timeout: 2.0))
@@ -491,7 +499,12 @@ extension XCUIApplication {
         XCTAssertTrue(buttons["Signup"].exists)
         collectionViews.buttons["Signup"].tap()
 
-        XCTAssertTrue(buttons["Close"].waitForExistence(timeout: 2.0))
-        buttons["Close"].tap()
+
+        XCTAssertTrue(staticTexts["Your Account"].waitForExistence(timeout: 10.0))
+        XCTAssertTrue(navigationBars.buttons["Close"].exists)
+        navigationBars.buttons["Close"].tap()
     }
 }
+
+
+// swiftlint:disable:this file_length

@@ -19,6 +19,25 @@ import SpeziValidation
 import SwiftUI
 
 
+private enum InitialUserState {
+    case unknown
+    case notPresent
+    case present(incomplete: Bool)
+
+    /// Check if the state of the authStateDidChange handler is the same as we observed initially.
+    func canSkipStateChange(for user: User?) -> Bool {
+        switch self {
+        case .unknown:
+            false
+        case .notPresent:
+            user == nil
+        case .present(let incomplete):
+            !incomplete && user != nil
+        }
+    }
+}
+
+
 private enum UserChange {
     case user(_ user: User)
     case removed
@@ -26,8 +45,34 @@ private enum UserChange {
 
 
 private struct UserUpdate {
+    static var removed: UserUpdate {
+        UserUpdate(change: .removed)
+    }
+
     let change: UserChange
     var authResult: AuthDataResult?
+
+
+    init(change: UserChange, authResult: AuthDataResult? = nil) {
+        self.change = change
+        self.authResult = authResult
+    }
+
+    init(from authResult: AuthDataResult) {
+        self.change = .user(authResult.user)
+        self.authResult = authResult
+    }
+
+    func describesSameUpdate(as update: UserUpdate) -> Bool {
+        switch (change, update.change) {
+        case (.removed, .removed):
+            true
+        case let (.user(lhs), .user(rhs)):
+            lhs.uid == rhs.uid
+        default:
+            false
+        }
+    }
 }
 
 
@@ -62,7 +107,7 @@ private struct UserUpdate {
 /// ### Signup
 /// - ``signUpAnonymously()``
 /// - ``signUp(with:)-6qeht``
-/// - ``signUp(with:)-rpy``
+/// - ``signUp(with:)-1jtx6``
 ///
 /// ### Login
 /// - ``login(userId:password:)``
@@ -129,7 +174,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     private var shouldQueue = false
     private var queuedUpdates: [UserUpdate] = []
     private var actionSemaphore = AsyncSemaphore()
-    private var skipNextStateChange = false
+    private var initiallyObservedState: InitialUserState = .unknown
 
 
     private var unsupportedKeys: AccountKeyCollection {
@@ -179,8 +224,6 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             Auth.auth().useEmulator(withHost: emulatorSettings.host, port: emulatorSettings.port)
         }
 
-        checkForInitialUserAccount()
-
         // get notified about changes of the User reference
         authStateDidChangeListenerHandle = Auth.auth().addStateDidChangeListener { [weak self] auth, user in
             // We could safely assume main actor isolation here, see
@@ -202,6 +245,13 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
                 }
             }
         }
+
+        // The `Auth.auth().currentUser` is not available immediately. The init of `Auth` delays
+        // the retrieval of the keychain object.
+        // See https://github.com/firebase/firebase-ios-sdk/blob/main/FirebaseAuth/Sources/Swift/Auth/Auth.swift#L1646.
+        // To increase our chance that the initial check did run, we move this check to the end.
+        // Every call to Auth.auth() acquires a lock, so this might increase our chance that the initialization did complete successfully.
+        checkForInitialUserAccount()
 
         Task.detached { [logger, secureStorage, localStorage] in
             // Previous SpeziFirebase releases used to store an identifier for the active account service on disk.
@@ -227,19 +277,26 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     ///   - password: The user's password.
     /// - Throws: Throws an ``FirebaseAccountError`` if the operation fails.
     public func login(userId: String, password: String) async throws {
-        logger.debug("Received new login request...")
+        logger.debug("Received new login request ...")
+        try ensureSignedOutBeforeLogin()
 
         try await dispatchFirebaseAuthAction { @MainActor in
-            try await Auth.auth().signIn(withEmail: userId, password: password)
-            logger.debug("signIn(withEmail:password:)")
+            let result = try await Auth.auth().signIn(withEmail: userId, password: password)
+            logger.debug("Successfully returned from Auth/signIn(withEmail:password:)")
+            return result
         }
     }
 
     /// Sign in with an anonymous user account.
     /// - Throws: Throws an ``FirebaseAccountError`` if the operation fails.
     public func signUpAnonymously() async throws {
+        logger.debug("Signing up anonymously ...")
+        try ensureSignedOutBeforeLogin()
+
         try await dispatchFirebaseAuthAction {
-            try await Auth.auth().signInAnonymously()
+            let result = try await Auth.auth().signInAnonymously()
+            logger.debug("Successfully signed up anonymously ...")
+            return result
         }
     }
 
@@ -249,7 +306,8 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     /// - Throws: Trows an ``FirebaseAccountError`` if the operation fails. A ``FirebaseAccountError/invalidCredentials`` is thrown if
     ///  the `userId` or `password` keys are not present.
     public func signUp(with signupDetails: AccountDetails) async throws {
-        logger.debug("Received new signup request...")
+        logger.debug("Received new signup request with details ...")
+        try ensureSignedOutBeforeLogin()
 
         guard let password = signupDetails.password, signupDetails.contains(AccountKeys.userId) else {
             throw FirebaseAccountError.invalidCredentials
@@ -258,16 +316,21 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         try await dispatchFirebaseAuthAction { @MainActor in
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
+                // The link call below resets the display name to nil. Therefore, we need to preserve the existing name if possible.
+                let previousDisplayName = currentUser.displayName
+
                 let credential = EmailAuthProvider.credential(withEmail: signupDetails.userId, password: password)
                 logger.debug("Linking email-password credentials with current anonymous user account ...")
                 let result = try await currentUser.link(with: credential)
 
                 if let displayName = signupDetails.name {
-                    try await updateDisplayName(of: result.user, displayName)
+                    try await updateDisplayName(of: currentUser, displayName)
+                } else if let previousDisplayName {
+                    try await updateDisplayName(of: currentUser, previousDisplayName)
                 }
 
-                try await requestExternalStorage(for: result.user.uid, details: signupDetails)
-                try await notifyUserSignIn(user: result.user)
+                try await requestExternalStorage(for: currentUser.uid, details: signupDetails)
+
                 return result
             }
 
@@ -275,7 +338,12 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             logger.debug("createUser(withEmail:password:) for user.")
 
             logger.debug("Sending email verification link now...")
-            try await authResult.user.sendEmailVerification()
+            do {
+                try await authResult.user.sendEmailVerification()
+            } catch {
+                // failing to send email should not fail signup. Signup UI should have a "resend E-Mail" button
+                logger.error("Failed to send email verification: \(error)")
+            }
 
             if let displayName = signupDetails.name {
                 try await updateDisplayName(of: authResult.user, displayName)
@@ -293,19 +361,28 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     /// - Parameter credential: The o-auth credential.
     /// - Throws: Throws an ``FirebaseAccountError`` if the operation fails.
     public func signUp(with credential: OAuthCredential) async throws {
+        logger.debug("Received new signup request with OAuth credential ...")
+        try ensureSignedOutBeforeLogin()
+
         try await dispatchFirebaseAuthAction { @MainActor in
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
-                logger.debug("Linking oauth credentials with current anonymous user account ...")
+                // The link call below resets the display name to nil (if non is part of the OAuth credential).
+                // Therefore, we need to preserve the existing name if possible.
+                let previousDisplayName = currentUser.displayName
+
+                logger.debug("Linking O-Auth credentials with current anonymous user account ...")
                 let result = try await currentUser.link(with: credential)
 
-                try await notifyUserSignIn(user: currentUser, isNewUser: true)
+                if let previousDisplayName, result.user.displayName == nil {
+                    try await updateDisplayName(of: currentUser, previousDisplayName)
+                }
 
                 return result
             }
 
             let authResult = try await Auth.auth().signIn(with: credential)
-            logger.debug("signIn(with:) credential for user.")
+            logger.debug("Successfully returned from Auth/signIn(with:).")
 
             // nothing to store externally
 
@@ -313,23 +390,25 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         }
     }
 
+    private func ensureSignedOutBeforeLogin() throws {
+        // We don't bother to notify SpeziAccount. This method is called when we attempt to associate a new user.
+        // We will update SpeziAccount with a new user anyways.
+        if let user = Auth.auth().currentUser, !user.isAnonymous {
+            logger.debug("Found existing user associated. Performing signOut() first ...")
+            try mapFirebaseAccountError {
+                try Auth.auth().signOut()
+            }
+        }
+    }
+
     public func resetPassword(userId: String) async throws {
         do {
-            try await Auth.auth().sendPasswordReset(withEmail: userId)
-            logger.debug("sendPasswordReset(withEmail:) for user.")
-        } catch {
-            let nsError = error as NSError
-            if nsError.domain == AuthErrors.domain,
-               let code = AuthErrorCode(rawValue: nsError.code) {
-                let accountError = FirebaseAccountError(authErrorCode: code)
-
-                if case .invalidCredentials = accountError {
-                    return // make sure we don't leak any information
-                } else {
-                    throw accountError
-                }
+            try await mapFirebaseAccountError {
+                try await Auth.auth().sendPasswordReset(withEmail: userId)
+                logger.debug("sendPasswordReset(withEmail:) for user.")
             }
-            throw FirebaseAccountError.unknown(.internalError)
+        } catch FirebaseAccountError.invalidCredentials {
+            return // make sure we don't leak any information
         }
     }
 
@@ -348,8 +427,8 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
         try await dispatchFirebaseAuthAction { @MainActor in
             try Auth.auth().signOut()
-            try await Task.sleep(for: .milliseconds(10))
-            logger.debug("signOut() for user.")
+            logger.debug("Successful signOut() for user.")
+            return .removed
         }
     }
 
@@ -372,13 +451,13 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
         try await notifications.reportEvent(.deletingAccount(currentUser.uid))
 
-        try await dispatchFirebaseAuthAction { @MainActor in
-            let result = try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
-            guard case .success = result else {
-                logger.debug("Re-authentication was cancelled by user. Not deleting the account.")
-                return// cancelled
-            }
+        let result = try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
+        guard case .success = result else {
+            logger.debug("Re-authentication was cancelled by user. Not deleting the account.")
+            throw CancellationError()
+        }
 
+        try await dispatchFirebaseAuthAction { @MainActor in
             if let credential = result.credential {
                 // re-authentication was made through sign in provider, delete SSO account as well
                 guard let authorizationCode = credential.authorizationCode else {
@@ -412,6 +491,8 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
             try await currentUser.delete()
             logger.debug("delete() for user.")
+
+            return .removed
         }
     }
 
@@ -435,16 +516,16 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             throw FirebaseAccountError.notSignedIn
         }
 
-        do {
-            // if we modify sensitive credentials and require a recent login
-            if modifications.modifiedDetails.contains(AccountKeys.userId) || modifications.modifiedDetails.password != nil {
-                let result = try await reauthenticateUser(user: currentUser)
-                guard case .success = result else {
-                    logger.debug("Re-authentication was cancelled. Not updating sensitive user details.")
-                    return // got cancelled!
-                }
+        // if we modify sensitive credentials and require a recent login
+        if modifications.modifiedDetails.contains(AccountKeys.userId) || modifications.modifiedDetails.password != nil {
+            let result = try await reauthenticateUser(user: currentUser)
+            guard case .success = result else {
+                logger.debug("Re-authentication was cancelled. Not updating sensitive user details.")
+                throw CancellationError()
             }
+        }
 
+        try await mapFirebaseAccountError {
             if modifications.modifiedDetails.contains(AccountKeys.userId) {
                 logger.debug("updateEmail(to:) for user.")
                 try await currentUser.updateEmail(to: modifications.modifiedDetails.userId)
@@ -458,25 +539,16 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             if let name = modifications.modifiedDetails.name {
                 try await updateDisplayName(of: currentUser, name)
             }
-
-            var externalModifications = modifications
-            externalModifications.removeModifications(for: Self.supportedAccountKeys)
-            if !externalModifications.isEmpty {
-                let externalStorage = externalStorage
-                try await externalStorage.updateExternalStorage(with: externalModifications, for: currentUser.uid)
-            }
-
-            // None of the above requests will trigger our state change listener, therefore, we just call it manually.
-            try await notifyUserSignIn(user: currentUser)
-        } catch {
-            logger.error("Received error on firebase dispatch: \(error)")
-            let nsError = error as NSError
-            if nsError.domain == AuthErrors.domain,
-               let code = AuthErrorCode(rawValue: nsError.code) {
-                throw FirebaseAccountError(authErrorCode: code)
-            }
-            throw FirebaseAccountError.unknown(.internalError)
         }
+
+        var externalModifications = modifications
+        externalModifications.removeModifications(for: Self.supportedAccountKeys)
+        if !externalModifications.isEmpty {
+            try await externalStorage.updateExternalStorage(with: externalModifications, for: currentUser.uid)
+        }
+
+        // None of the above requests will trigger our state change listener, therefore, we just call it manually.
+        await notifyUserSignIn(user: currentUser)
     }
 
     private func reauthenticateUser(user: User) async throws -> ReauthenticationOperation {
@@ -503,7 +575,9 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         }
 
         logger.debug("Re-authenticating password-based user now ...")
-        try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
+        _ = try await mapFirebaseAccountError {
+            try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
+        }
         return .success
     }
 
@@ -514,15 +588,21 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
         let credential = try oAuthCredential(from: appleIdCredential)
         logger.debug("Re-Authenticating Apple credential ...")
-        try await user.reauthenticate(with: credential)
+        _ = try await mapFirebaseAccountError {
+            try await user.reauthenticate(with: credential)
+        }
 
         return .success(with: appleIdCredential)
     }
 
     private func updateDisplayName(of user: User, _ name: PersonNameComponents) async throws {
+        try await updateDisplayName(of: user, name.formatted(.name(style: .long)))
+    }
+
+    private func updateDisplayName(of user: User, _ name: String) async throws {
         logger.debug("Creating change request for updated display name.")
         let changeRequest = user.createProfileChangeRequest()
-        changeRequest.displayName = name.formatted(.name(style: .long))
+        changeRequest.displayName = name
         try await changeRequest.commitChanges()
     }
 }
@@ -533,7 +613,8 @@ extension FirebaseAccountService {
     @MainActor
     private func checkForInitialUserAccount() {
         guard let user = Auth.auth().currentUser else {
-            skipNextStateChange = true
+            initiallyObservedState = .notPresent
+            logger.debug("There is no existing Firebase account.")
             return
         }
 
@@ -546,22 +627,19 @@ extension FirebaseAccountService {
 
         logger.debug("Found existing Firebase account. Supplying initial user details of associated Firebase account.")
         account.supplyUserDetails(details)
-        skipNextStateChange = !details.isIncomplete
+        initiallyObservedState = .present(incomplete: details.isIncomplete)
     }
 
     @MainActor
     private func handleStateDidChange(auth: Auth, user: User?) {
-        if skipNextStateChange {
-            skipNextStateChange = false
+        if initiallyObservedState.canSkipStateChange(for: user) {
+            initiallyObservedState = .unknown
+            logger.debug("Skipping the initial stateDidChange handler once. User is \(user == nil ? "not " : "")associated.")
             return
         }
 
         Task {
-            do {
-                try await handleUpdatedUserState(user: user)
-            } catch {
-                logger.error("Failed to handle update Firebase user state: \(error)")
-            }
+            await handleUpdatedUserState(user: user)
         }
     }
 
@@ -724,10 +802,8 @@ extension FirebaseAccountService {
     }
 
     // a overload that just returns void
-    func dispatchFirebaseAuthAction(
-        action: () async throws -> Void
-    ) async throws {
-        try await self.dispatchFirebaseAuthAction {
+    private func dispatchFirebaseAuthAction(action: () async throws -> Void) async throws {
+        try await self._dispatchFirebaseAuthAction {
             try await action()
             return nil
         }
@@ -743,34 +819,62 @@ extension FirebaseAccountService {
     ///   - action: The action. If you doing an authentication action, return the auth data result. This way
     ///     we can forward additional information back to SpeziAccount.
     @_disfavoredOverload
-    func dispatchFirebaseAuthAction(
-        action: () async throws -> AuthDataResult?
-    ) async throws {
-        defer {
-            shouldQueue = false
-            actionSemaphore.signal()
-        }
-
-        shouldQueue = true
-        try await actionSemaphore.waitCheckingCancellation()
-
-        do {
-            let result = try await action()
-
-            try await dispatchQueuedChanges(result: result)
-        } catch {
-            logger.error("Received error on firebase dispatch: \(error)")
-            let nsError = error as NSError
-            if nsError.domain == AuthErrors.domain,
-               let code = AuthErrorCode(rawValue: nsError.code) {
-                throw FirebaseAccountError(authErrorCode: code)
-            }
-            throw FirebaseAccountError.unknown(.internalError)
+    private func dispatchFirebaseAuthAction(action: () async throws -> AuthDataResult) async throws {
+        try await _dispatchFirebaseAuthAction {
+            try await UserUpdate(from: action())
         }
     }
 
+    @_disfavoredOverload
+    private func dispatchFirebaseAuthAction(action: () async throws -> UserUpdate) async throws {
+        try await _dispatchFirebaseAuthAction(action: action)
+    }
 
-    private func handleUpdatedUserState(user: User?) async throws {
+    private func _dispatchFirebaseAuthAction(
+        action: () async throws -> UserUpdate?
+    ) async throws {
+        shouldQueue = true
+        defer {
+            shouldQueue = false
+        }
+
+        try await actionSemaphore.waitCheckingCancellation()
+        defer {
+            actionSemaphore.signal()
+        }
+
+        let update = try await mapFirebaseAccountError(action: action)
+        await dispatchQueuedChanges(update: update)
+    }
+
+    private func mapFirebaseAccountError<T: Sendable>(action: () async throws -> T) async rethrows -> T {
+        do {
+            return try await action()
+        } catch {
+            try _firebaseAccountMapError(error)
+        }
+    }
+
+    private func mapFirebaseAccountError<T>(action: () throws -> T) rethrows -> T {
+        do {
+            return try action()
+        } catch {
+            try _firebaseAccountMapError(error)
+        }
+    }
+
+    private func _firebaseAccountMapError(_ error: Error) throws -> Never {
+        logger.error("Received error on firebase dispatch: \(error)")
+        let nsError = error as NSError
+        if nsError.domain == AuthErrors.domain,
+           let code = AuthErrorCode(rawValue: nsError.code) {
+            throw FirebaseAccountError(authErrorCode: code)
+        }
+        throw error
+    }
+
+
+    private func handleUpdatedUserState(user: User?) async {
         // this is called by the FIRAuth framework.
 
         let change: UserChange
@@ -789,31 +893,38 @@ extension FirebaseAccountService {
             logger.debug("Received FirebaseAuth stateDidChange that that was triggered due to other reasons. Dispatching anonymously...")
 
             // just apply update out of band, errors are just logged as we can't throw them somewhere where UI pops up
-            try await apply(update: update)
+            await apply(update)
         }
     }
 
-    private func dispatchQueuedChanges(result: AuthDataResult? = nil) async throws {
+    private func dispatchQueuedChanges(update: UserUpdate? = nil) async {
         defer {
             shouldQueue = false
         }
 
-        while var queuedUpdate = queuedUpdates.first {
+        // apply all queued updates
+        while let queuedUpdate = queuedUpdates.first {
             queuedUpdates.removeFirst()
-
-            if let result { // patch the update before we apply it
-                queuedUpdate.authResult = result
+            if let update, queuedUpdate.describesSameUpdate(as: update) {
+                continue
             }
 
-            try await apply(update: queuedUpdate)
+            await apply(queuedUpdate)
+        }
+
+        // we always apply the update we receive from the action
+        if let update {
+            await apply(update)
         }
     }
 
-    private func apply(update: UserUpdate) async throws {
+    private func apply(_ update: UserUpdate) async {
         switch update.change {
         case let .user(user):
-            let isNewUser = update.authResult?.additionalUserInfo?.isNewUser ?? false
-            try await notifyUserSignIn(user: user, isNewUser: isNewUser)
+            let wasAnonymous = account.details?.isAnonymous == true
+            let isNewUser = wasAnonymous || update.authResult?.additionalUserInfo?.isNewUser ?? false
+
+            await notifyUserSignIn(user: user, isNewUser: isNewUser)
         case .removed:
             notifyUserRemoval()
         }
@@ -848,21 +959,20 @@ extension FirebaseAccountService {
         return details
     }
 
-    private func buildUserQueryingStorageProvider(user: User, isNewUser: Bool) async throws -> AccountDetails {
+    private func buildUserQueryingStorageProvider(user: User, isNewUser: Bool) async -> AccountDetails {
         var details = buildUser(user, isNewUser: isNewUser)
 
         let unsupportedKeys = unsupportedKeys
         if !unsupportedKeys.isEmpty {
-            let externalStorage = externalStorage
-            let externalDetails = try await externalStorage.retrieveExternalStorage(for: details.accountId, unsupportedKeys)
+            let externalDetails = await externalStorage.retrieveExternalStorage(for: details.accountId, unsupportedKeys)
             details.add(contentsOf: externalDetails)
         }
 
         return details
     }
 
-    func notifyUserSignIn(user: User, isNewUser: Bool = false) async throws {
-        let details = try await buildUserQueryingStorageProvider(user: user, isNewUser: isNewUser)
+    func notifyUserSignIn(user: User, isNewUser: Bool = false) async {
+        let details = await buildUserQueryingStorageProvider(user: user, isNewUser: isNewUser)
 
         logger.debug("Notifying SpeziAccount with updated user details.")
         account.supplyUserDetails(details)
@@ -871,7 +981,6 @@ extension FirebaseAccountService {
     func notifyUserRemoval() {
         logger.debug("Notifying SpeziAccount of removed user details.")
 
-        let account = account
         account.removeUserDetails()
     }
 
@@ -882,7 +991,7 @@ extension FirebaseAccountService {
             return
         }
 
-        let externalStorage = externalStorage
+        logger.debug("Delegating storage of additional \(externallyStoredDetails.count) account details to storage provider ...")
         try await externalStorage.requestExternalStorage(of: externallyStoredDetails, for: accountId)
     }
 }
