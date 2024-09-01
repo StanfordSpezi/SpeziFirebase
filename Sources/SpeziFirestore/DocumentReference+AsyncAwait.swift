@@ -77,6 +77,7 @@ extension DocumentReference {
     /// Due to the Firebase SDK, it will not return when the client is offline, though local changes will be visible immediately.
     ///
     /// - Parameters:
+    ///   - isolation: The actor isolation to inherit.
     ///   - value: An instance of `Encodable` to be encoded to a document.
     ///   - encoder: An encoder instance to use to run the encoding.
     public func setData<T: Encodable>( // swiftlint:disable:this function_default_parameter_at_end
@@ -104,6 +105,7 @@ extension DocumentReference {
     /// Due to the Firebase SDK, it will not return when the client is offline, though local changes will be visible immediately.
     ///
     /// - Parameters:
+    ///   - isolation: The actor isolation to inherit.
     ///   - value: An instance of `Encodable` to be encoded to a document.
     ///   - merge: Whether to merge the provided `Encodable` into any existing
     ///            document.
@@ -137,6 +139,7 @@ extension DocumentReference {
     /// Due to the Firebase SDK, it will not return when the client is offline, though local changes will be visible immediately.
     ///
     /// - Parameters:
+    ///   - isolation: The actor isolation to inherit.
     ///   - value: An instance of `Encodable` to be encoded to a document.
     ///   - mergeFields: Array of `String` or `FieldPath` elements specifying which fields to
     ///                  merge. Fields can contain dots to reference nested fields within the
