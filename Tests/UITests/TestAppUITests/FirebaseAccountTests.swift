@@ -499,8 +499,10 @@ extension XCUIApplication {
         XCTAssertTrue(buttons["Signup"].exists)
         collectionViews.buttons["Signup"].tap()
 
-        XCTAssertTrue(buttons["Close"].waitForExistence(timeout: 2.0))
-        buttons["Close"].tap()
+
+        XCTAssertTrue(staticTexts["Your Account"].waitForExistence(timeout: 2.0))
+        XCTAssertTrue(navigationBars.buttons["Close"].exists)
+        navigationBars.buttons["Close"].tap()
     }
 }
 
