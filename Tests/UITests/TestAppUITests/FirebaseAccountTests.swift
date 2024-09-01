@@ -15,11 +15,9 @@ import XCTestExtensions
 /// Refer to https://firebase.google.com/docs/emulator-suite/connect_auth about more information about the
 /// Firebase Local Emulator Suite.
 final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_body_length
-    override func setUp() {
-        continueAfterFailure = false
-    }
-
     override func setUp() async throws {
+        continueAfterFailure = false
+
         try await FirebaseClient.deleteAllAccounts()
         try await Task.sleep(for: .seconds(0.5))
     }
@@ -327,6 +325,10 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssertTrue(app.alerts["Authentication Required"].waitForExistence(timeout: 2.0))
         XCTAssertTrue(app.alerts["Authentication Required"].buttons["Cancel"].waitForExistence(timeout: 0.5))
         app.alerts["Authentication Required"].buttons["Cancel"].tap()
+
+        XCTAssertTrue(app.navigationBars.staticTexts["Change Password"].exists) // ensure we stay in the sheet
+        XCTAssertTrue(app.navigationBars.buttons["Cancel"].exists)
+        app.navigationBars.buttons["Cancel"].tap()
 
         XCTAssertTrue(app.navigationBars.buttons["Account Overview"].waitForExistence(timeout: 2.0))
         app.navigationBars.buttons["Account Overview"].tap() // back button

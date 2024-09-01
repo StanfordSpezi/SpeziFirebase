@@ -314,20 +314,24 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         }
 
         try await dispatchFirebaseAuthAction { @MainActor in
-            // TODO: always create an anonymous account! and then link! (preform deletion/signout, if we created it here and we receive an error!)
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
+                // The link call below resets the display name to nil. Therefore, we need to preserve the existing name if possible.
+                let previousDisplayName = currentUser.displayName
+
+                let credential = EmailAuthProvider.credential(withEmail: signupDetails.userId, password: password)
+                logger.debug("Linking email-password credentials with current anonymous user account ...")
+                let result = try await currentUser.link(with: credential)
+
                 if let displayName = signupDetails.name {
                     try await updateDisplayName(of: currentUser, displayName)
+                } else if let previousDisplayName {
+                    try await updateDisplayName(of: currentUser, previousDisplayName)
                 }
 
                 try await requestExternalStorage(for: currentUser.uid, details: signupDetails)
 
-                logger.debug("Linking email-password credentials with current anonymous user account ...")
-
-                // ensure we perform the link as the last step, so we don't make it impossible to redo the operation.
-                let credential = EmailAuthProvider.credential(withEmail: signupDetails.userId, password: password)
-                return try await currentUser.link(with: credential)
+                return result
             }
 
             let authResult = try await Auth.auth().createUser(withEmail: signupDetails.userId, password: password)
@@ -341,7 +345,6 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
                 logger.error("Failed to send email verification: \(error)")
             }
 
-            // TODO: current problem if things fail!
             if let displayName = signupDetails.name {
                 try await updateDisplayName(of: authResult.user, displayName)
             }
@@ -364,8 +367,18 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         try await dispatchFirebaseAuthAction { @MainActor in
             if let currentUser = Auth.auth().currentUser,
                currentUser.isAnonymous {
+                // The link call below resets the display name to nil (if non is part of the OAuth credential).
+                // Therefore, we need to preserve the existing name if possible.
+                let previousDisplayName = currentUser.displayName
+
                 logger.debug("Linking O-Auth credentials with current anonymous user account ...")
-                return try await currentUser.link(with: credential)
+                let result = try await currentUser.link(with: credential)
+
+                if let previousDisplayName, result.user.displayName == nil {
+                    try await updateDisplayName(of: currentUser, previousDisplayName)
+                }
+
+                return result
             }
 
             let authResult = try await Auth.auth().signIn(with: credential)
@@ -438,13 +451,13 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
         try await notifications.reportEvent(.deletingAccount(currentUser.uid))
 
-        try await dispatchFirebaseAuthAction { @MainActor in
-            let result = try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
-            guard case .success = result else {
-                logger.debug("Re-authentication was cancelled by user. Not deleting the account.")
-                throw CancellationError()
-            }
+        let result = try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
+        guard case .success = result else {
+            logger.debug("Re-authentication was cancelled by user. Not deleting the account.")
+            throw CancellationError()
+        }
 
+        try await dispatchFirebaseAuthAction { @MainActor in
             if let credential = result.credential {
                 // re-authentication was made through sign in provider, delete SSO account as well
                 guard let authorizationCode = credential.authorizationCode else {
@@ -503,16 +516,16 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             throw FirebaseAccountError.notSignedIn
         }
 
-        try await mapFirebaseAccountError {
-            // if we modify sensitive credentials and require a recent login
-            if modifications.modifiedDetails.contains(AccountKeys.userId) || modifications.modifiedDetails.password != nil {
-                let result = try await reauthenticateUser(user: currentUser)
-                guard case .success = result else {
-                    logger.debug("Re-authentication was cancelled. Not updating sensitive user details.")
-                    throw CancellationError()
-                }
+        // if we modify sensitive credentials and require a recent login
+        if modifications.modifiedDetails.contains(AccountKeys.userId) || modifications.modifiedDetails.password != nil {
+            let result = try await reauthenticateUser(user: currentUser)
+            guard case .success = result else {
+                logger.debug("Re-authentication was cancelled. Not updating sensitive user details.")
+                throw CancellationError()
             }
+        }
 
+        try await mapFirebaseAccountError {
             if modifications.modifiedDetails.contains(AccountKeys.userId) {
                 logger.debug("updateEmail(to:) for user.")
                 try await currentUser.updateEmail(to: modifications.modifiedDetails.userId)
@@ -562,7 +575,9 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         }
 
         logger.debug("Re-authenticating password-based user now ...")
-        try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
+        _ = try await mapFirebaseAccountError {
+            try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: userId, password: password))
+        }
         return .success
     }
 
@@ -573,15 +588,21 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
         let credential = try oAuthCredential(from: appleIdCredential)
         logger.debug("Re-Authenticating Apple credential ...")
-        try await user.reauthenticate(with: credential)
+        _ = try await mapFirebaseAccountError {
+            try await user.reauthenticate(with: credential)
+        }
 
         return .success(with: appleIdCredential)
     }
 
     private func updateDisplayName(of user: User, _ name: PersonNameComponents) async throws {
+        try await updateDisplayName(of: user, name.formatted(.name(style: .long)))
+    }
+
+    private func updateDisplayName(of user: User, _ name: String) async throws {
         logger.debug("Creating change request for updated display name.")
         let changeRequest = user.createProfileChangeRequest()
-        changeRequest.displayName = name.formatted(.name(style: .long))
+        changeRequest.displayName = name
         try await changeRequest.commitChanges()
     }
 }
@@ -680,7 +701,7 @@ extension FirebaseAccountService {
 
             logger.info("onAppleSignInCompletion creating firebase apple credential from authorization credential")
 
-            try await signUp(with: credential)
+            try await signUp(with: credential) // TODO: pass in if we have a full name?
         case let .failure(error):
             guard let authorizationError = error as? ASAuthorizationError else {
                 logger.error("onAppleSignInCompletion received unknown error: \(error)")
@@ -849,7 +870,7 @@ extension FirebaseAccountService {
            let code = AuthErrorCode(rawValue: nsError.code) {
             throw FirebaseAccountError(authErrorCode: code)
         }
-        throw FirebaseAccountError.unknown(.internalError)
+        throw error
     }
 
 
@@ -970,6 +991,7 @@ extension FirebaseAccountService {
             return
         }
 
+        logger.debug("Delegating storage of additional \(externallyStoredDetails.count) account details to storage provider ...")
         try await externalStorage.requestExternalStorage(of: externallyStoredDetails, for: accountId)
     }
 }
