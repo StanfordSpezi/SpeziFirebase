@@ -22,27 +22,13 @@ struct FirebaseAccountTestsView: View {
 
     @State var showSetup = false
     @State var showOverview = false
+    @State private var accountIdFromAnonymousUser: String?
 
     var body: some View {
         List {
             if let details = account.details {
-                HStack {
-                    UserProfileView(name: details.name ?? .init(givenName: "NOT FOUND"))
-                        .frame(height: 30)
-                    Text(details.userId)
-                }
-                if details.isAnonymous {
-                    ListRow("User") {
-                        Text("Anonymous")
-                    }
-                }
-
-                ListRow("New User") {
-                    Text(details.isNewUser ? "Yes" : "No")
-                }
-
-                AsyncButton("Logout", role: .destructive, state: $viewState) {
-                    try await account.accountService.logout()
+                Section {
+                    accountHeader(for: details)
                 }
             }
             Button("Account Setup") {
@@ -56,7 +42,11 @@ struct FirebaseAccountTestsView: View {
                 NavigationStack {
                     AccountSetup()
                         .toolbar {
-                            toolbar(closing: $showSetup)
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Close") {
+                                    showSetup = false
+                                }
+                            }
                         }
                 }
             }
@@ -68,12 +58,41 @@ struct FirebaseAccountTestsView: View {
     }
 
 
-    @ToolbarContentBuilder
-    func toolbar(closing flag: Binding<Bool>) -> some ToolbarContent {
-        ToolbarItemGroup(placement: .cancellationAction) {
-            Button("Close") {
-                flag.wrappedValue = false
+    @ViewBuilder
+    @MainActor
+    private func accountHeader(for details: AccountDetails) -> some View {
+        HStack {
+            UserProfileView(name: details.name ?? .init(givenName: "NOT FOUND"))
+                .frame(height: 30)
+            Text(details.userId)
+        }
+        if details.isAnonymous {
+            ListRow("User") {
+                Text("Anonymous")
             }
+            .onAppear {
+                accountIdFromAnonymousUser = details.accountId
+            }
+        }
+
+        ListRow("New User") {
+            Text(details.isNewUser ? "Yes" : "No")
+        }
+
+        if let accountIdFromAnonymousUser {
+            ListRow("Account Id") {
+                if details.accountId == accountIdFromAnonymousUser {
+                    Text(verbatim: "Stable")
+                        .foregroundStyle(.green)
+                } else {
+                    Text(verbatim: "Changed")
+                        .foregroundStyle(.red)
+                }
+            }
+        }
+
+        AsyncButton("Logout", role: .destructive, state: $viewState) {
+            try await account.accountService.logout()
         }
     }
 }

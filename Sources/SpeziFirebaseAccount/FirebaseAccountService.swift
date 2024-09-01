@@ -701,7 +701,7 @@ extension FirebaseAccountService {
 
             logger.info("onAppleSignInCompletion creating firebase apple credential from authorization credential")
 
-            try await signUp(with: credential) // TODO: pass in if we have a full name?
+            try await signUp(with: credential)
         case let .failure(error):
             guard let authorizationError = error as? ASAuthorizationError else {
                 logger.error("onAppleSignInCompletion received unknown error: \(error)")
