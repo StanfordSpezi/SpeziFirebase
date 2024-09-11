@@ -196,7 +196,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
         let localCache = localCache
         let cached = await localCache.loadEntry(for: accountId, keys)
 
-        if listenerRegistrations[accountId] != nil { // check that there is a snapshot listener in place
+        if listenerRegistrations[accountId] == nil { // check that there is a snapshot listener in place
             snapshotListener(for: accountId, with: keys)
         }
 
