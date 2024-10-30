@@ -51,7 +51,7 @@ struct FirestoreAccount: Decodable, Equatable {
 
 
 enum FirebaseClient {
-    private static let projectId = "nams-e43ed"
+    private static let projectId = "spezifirebaseuitests"
 
     // curl -H "Authorization: Bearer owner" -X DELETE http://localhost:9099/emulator/v1/projects/spezifirebaseuitests/accounts
     static func deleteAllAccounts() async throws {
