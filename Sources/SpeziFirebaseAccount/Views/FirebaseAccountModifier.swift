@@ -21,7 +21,7 @@ struct FirebaseAccountModifier: ViewModifier {
     private var firebaseModel
 
 
-    init() {}
+    nonisolated init() {}
 
 
     func body(content: Content) -> some View {

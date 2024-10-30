@@ -125,6 +125,7 @@ private struct UserUpdate {
 /// ### Presenting the security alert
 /// - ``securityAlert``
 /// - ``FirebaseSecurityAlert``
+@MainActor
 public final class FirebaseAccountService: AccountService { // swiftlint:disable:this type_body_length
     private static let supportedAccountKeys = AccountKeyCollection {
         \.accountId

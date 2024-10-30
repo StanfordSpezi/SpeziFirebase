@@ -728,7 +728,7 @@
 /* Begin XCRemoteSwiftPackageReference section */
 		2F746D9D29962B2A00BF54FE /* XCRemoteSwiftPackageReference "XCTestExtensions" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/StanfordSpezi/XCTestExtensions";
+			repositoryURL = "https://github.com/StanfordBDHG/XCTestExtensions";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 1.0.0;
