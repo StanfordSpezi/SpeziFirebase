@@ -163,10 +163,6 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
 
         let details = buildAccountDetails(from: snapshot, keys: Array(keys))
 
-        guard !details.isEmpty else {
-            return
-        }
-
         let localCache = localCache
         await localCache.communicateRemoteChanges(for: accountId, details)
 

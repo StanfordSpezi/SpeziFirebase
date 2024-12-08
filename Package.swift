@@ -29,7 +29,7 @@ let package = Package(
         .package(url: "https://github.com/StanfordSpezi/SpeziFoundation", from: "2.0.0"),
         .package(url: "https://github.com/StanfordSpezi/Spezi", from: "1.7.1"),
         .package(url: "https://github.com/StanfordSpezi/SpeziViews", from: "1.6.0"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", from: "2.0.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", branch: "fix/wait-for-complete-details"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.0.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.2.0")
     ] + swiftLintPackage(),
