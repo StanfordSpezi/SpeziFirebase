@@ -659,7 +659,10 @@ extension FirebaseAccountService {
             actionSemaphore.signal()
         }
 
-        let details = buildUser(user, isNewUser: false, mergeWith: details)
+        // make sure to keep the `newUser` flag
+        let consideredNewUser = account.details?.isNewUser ?? false
+
+        let details = buildUser(user, isNewUser: consideredNewUser, mergeWith: details)
         logger.debug("Update user details due to updates in the externally stored account details.")
         account.supplyUserDetails(details)
     }
