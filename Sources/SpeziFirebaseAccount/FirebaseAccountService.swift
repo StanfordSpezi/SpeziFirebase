@@ -247,11 +247,10 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             }
         }
 
-        // The `Auth.auth().currentUser` is not available immediately. The init of `Auth` delays
-        // the retrieval of the keychain object.
-        // See https://github.com/firebase/firebase-ios-sdk/blob/main/FirebaseAuth/Sources/Swift/Auth/Auth.swift#L1646.
-        // To increase our chance that the initial check did run, we move this check to the end.
-        // Every call to Auth.auth() acquires a lock, so this might increase our chance that the initialization did complete successfully.
+        // Firebase v11.6.0 restore the v10 behavior where the currentUser is available immediately after startup.
+        // `currentUser` will sync to the Auth worker queue, see https://github.com/firebase/firebase-ios-sdk/pull/14141.
+        // The Auth.init kicked off loading the current user already above, so we might not need to wait that long here.
+        // But, if there is a user, it will definitely get loaded here.
         checkForInitialUserAccount()
 
         Task.detached { [logger, secureStorage, localStorage] in
