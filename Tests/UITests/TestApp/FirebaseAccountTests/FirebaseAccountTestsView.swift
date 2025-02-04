@@ -17,6 +17,8 @@ import SwiftUI
 struct FirebaseAccountTestsView: View {
     @Environment(Account.self)
     var account
+    @Environment(AccountTestModel.self)
+    private var testModel
 
     @State var viewState: ViewState = .idle
 
@@ -26,6 +28,9 @@ struct FirebaseAccountTestsView: View {
 
     var body: some View {
         List {
+            Section {
+                ListRow("User Present on Startup", value: testModel.accountUponConfigure ? "Yes" : "No")
+            }
             if let details = account.details {
                 Section {
                     accountHeader(for: details)
@@ -96,3 +101,16 @@ struct FirebaseAccountTestsView: View {
         }
     }
 }
+
+
+#if DEBUG
+#Preview {
+    NavigationStack {
+        FirebaseAccountTestsView()
+    }
+        .environment(AccountTestModel())
+        .previewWith {
+            AccountConfiguration(service: InMemoryAccountService(), configuration: .default)
+        }
+}
+#endif
