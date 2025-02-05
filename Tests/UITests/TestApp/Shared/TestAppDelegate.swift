@@ -17,7 +17,29 @@ import SpeziFirestore
 import SwiftUI
 
 
+@Observable
+final class AccountTestModel {
+    /// Flag to determine if an account was present upon the initial startup.
+    var accountUponConfigure = false
+
+    init() {}
+}
+
+
 class TestAppDelegate: SpeziAppDelegate {
+    private class InitialUserCheck: Module {
+        @Dependency(Account.self)
+        private var account
+        @Dependency(FirebaseAccountService.self)
+        private var service
+
+        @Model var model = AccountTestModel()
+
+        func configure() {
+            model.accountUponConfigure = account.signedIn
+        }
+    }
+
     private class Logout: Module {
         @Application(\.logger)
         private var logger
@@ -70,6 +92,8 @@ class TestAppDelegate: SpeziAppDelegate {
             }
 
             Logout()
+
+            InitialUserCheck()
 
             Firestore(settings: .emulator)
             FirebaseStorageConfiguration(emulatorSettings: (host: "localhost", port: 9199))

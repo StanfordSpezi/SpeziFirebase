@@ -26,11 +26,11 @@ let package = Package(
         .library(name: "SpeziFirebaseAccountStorage", targets: ["SpeziFirebaseAccountStorage"])
     ],
     dependencies: [
-        .package(url: "https://github.com/StanfordSpezi/SpeziFoundation", from: "2.0.0"),
-        .package(url: "https://github.com/StanfordSpezi/Spezi", from: "1.7.1"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziViews", from: "1.6.0"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", from: "2.1.1"),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.0.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziFoundation", from: "2.1.0"),
+        .package(url: "https://github.com/StanfordSpezi/Spezi", from: "1.8.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziViews", from: "1.9.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", from: "2.1.2"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.8.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.2.0")
     ] + swiftLintPackage(),
     targets: [

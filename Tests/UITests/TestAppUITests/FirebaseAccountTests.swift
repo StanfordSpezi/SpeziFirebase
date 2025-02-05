@@ -457,6 +457,39 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssert(app.staticTexts["Leland Stanford"].waitForExistence(timeout: 2.0))
         XCTAssert(app.staticTexts["Biography, Bio"].exists)
     }
+
+    @MainActor
+    func testAccountReadyUponStartup() async throws {
+        try await FirebaseClient.createAccount(email: "test@username.edu", password: "TestPassword", displayName: "Username Test")
+
+        let accounts = try await FirebaseClient.getAllAccounts()
+        XCTAssertEqual(accounts, [FirestoreAccount(email: "test@username.edu", displayName: "Username Test")])
+
+        let app = XCUIApplication()
+        app.launchArguments = ["--firebaseAccount"]
+        app.launch()
+
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 2.0))
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        try app.login(username: "test@username.edu", password: "TestPassword")
+        XCTAssert(app.staticTexts["test@username.edu"].waitForExistence(timeout: 2.0))
+
+        app.terminate()
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 2.0))
+
+        app.launch()
+
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 2.0))
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        XCTAssertFalse(app.staticTexts["User Present on Startup, No"].exists)
+        XCTAssert(app.staticTexts["User Present on Startup, Yes"].waitForExistence(timeout: 2.0))
+    }
 }
 
 
