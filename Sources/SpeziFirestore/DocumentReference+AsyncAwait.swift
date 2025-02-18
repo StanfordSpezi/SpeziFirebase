@@ -18,10 +18,10 @@ private struct FirestoreCompletion: Sendable {
         Logger(subsystem: "edu.stanford.spezi.firebase", category: "FirestoreCompletion")
     }
 
-    private let continuation: UnsafeContinuation<Void, Error>
+    private let continuation: UnsafeContinuation<Void, any Error>
     private let resumed: ManagedAtomic<Bool>
 
-    private init(continuation: UnsafeContinuation<Void, Error>) {
+    private init(continuation: UnsafeContinuation<Void, any Error>) {
         self.continuation = continuation
         self.resumed = ManagedAtomic(false)
     }
@@ -43,7 +43,7 @@ private struct FirestoreCompletion: Sendable {
     }
 
     func complete(
-        with error: Error?,
+        with error: (any Error)?,
         file: StaticString = #filePath,
         line: Int = #line
     ) {
