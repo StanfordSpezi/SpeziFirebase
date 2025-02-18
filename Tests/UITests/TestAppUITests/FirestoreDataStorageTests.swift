@@ -200,7 +200,7 @@ final class FirestoreDataStorageTests: XCTestCase {
 
         let contentFieldIdentifier = "Enter the element's optional content."
         try app.textFields[contentFieldIdentifier].delete(count: 100, options: .disableKeyboardDismiss)
-        app.textFields[contentFieldIdentifier].typeText(content)
+        try app.textFields[contentFieldIdentifier].enter(value: content, options: .skipTextFieldSelection)
     }
 }
 
