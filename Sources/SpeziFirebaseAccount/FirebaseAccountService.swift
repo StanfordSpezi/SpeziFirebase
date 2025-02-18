@@ -14,7 +14,7 @@ import SpeziAccount
 import SpeziFirebaseConfiguration
 import SpeziFoundation
 import SpeziLocalStorage
-import SpeziSecureStorage
+import SpeziKeychainStorage
 import SpeziValidation
 import SwiftUI
 
@@ -137,9 +137,12 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
     @Application(\.logger)
     private var logger
 
-    @Dependency private var configureFirebaseApp = ConfigureFirebaseApp()
-    @Dependency private var localStorage = LocalStorage()
-    @Dependency private var secureStorage = SecureStorage()
+    @Dependency(ConfigureFirebaseApp.self)
+    private var configureFirebaseApp
+    @Dependency(LocalStorage.self)
+    private var localStorage
+    @Dependency(KeychainStorage.self)
+    private var keychainStorage
 
     @Dependency(Account.self)
     private var account
@@ -253,10 +256,10 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         // But, if there is a user, it will definitely get loaded here.
         checkForInitialUserAccount()
 
-        Task.detached { [logger, secureStorage, localStorage] in
+        Task.detached { [logger, keychainStorage, localStorage] in
             // Previous SpeziFirebase releases used to store an identifier for the active account service on disk.
             // We keep this for now, to clear the keychain of all users.
-            Self.resetLegacyStorage(secureStorage, localStorage, logger)
+            Self.resetLegacyStorage(keychainStorage, localStorage, logger)
         }
 
         let subscription = externalStorage.updatedDetails
@@ -688,7 +691,7 @@ extension FirebaseAccountService {
         self.lastNonce = nonce // save the nonce for later use to be passed to FirebaseAuth
     }
 
-    func onAppleSignInCompletion(result: Result<ASAuthorization, Error>) async throws {
+    func onAppleSignInCompletion(result: Result<ASAuthorization, any Error>) async throws {
         defer { // cleanup tasks
             self.lastNonce = nil
         }
@@ -791,17 +794,18 @@ extension FirebaseAccountService {
 
 @MainActor
 extension FirebaseAccountService {
-    private static nonisolated func resetLegacyStorage(_ secureStorage: SecureStorage, _ localStorage: LocalStorage, _ logger: Logger) {
+    private static nonisolated func resetLegacyStorage(_ keychainStorage: KeychainStorage, _ localStorage: LocalStorage, _ logger: Logger) {
         do {
-            try secureStorage.deleteCredentials("_", server: StorageKeys.activeAccountService)
-        } catch SecureStorageError.notFound {
-            // we don't care if we want to delete something that doesn't exist
+            try keychainStorage.deleteCredentials(
+                withUsername: "_",
+                for: .internetPassword(forServer: StorageKeys.activeAccountService)
+            )
         } catch {
             logger.error("Failed to remove active account service: \(error)")
         }
 
         // we don't care if removal of the legacy item fails
-        try? localStorage.delete(storageKey: StorageKeys.activeAccountService)
+        try? localStorage.delete(LocalStorageKey<Never>(StorageKeys.activeAccountService))
     }
 
     // a overload that just returns void
@@ -866,7 +870,7 @@ extension FirebaseAccountService {
         }
     }
 
-    private func _firebaseAccountMapError(_ error: Error) throws -> Never {
+    private func _firebaseAccountMapError(_ error: any Error) throws -> Never {
         logger.error("Received error on firebase dispatch: \(error)")
         let nsError = error as NSError
         if nsError.domain == AuthErrors.domain,

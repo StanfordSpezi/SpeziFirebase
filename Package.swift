@@ -26,11 +26,12 @@ let package = Package(
         .library(name: "SpeziFirebaseAccountStorage", targets: ["SpeziFirebaseAccountStorage"])
     ],
     dependencies: [
-        .package(url: "https://github.com/StanfordSpezi/SpeziFoundation", from: "2.1.0"),
-        .package(url: "https://github.com/StanfordSpezi/Spezi", from: "1.8.0"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziViews", from: "1.9.0"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziAccount", from: "2.1.2"),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "11.8.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziFoundation.git", from: "2.1.0"),
+        .package(url: "https://github.com/StanfordSpezi/Spezi.git", from: "1.8.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziViews.git", from: "1.9.0"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziAccount.git", from: "2.1.3"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziStorage.git", from: "2.1.0"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "11.8.0"),
         .package(url: "https://github.com/apple/swift-atomics.git", from: "1.2.0")
     ] + swiftLintPackage(),
     targets: [
@@ -42,8 +43,11 @@ let package = Package(
                 .product(name: "Spezi", package: "Spezi"),
                 .product(name: "SpeziValidation", package: "SpeziViews"),
                 .product(name: "SpeziAccount", package: "SpeziAccount"),
+                .product(name: "SpeziLocalStorage", package: "SpeziStorage"),
+                .product(name: "SpeziKeychainStorage", package: "SpeziStorage"),
                 .product(name: "FirebaseAuth", package: "firebase-ios-sdk")
             ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")],
             plugins: [] + swiftLintPlugin()
         ),
         .target(
@@ -52,6 +56,7 @@ let package = Package(
                 .product(name: "Spezi", package: "Spezi"),
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk")
             ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")],
             plugins: [] + swiftLintPlugin()
         ),
         .target(
@@ -62,6 +67,7 @@ let package = Package(
                 .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
                 .product(name: "Atomics", package: "swift-atomics")
             ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")],
             plugins: [] + swiftLintPlugin()
         ),
         .target(
@@ -71,6 +77,7 @@ let package = Package(
                 .product(name: "Spezi", package: "Spezi"),
                 .product(name: "FirebaseStorage", package: "firebase-ios-sdk")
             ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")],
             plugins: [] + swiftLintPlugin()
         ),
         .target(
@@ -81,6 +88,7 @@ let package = Package(
                 .product(name: "SpeziAccount", package: "SpeziAccount"),
                 .target(name: "SpeziFirestore")
             ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")],
             plugins: [] + swiftLintPlugin()
         ),
         .testTarget(
@@ -90,6 +98,7 @@ let package = Package(
                 .target(name: "SpeziFirebaseConfiguration"),
                 .target(name: "SpeziFirestore")
             ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")],
             plugins: [] + swiftLintPlugin()
         )
     ]

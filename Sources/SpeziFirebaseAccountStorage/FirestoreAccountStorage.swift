@@ -93,7 +93,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     private let collection: @Sendable () -> CollectionReference
     private let identifierMapping: [String: any AccountKey.Type]? // swiftlint:disable:this discouraged_optional_collection
 
-    private var listenerRegistrations: [String: ListenerRegistration] = [:]
+    private var listenerRegistrations: [String: any ListenerRegistration] = [:]
     private var registeredKeys: [String: [ObjectIdentifier: any AccountKey.Type]] = [:]
 
     /// Configure the Firestore Account Storage provider.
