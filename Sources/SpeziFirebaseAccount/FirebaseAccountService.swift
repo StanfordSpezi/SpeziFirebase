@@ -13,8 +13,8 @@ import Spezi
 import SpeziAccount
 import SpeziFirebaseConfiguration
 import SpeziFoundation
-import SpeziLocalStorage
 import SpeziKeychainStorage
+import SpeziLocalStorage
 import SpeziValidation
 import SwiftUI
 
