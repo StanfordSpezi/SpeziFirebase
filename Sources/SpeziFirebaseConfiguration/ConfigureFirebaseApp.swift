@@ -36,18 +36,7 @@ public final class ConfigureFirebaseApp: Module, DefaultInitializable {
         case custom(name: String, options: FirebaseOptions)
     }
     
-    /// Whether any instance of this module was already configured.
-    /// We use this property to keep track of this, since Firebase doesn't allow repeated configuration.
-    @MainActor private static var didConfigure = false
-    
     @MainActor private static var usedConfigInput: Input?
-    
-    // TODO: document!
-    @MainActor private static var isDefaultConfigurationAllowed = true
-    
-    @MainActor public static func disallowDefaultConfiguration() {
-        isDefaultConfigurationAllowed = false
-    }
     
     @Application(\.logger)
     private var logger
@@ -62,29 +51,18 @@ public final class ConfigureFirebaseApp: Module, DefaultInitializable {
     /// Creates a ``ConfigureFirebaseApp`` instance, which will configure firebase using custom configuration options.
     /// - parameter name: The name of the app. Defaults to `__FIRAPP_DEFAULT`.
     /// - parameter options: The options which should be used to configure firebase.
-    public init(name: String = kFIRDefaultAppName, options: FirebaseOptions) {
+    public init(name: String = kFIRDefaultAppName, options: FirebaseOptions) { // swiftlint:disable:this function_default_parameter_at_end
         input = .custom(name: name, options: options)
     }
     
     @_documentation(visibility: internal)
     public func configure() {
-        if let lastInput = Self.usedConfigInput {
-            preconditionFailure("Firebase was already configured, using \(lastInput)")
-        }
-        guard !Self.didConfigure else {
-            preconditionFailure("\(Self.self) module was included multiple times in Spezi Configuration")
-        }
         switch input {
         case .useDefault:
-            guard Self.isDefaultConfigurationAllowed else {
-                preconditionFailure("Attempted to configure default config, which is disallowed.")
-            }
-            logger.notice("Configuring Firebase using default config")
-            Self.usedConfigInput = input
+            logger.notice("Configuring Firebase, using default config")
             FirebaseApp.configure()
         case let .custom(name, options):
-            logger.notice("Configuring Firebase using custom config; name=\(name); options=\(options)")
-            Self.usedConfigInput = input
+            logger.notice("Configuring Firebase, using custom config; name=\(name); options=\(options)")
             FirebaseApp.configure(name: name, options: options)
         }
     }
