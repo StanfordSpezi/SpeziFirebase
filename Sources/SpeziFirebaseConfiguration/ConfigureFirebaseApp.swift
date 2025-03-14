@@ -16,7 +16,7 @@ import Spezi
 /// The `FirebaseApp.configure()` method will be called upon configuration of the `Module`.
 ///
 /// If your app uses the standard `GoogleService-Info.plist` approach to configure Firebase, you don't need to explicitly enable this module.
-/// However, if you want to use a custom, non-plist-based Firebase configuration, you should place t
+/// However, if you want to use a custom, non-plist-based Firebase configuration, you should place this module into your Spezi app's Configuration.
 ///
 /// Use the `@Dependency` property wrapper to define a dependency on this module and ensure that `FirebaseApp.configure()` is called before any
 /// other Firebase-related modules and to ensure it is called exactly once.
