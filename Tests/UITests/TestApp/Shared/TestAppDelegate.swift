@@ -65,16 +65,18 @@ class TestAppDelegate: SpeziAppDelegate {
 
     override var configuration: Configuration {
         Configuration {
-            let configuration: AccountValueConfiguration = FeatureFlags.accountStorageTests
-            ? [
-                .requires(\.userId),
-                .requires(\.name),
-                .requires(\.biography)
-            ]
-            : [
-                .requires(\.userId),
-                .collects(\.name)
-            ]
+            let configuration: AccountValueConfiguration = if FeatureFlags.accountStorageTests {
+                [
+                    .requires(\.userId),
+                    .requires(\.name),
+                    .requires(\.biography)
+                ]
+            } else {
+                [
+                    .requires(\.userId),
+                    .collects(\.name)
+                ]
+            }
 
             let service = FirebaseAccountService(
                 providers: [.emailAndPassword, .signInWithApple, .anonymousButton],
