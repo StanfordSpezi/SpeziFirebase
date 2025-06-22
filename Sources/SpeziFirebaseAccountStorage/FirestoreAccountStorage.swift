@@ -140,13 +140,13 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     public init(
         storeIn collection: @Sendable @autoclosure @escaping () -> CollectionReference,
         mapping identifierMapping: [String: any AccountKey.Type]? = nil, // swiftlint:disable:this discouraged_optional_collection
-        encoder: FirebaseFirestore.Firestore.Encoder? = nil,
-        decoder: FirebaseFirestore.Firestore.Decoder? = nil
+        encoder: FirebaseFirestore.Firestore.Encoder = FirebaseFirestore.Firestore.Encoder(),
+        decoder: FirebaseFirestore.Firestore.Decoder = FirebaseFirestore.Firestore.Decoder()
     ) {
         self.collection = collection // make it a auto-closure. Firestore.firstore() is only configured later on
         self.identifierMapping = identifierMapping
-        self.encoder = encoder ?? FirebaseFirestore.Firestore.Encoder()
-        self.decoder = decoder ?? FirebaseFirestore.Firestore.Decoder()
+        self.encoder = encoder
+        self.decoder = decoder
     }
 
 
