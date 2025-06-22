@@ -78,7 +78,7 @@ private struct AccountDetailsWrapper: Codable {
 /// ## Topics
 ///
 /// ### Configuration
-/// - ``init(storeIn:mapping:)``
+/// - ``init(storeIn:mapping:encoder:decoder:)``
 public actor FirestoreAccountStorage: AccountStorageProvider {
     @Application(\.logger)
     private var logger
@@ -92,6 +92,8 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
 
     private let collection: @Sendable () -> CollectionReference
     private let identifierMapping: [String: any AccountKey.Type]? // swiftlint:disable:this discouraged_optional_collection
+    private let encoder: Firestore.Encoder
+    private let decoder: Firestore.Decoder
 
     private var listenerRegistrations: [String: any ListenerRegistration] = [:]
     private var registeredKeys: [String: [ObjectIdentifier: any AccountKey.Type]] = [:]
@@ -107,17 +109,44 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     /// By default, the [`identifier`](https://swiftpackageindex.com/stanfordspezi/speziaccount/1.2.4/documentation/speziaccount/accountkey/identifier)
     /// provided by the account key is used as a field name.
     ///
+    /// ### Custom Encoder/Decoder Configuration
+    ///
+    /// For advanced use cases, such as integrating with libraries like PhoneNumberKit that require specific encoding/decoding strategies,
+    /// you can provide custom encoder and decoder instances with specific userInfo configurations.
+    ///
+    /// ```swift
+    /// import PhoneNumberKit
+    ///
+    /// let encoder = Firestore.Encoder()
+    /// encoder.userInfo[.phoneNumbers] = PhoneNumberEncodingStrategy.e164
+    ///
+    /// let decoder = Firestore.Decoder()
+    /// decoder.userInfo[.phoneNumbers] = PhoneNumberEncodingStrategy.e164
+    ///
+    /// let storage = FirestoreAccountStorage(
+    ///     storeIn: Firestore.firestore().collection("users"),
+    ///     encoder: encoder,
+    ///     decoder: decoder
+    /// )
+    /// ```
+    ///
     /// - Parameters:
     ///   - collection: The Firestore collection that all users records are stored in. The `accountId` is used for the name of
     ///     each user document. The field names are derived from the stable `AccountKey/identifier`.
     ///   - identifierMapping: An optional mapping of string identifiers to their `AccountKey`. Use that to customize the scheme used to store account keys
     ///     or provide backwards compatibility with details stored with SpeziAccount 1.0.
+    ///   - encoder: A custom Firestore encoder instance with specific userInfo configuration. If not provided, a default encoder will be used.
+    ///   - decoder: A custom Firestore decoder instance with specific userInfo configuration. If not provided, a default decoder will be used.
     public init(
         storeIn collection: @Sendable @autoclosure @escaping () -> CollectionReference,
-        mapping identifierMapping: [String: any AccountKey.Type]? = nil // swiftlint:disable:this discouraged_optional_collection
+        mapping identifierMapping: [String: any AccountKey.Type]? = nil, // swiftlint:disable:this discouraged_optional_collection
+        encoder: Firestore.Encoder? = nil,
+        decoder: Firestore.Decoder? = nil
     ) {
         self.collection = collection // make it a auto-closure. Firestore.firstore() is only configured later on
         self.identifierMapping = identifierMapping
+        self.encoder = encoder ?? Firestore.Encoder()
+        self.decoder = decoder ?? Firestore.Decoder()
     }
 
 
@@ -174,7 +203,6 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
             return AccountDetails()
         }
 
-        let decoder = Firestore.Decoder()
         let configuration = AccountDetails.DecodingConfiguration(keys: keys, identifierMapping: identifierMapping)
 
         do {
@@ -205,7 +233,6 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
         let batch = Firestore.firestore().batch()
 
         if !modifications.modifiedDetails.isEmpty {
-            let encoder = Firestore.Encoder()
             let configuration = AccountDetails.EncodingConfiguration(identifierMapping: identifierMapping)
 
             try AccountDetailsConfiguration.$encodingConfiguration.withValue(configuration) {
