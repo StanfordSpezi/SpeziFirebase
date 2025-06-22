@@ -121,7 +121,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     /// encoder.userInfo[.phoneNumbers] = PhoneNumberEncodingStrategy.e164
     ///
     /// let decoder = Firestore.Decoder()
-    /// decoder.userInfo[.phoneNumbers] = PhoneNumberEncodingStrategy.e164
+    /// decoder.userInfo[.phoneNumbers] = PhoneNumberDecodingStrategy.e164
     ///
     /// let storage = FirestoreAccountStorage(
     ///     storeIn: Firestore.firestore().collection("users"),
