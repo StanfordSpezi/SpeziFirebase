@@ -111,7 +111,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     ///
     /// ### Custom Encoder/Decoder Configuration
     ///
-    /// For advanced use cases, such as integrating with libraries like PhoneNumberKit that require specific encoding/decoding strategies,
+    /// For advanced use cases, such as integrating with libraries like PhoneNumberKit where you might want to set specific encoding/decoding strategies,
     /// you can provide custom encoder and decoder instances with specific userInfo configurations.
     ///
     /// ```swift
