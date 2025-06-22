@@ -92,8 +92,8 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
 
     private let collection: @Sendable () -> CollectionReference
     private let identifierMapping: [String: any AccountKey.Type]? // swiftlint:disable:this discouraged_optional_collection
-    private let encoder: Firestore.Encoder
-    private let decoder: Firestore.Decoder
+    private let encoder: FirebaseFirestore.Firestore.Encoder
+    private let decoder: FirebaseFirestore.Firestore.Decoder
 
     private var listenerRegistrations: [String: any ListenerRegistration] = [:]
     private var registeredKeys: [String: [ObjectIdentifier: any AccountKey.Type]] = [:]
@@ -117,11 +117,11 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     /// ```swift
     /// import PhoneNumberKit
     ///
-    /// let encoder = Firestore.Encoder()
-    /// encoder.userInfo[.phoneNumbers] = PhoneNumberEncodingStrategy.e164
+    /// let encoder = FirebaseFirestore.Firestore.Encoder()
+    /// encoder.userInfo[CodingUserInfoKey(rawValue: "com.roymarmelstein.PhoneNumberKit.encoding-strategy")!] = PhoneNumberEncodingStrategy.e164
     ///
-    /// let decoder = Firestore.Decoder()
-    /// decoder.userInfo[.phoneNumbers] = PhoneNumberDecodingStrategy.e164
+    /// let decoder = FirebaseFirestore.Firestore.Decoder()
+    /// decoder.userInfo[CodingUserInfoKey(rawValue: "com.roymarmelstein.PhoneNumberKit.decoding-strategy")!] = PhoneNumberDecodingStrategy.e164
     ///
     /// let storage = FirestoreAccountStorage(
     ///     storeIn: Firestore.firestore().collection("users"),
@@ -140,13 +140,13 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     public init(
         storeIn collection: @Sendable @autoclosure @escaping () -> CollectionReference,
         mapping identifierMapping: [String: any AccountKey.Type]? = nil, // swiftlint:disable:this discouraged_optional_collection
-        encoder: Firestore.Encoder? = nil,
-        decoder: Firestore.Decoder? = nil
+        encoder: FirebaseFirestore.Firestore.Encoder? = nil,
+        decoder: FirebaseFirestore.Firestore.Decoder? = nil
     ) {
         self.collection = collection // make it a auto-closure. Firestore.firstore() is only configured later on
         self.identifierMapping = identifierMapping
-        self.encoder = encoder ?? Firestore.Encoder()
-        self.decoder = decoder ?? Firestore.Decoder()
+        self.encoder = encoder ?? FirebaseFirestore.Firestore.Encoder()
+        self.decoder = decoder ?? FirebaseFirestore.Firestore.Decoder()
     }
 
 
