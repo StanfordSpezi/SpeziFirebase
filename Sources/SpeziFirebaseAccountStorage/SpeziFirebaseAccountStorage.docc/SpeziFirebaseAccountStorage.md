@@ -36,15 +36,36 @@ import SpeziFirebaseAccount
 import SpeziFirebaseAccountStorage
 
 class ExampleAppDelegate: SpeziAppDelegate {
-override var configuration: Configuration {
-    Configuration {
-        AccountConfiguration(
-            service: FirebaseAccountService(),
-            storageProvider: FirestoreAccountStorage(storeIn: Firestore.firestore().collection("users"))
-            configuration: [/* ... */]
-        )
+    override var configuration: Configuration {
+        Configuration {
+            AccountConfiguration(
+                service: FirebaseAccountService(),
+                storageProvider: FirestoreAccountStorage(storeIn: Firestore.firestore().collection("users")),
+                configuration: [/* ... */]
+            )
+        }
     }
 }
+
+### Custom Encoder/Decoder Configuration
+
+For advanced use cases, such as integrating with libraries like PhoneNumberKit where you might want to set specific encoding/decoding strategies,
+you can provide custom encoder and decoder instances with specific userInfo configurations.
+
+```swift
+import PhoneNumberKit
+
+let encoder = FirebaseFirestore.Firestore.Encoder()
+encoder.userInfo[CodingUserInfoKey(rawValue: "com.roymarmelstein.PhoneNumberKit.encoding-strategy")!] = PhoneNumberEncodingStrategy.e164
+
+let decoder = FirebaseFirestore.Firestore.Decoder()
+decoder.userInfo[CodingUserInfoKey(rawValue: "com.roymarmelstein.PhoneNumberKit.decoding-strategy")!] = PhoneNumberDecodingStrategy.e164
+
+let storage = FirestoreAccountStorage(
+    storeIn: Firestore.firestore().collection("users"),
+    encoder: encoder,
+    decoder: decoder
+)
 ```
 
 > Important: In order to use the `FirestoreAccountStorage`, you must have [`Firestore`](https://swiftpackageindex.com/stanfordspezi/spezifirebase/main/documentation/spezifirestore/firestore)
