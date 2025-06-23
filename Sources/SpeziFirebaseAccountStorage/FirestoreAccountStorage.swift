@@ -115,13 +115,13 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     /// you can provide custom encoder and decoder instances with specific userInfo configurations.
     ///
     /// ```swift
-    /// private let customEncoder: FirebaseFirestore.Firestore.Encoder {
+    /// private var customEncoder: FirebaseFirestore.Firestore.Encoder {
     ///     let encoder = FirebaseFirestore.Firestore.Encoder()
     ///     encoder.userInfo[.phoneNumberEncodingStrategy] = PhoneNumberDecodingStrategy.e164
     ///     return encoder
     /// }
     ///
-    /// private let customDecoder: FirebaseFirestore.Firestore.Decoder {
+    /// private var customDecoder: FirebaseFirestore.Firestore.Decoder {
     ///     let decoder = FirebaseFirestore.Firestore.Decoder()
     ///     decoder.userInfo[.phoneNumberDecodingStrategy] = PhoneNumberDecodingStrategy.e164
     ///     return decoder
