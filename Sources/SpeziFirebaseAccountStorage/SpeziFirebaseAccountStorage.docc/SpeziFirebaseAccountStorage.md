@@ -36,12 +36,48 @@ import SpeziFirebaseAccount
 import SpeziFirebaseAccountStorage
 
 class ExampleAppDelegate: SpeziAppDelegate {
+    override var configuration: Configuration {
+        Configuration {
+            AccountConfiguration(
+                service: FirebaseAccountService(),
+                storageProvider: FirestoreAccountStorage(storeIn: Firestore.firestore().collection("users")),
+                configuration: [/* ... */]
+            )
+        }
+    }
+}
+
+### Custom Encoder/Decoder Configuration
+
+For advanced use cases, such as integrating with libraries like PhoneNumberKit where you might want to set specific encoding/decoding strategies,
+you can provide custom encoder and decoder instances with specific userInfo configurations.
+
+```swift
+private let customEncoder: FirebaseFirestore.Firestore.Encoder {
+    let encoder = FirebaseFirestore.Firestore.Encoder()
+    encoder.userInfo[.phoneNumberEncodingStrategy] = PhoneNumberDecodingStrategy.e164
+    return encoder
+}
+
+private let customDecoder: FirebaseFirestore.Firestore.Decoder {
+    let decoder = FirebaseFirestore.Firestore.Decoder()
+    decoder.userInfo[.phoneNumberDecodingStrategy] = PhoneNumberDecodingStrategy.e164
+    return decoder
+}
+
 override var configuration: Configuration {
-    Configuration {
+    Configuration(standard: YourStandard()) {
         AccountConfiguration(
-            service: FirebaseAccountService(),
-            storageProvider: FirestoreAccountStorage(storeIn: Firestore.firestore().collection("users"))
-            configuration: [/* ... */]
+            storageProvider: FirestoreAccountStorage(
+                storeIn: Firestore.userCollection,
+                mapping: [
+                    "phoneNumbers": AccountKeys.phoneNumbers,
+                    // ... other mappings ...
+                ],
+                encoder: customEncoder,
+                decoder: customDecoder
+            ),
+        // ... other configuration ...
         )
     }
 }
