@@ -529,7 +529,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         }
 
         try await mapFirebaseAccountError {
-            if modifications.modifiedDetails.contains(AccountKeys.userId) && account.details?.userIdType == .emailAddress {
+            if modifications.modifiedDetails.contains(AccountKeys.userId) {
                 logger.debug("sendEmailVerification(beforeUpdatingEmail:) for user.")
                 try await currentUser.sendEmailVerification(beforeUpdatingEmail: modifications.modifiedDetails.userId)
             }
