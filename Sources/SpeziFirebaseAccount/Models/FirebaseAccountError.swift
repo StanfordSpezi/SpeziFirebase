@@ -52,7 +52,7 @@ public enum FirebaseAccountError {
             self = .accountAlreadyInUse
         case .weakPassword:
             self = .weakPassword
-        case .userDisabled, .wrongPassword, .userNotFound, .userMismatch:
+        case .invalidCredential, .userDisabled, .wrongPassword, .userNotFound, .userMismatch:
             self = .invalidCredentials
         case .invalidSender, .invalidMessagePayload:
             self = .internalPasswordResetError
