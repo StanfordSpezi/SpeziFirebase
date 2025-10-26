@@ -15,6 +15,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: Build-and-Test-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   buildandtest:
     name: Build and Test Swift Package
@@ -32,7 +36,7 @@ jobs:
       setupfirebaseemulator: true
       path: Tests/UITests
       customcommand: |
-          firebase emulators:exec 'set -o pipefail && xcodebuild test -project UITests.xcodeproj -scheme TestApp -destination "platform=iOS Simulator,name=iPhone 16 Pro" -resultBundlePath UITests.xcresult -derivedDataPath ".derivedData" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipPackagePluginValidation -skipMacroValidation | xcbeautify'
+          firebase emulators:exec 'set -o pipefail && xcodebuild test -project UITests.xcodeproj -scheme TestApp -destination "platform=iOS Simulator,name=iPhone 17 Pro" -resultBundlePath UITests.xcresult -derivedDataPath ".derivedData" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipPackagePluginValidation -skipMacroValidation | xcbeautify'
   uploadcoveragereport:
     name: Upload Coverage Report
     needs: [buildandtest, buildandtestuitests]
