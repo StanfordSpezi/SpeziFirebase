@@ -427,7 +427,9 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
                 throw FirebaseAccountError.notSignedIn
             }
         }
-
+        if let details = account.details {
+            try await notifications.reportEvent(.willLogOut(details))
+        }
         try await dispatchFirebaseAuthAction { @MainActor in
             try Auth.auth().signOut()
             logger.debug("Successful signOut() for user.")
@@ -452,7 +454,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             throw FirebaseAccountError.notSignedIn
         }
 
-        try await notifications.reportEvent(.deletingAccount(currentUser.uid))
+        try await notifications.reportEvent(.willDelete(currentUser.uid))
 
         let result = try await reauthenticateUser(user: currentUser) // delete requires a recent sign in
         guard case .success = result else {
