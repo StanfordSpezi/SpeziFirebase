@@ -136,6 +136,11 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
     @Application(\.logger)
     private var logger
+    
+    @StandardActor private var standard: any Standard
+    private var notifyStandard: (any AccountNotifyConstraint)? {
+        standard as? any AccountNotifyConstraint
+    }
 
     @Dependency(ConfigureFirebaseApp.self)
     private var configureFirebaseApp
@@ -427,7 +432,9 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
                 throw FirebaseAccountError.notSignedIn
             }
         }
-
+        if let details = account.details {
+            await notifyStandard?.willLogOut(details)
+        }
         try await dispatchFirebaseAuthAction { @MainActor in
             try Auth.auth().signOut()
             logger.debug("Successful signOut() for user.")
@@ -794,7 +801,7 @@ extension FirebaseAccountService {
 
 @MainActor
 extension FirebaseAccountService {
-    private static nonisolated func resetLegacyStorage(_ keychainStorage: KeychainStorage, _ localStorage: LocalStorage, _ logger: Logger) {
+    nonisolated private static func resetLegacyStorage(_ keychainStorage: KeychainStorage, _ localStorage: LocalStorage, _ logger: Logger) {
         do {
             try keychainStorage.deleteCredentials(
                 withUsername: "_",
