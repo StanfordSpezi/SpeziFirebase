@@ -165,7 +165,7 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
     }
 
 
-    private nonisolated func userDocument(for accountId: String) -> DocumentReference {
+    nonisolated private func userDocument(for accountId: String) -> DocumentReference {
         collection().document(accountId)
     }
 

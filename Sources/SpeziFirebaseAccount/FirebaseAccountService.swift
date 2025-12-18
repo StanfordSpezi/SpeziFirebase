@@ -801,7 +801,7 @@ extension FirebaseAccountService {
 
 @MainActor
 extension FirebaseAccountService {
-    private static nonisolated func resetLegacyStorage(_ keychainStorage: KeychainStorage, _ localStorage: LocalStorage, _ logger: Logger) {
+    nonisolated private static func resetLegacyStorage(_ keychainStorage: KeychainStorage, _ localStorage: LocalStorage, _ logger: Logger) {
         do {
             try keychainStorage.deleteCredentials(
                 withUsername: "_",
