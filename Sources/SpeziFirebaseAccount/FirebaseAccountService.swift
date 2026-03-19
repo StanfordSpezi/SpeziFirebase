@@ -179,6 +179,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
 
     @MainActor private var authStateDidChangeListenerHandle: AuthStateDidChangeListenerHandle?
     @MainActor private var lastNonce: String?
+    @MainActor private var currentSessionId: String?
 
     private var shouldQueue = false
     private var queuedUpdates: [UserUpdate] = []
@@ -658,6 +659,16 @@ extension FirebaseAccountService {
             return
         }
 
+        // sign out if a different session is now active
+        if let remoteSessionId = details.activeSessionId,
+           let localSessionId = self.currentSessionId,
+           remoteSessionId != localSessionId {
+            logger.info("Session invalidated, signing out.")
+            try? Auth.auth().signOut()
+            notifyUserRemoval()
+            return
+        }
+
         do {
             try await actionSemaphore.waitCheckingCancellation()
         } catch {
@@ -987,6 +998,11 @@ extension FirebaseAccountService {
 
     func notifyUserSignIn(user: User, isNewUser: Bool = false) async {
         let details = await buildUserQueryingStorageProvider(user: user, isNewUser: isNewUser)
+
+        // Capture the active session ID from the ID token's session claims
+        if let tokenResult = try? await user.getIDTokenResult() {
+            self.currentSessionId = tokenResult.claims["activeSessionId"] as? String
+        }
 
         logger.debug("Notifying SpeziAccount with updated user details.")
         account.supplyUserDetails(details)
