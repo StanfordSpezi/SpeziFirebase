@@ -391,6 +391,7 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
         XCTAssertTrue(app.buttons["Close"].exists)
         app.buttons["Close"].tap()
+        app.dismissSavePasswordAlert(timeout: 7) // sometimes shows up even though there was no successful login
 
         XCTAssertTrue(app.buttons["Account Setup"].waitForExistence(timeout: 2.0))
 
