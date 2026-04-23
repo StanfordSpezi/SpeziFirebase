@@ -263,6 +263,8 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
                         // the reload() call, for some errors, already triggers an automatic log out,
                         // meaning that the user might already be signed out when we call `logout()` above.
                         // we nonetheless call it unconditionally, since it will in both cases notify the Account module of the account removal.
+                    } catch {
+                        logger.error("Error trying to log out after failed reload: \(error)")
                     }
                 }
             }
