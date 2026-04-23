@@ -240,17 +240,30 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             self?.handleStateDidChange(auth: auth, user: user)
         }
 
-        // if there is a cached user, we refresh the authentication token
-        Auth.auth().currentUser?.getIDTokenForcingRefresh(true) { _, error in
-            if let error {
-                guard (error as NSError).code != AuthErrorCode.networkError.rawValue else {
-                    return // we make sure that we don't remove the account when we don't have network (e.g., flight mode)
-                }
-
-                // guaranteed to be invoked on the main thread, see
-                // https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/User#getidtokenforcingrefresh_:completion:
-                MainActor.assumeIsolated {
-                    self.notifyUserRemoval()
+        Task { @MainActor in
+            guard let user = Auth.auth().currentUser else {
+                return
+            }
+            // if there is a cached user, we trigger a refresh to make sure everything is up to date and correct.
+            // if the refresh fails for a non-network-connectivity-related reason, we log the user out of the app.
+            // this also covers issues such as there being a (valid) logged-in user, but the app connecting to an incorrect firebase deployment.
+            do {
+                logger.notice("Triggering user reload")
+                try await user.reload()
+            } catch {
+                switch AuthErrorCode(rawValue: (error as NSError).code) {
+                case .networkError:
+                    // we make sure that we don't remove the account when we don't have network (e.g., flight mode)
+                    return
+                default:
+                    logger.error("Error trying to reload user: \(error). Will log out. (IsLoggedIn: \(Auth.auth().currentUser != nil))")
+                    do {
+                        try await self.logout()
+                    } catch FirebaseAccountError.notSignedIn {
+                        // the reload() call, for some errors, already triggers an automatic log out,
+                        // meaning that the user might already be signed out when we call `logout()` above.
+                        // we nonetheless call it unconditionally, since it will in both cases notify the Account module of the account removal.
+                    }
                 }
             }
         }
