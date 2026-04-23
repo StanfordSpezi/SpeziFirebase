@@ -11,6 +11,7 @@
 		2FB07593299DF96E00C0B37F /* SpeziFirebaseAccount in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07592299DF96E00C0B37F /* SpeziFirebaseAccount */; };
 		2FB07595299DF96E00C0B37F /* SpeziFirebaseConfiguration in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07594299DF96E00C0B37F /* SpeziFirebaseConfiguration */; };
 		2FB07597299DF96E00C0B37F /* SpeziFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 2FB07596299DF96E00C0B37F /* SpeziFirestore */; };
+		806D151C2F9A86000036D411 /* XCTSpeziAccount in Frameworks */ = {isa = PBXBuildFile; productRef = 806D151B2F9A86000036D411 /* XCTSpeziAccount */; };
 		978DFE922ADB1E1600E2B9B5 /* SpeziFirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 978DFE912ADB1E1600E2B9B5 /* SpeziFirebaseStorage */; };
 		A9D83F9F2B0BDCC7000D0C78 /* SpeziFirebaseAccountStorage in Frameworks */ = {isa = PBXBuildFile; productRef = A9D83F9E2B0BDCC7000D0C78 /* SpeziFirebaseAccountStorage */; };
 /* End PBXBuildFile section */
@@ -85,6 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				806D151C2F9A86000036D411 /* XCTSpeziAccount in Frameworks */,
 				2F746D9F29962B2A00BF54FE /* XCTestExtensions in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -169,6 +171,7 @@
 			name = TestAppUITests;
 			packageProductDependencies = (
 				2F746D9E29962B2A00BF54FE /* XCTestExtensions */,
+				806D151B2F9A86000036D411 /* XCTSpeziAccount */,
 			);
 			productName = ExampleUITests;
 			productReference = 2F6D13AC28F5F386007C25D6 /* TestAppUITests.xctest */;
@@ -203,6 +206,7 @@
 			mainGroup = 2F6D138928F5F384007C25D6;
 			packageReferences = (
 				2F746D9D29962B2A00BF54FE /* XCRemoteSwiftPackageReference "XCTestExtensions" */,
+				806D151A2F9A86000036D411 /* XCRemoteSwiftPackageReference "SpeziAccount" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2F6D139328F5F384007C25D6 /* Products */;
@@ -656,6 +660,14 @@
 				minimumVersion = 1.0.0;
 			};
 		};
+		806D151A2F9A86000036D411 /* XCRemoteSwiftPackageReference "SpeziAccount" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/StanfordSpezi/SpeziAccount.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.7;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -675,6 +687,11 @@
 		2FB07596299DF96E00C0B37F /* SpeziFirestore */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SpeziFirestore;
+		};
+		806D151B2F9A86000036D411 /* XCTSpeziAccount */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 806D151A2F9A86000036D411 /* XCRemoteSwiftPackageReference "SpeziAccount" */;
+			productName = XCTSpeziAccount;
 		};
 		978DFE912ADB1E1600E2B9B5 /* SpeziFirebaseStorage */ = {
 			isa = XCSwiftPackageProductDependency;

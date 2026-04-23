@@ -12,8 +12,6 @@ import SwiftUI
 
 
 struct FirebaseAccountModifier: ViewModifier {
-    static let logger = Logger(subsystem: "edu.stanford.spezi.firebase", category: "FirebaseAccount")
-
     @Environment(\.authorizationController)
     private var authorizationController
 
@@ -28,7 +26,6 @@ struct FirebaseAccountModifier: ViewModifier {
         content
             .task {
                 firebaseModel.authorizationController = authorizationController
-                Self.logger.debug("Retrieved the Sign in With Apple authorization controller from the SwiftUI environment!")
             }
     }
 }
