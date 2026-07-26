@@ -6,11 +6,13 @@
 // SPDX-License-Identifier: MIT
 //
 
-import XCTest
+import Testing
 
 
-final class SpeziFirebaseTests: XCTestCase {
-    func testSpeziFirebase() throws {
-        XCTAssertTrue(true)
+@Suite("SpeziFirebase Tests")
+struct SpeziFirebaseTests {
+    @Test("Module loads successfully")
+    func moduleLoads() {
+        #expect(true)
     }
 }
