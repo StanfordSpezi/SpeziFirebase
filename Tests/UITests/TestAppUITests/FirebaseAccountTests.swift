@@ -8,6 +8,7 @@
 
 import XCTest
 import XCTestExtensions
+import XCTSpeziAccount
 
 
 /// The `FirebaseAccountTests` require the Firebase Authentication Emulator to run at port 9099.
@@ -390,6 +391,7 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
 
         XCTAssertTrue(app.buttons["Close"].exists)
         app.buttons["Close"].tap()
+        app.dismissSavePasswordAlert(timeout: 7) // sometimes shows up even though there was no successful login
 
         XCTAssertTrue(app.buttons["Account Setup"].waitForExistence(timeout: 2.0))
 
@@ -499,12 +501,8 @@ extension XCUIApplication {
         buttons["Account Setup"].tap()
         XCTAssertTrue(self.buttons["Login"].waitForExistence(timeout: 2.0))
         
-        try textFields["E-Mail Address"].enter(value: username)
-        try secureTextFields["Password"].enter(value: password)
-
-        scrollViews.buttons["Login"].tap()
-
-
+        try login(email: username, password: password)
+        
         if close {
             XCTAssertTrue(staticTexts[username].waitForExistence(timeout: 5.0))
             self.buttons["Close"].tap()
@@ -531,7 +529,7 @@ extension XCUIApplication {
 
         XCTAssertTrue(buttons["Signup"].exists)
         collectionViews.buttons["Signup"].tap()
-
+        dismissSavePasswordAlert(timeout: 7)
 
         XCTAssertTrue(staticTexts["Create a new Account"].waitForNonExistence(timeout: 10.0))
         XCTAssertTrue(staticTexts["Your Account"].waitForExistence(timeout: 10.0))
