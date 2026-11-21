@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+@testable import SpeziFirebaseAccount
 import Testing
 
 
