@@ -179,13 +179,23 @@ public actor FirestoreAccountStorage: AccountStorageProvider {
             result[ObjectIdentifier(key)] = key
         }
 
-        listenerRegistrations[accountId] = document.addSnapshotListener { [weak self] snapshot, error in
+        // We observe metadata changes to make sure we receive the server-acknowledged snapshot after a local write.
+        // If the app has *any* local write pending on this document (even to an unrelated field), the snapshot carrying the
+        // full document arrives with `hasPendingWrites == true` and is skipped below. Once the write is acknowledged,
+        // `hasPendingWrites` flips to `false` without the document data changing, i.e., a metadata-only event.
+        // Without observing metadata changes, that event is never delivered and the account details would only contain the
+        // locally written fields until the next server-side change (e.g., when writing details right after app launch,
+        // before the initial load of the document completed).
+        listenerRegistrations[accountId] = document.addSnapshotListener(includeMetadataChanges: true) { [weak self] snapshot, error in
             guard let self else {
                 return
             }
 
             if snapshot?.metadata.hasPendingWrites == true {
-                return // ignore updates we caused locally, see https://firebase.google.com/docs/firestore/query-data/listen#events-local-changes
+                // Skip optimistic local echoes of our own, not yet acknowledged writes (on a cold cache these might only contain the
+                // locally written subset of fields). We process the server-acknowledged snapshot instead.
+                // See https://firebase.google.com/docs/firestore/query-data/listen#events-local-changes
+                return
             }
 
             Task { @Sendable in

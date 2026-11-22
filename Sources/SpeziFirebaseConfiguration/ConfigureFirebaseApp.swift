@@ -36,8 +36,6 @@ public final class ConfigureFirebaseApp: Module, DefaultInitializable {
         case custom(name: String, options: FirebaseOptions)
     }
     
-    @MainActor private static var usedConfigInput: Input?
-    
     @Application(\.logger)
     private var logger
     

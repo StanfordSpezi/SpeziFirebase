@@ -492,6 +492,88 @@ final class FirebaseAccountTests: XCTestCase { // swiftlint:disable:this type_bo
         XCTAssertFalse(app.staticTexts["User Present on Startup, No"].exists)
         XCTAssert(app.staticTexts["User Present on Startup, Yes"].waitForExistence(timeout: 2.0))
     }
+
+    @MainActor
+    func testStaysSignedInOnStartupIfAccountIsValid() async throws {
+        try await FirebaseClient.createAccount(email: "test@username.edu", password: "TestPassword", displayName: "Username Test")
+
+        let app = try launchAndLogin(username: "test@username.edu", password: "TestPassword")
+
+        app.terminate()
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 2.0))
+
+        try relaunchKeepingSignedIn(app)
+
+        // the refresh on launch succeeds, so the user stays signed in
+        XCTAssert(app.staticTexts["test@username.edu"].waitForExistence(timeout: 2.0))
+        sleep(5)
+        XCTAssert(app.staticTexts["test@username.edu"].exists)
+    }
+
+    @MainActor
+    func testLoggedOutOnStartupIfAccountWasDeleted() async throws {
+        try await FirebaseClient.createAccount(email: "test@username.edu", password: "TestPassword", displayName: "Username Test")
+
+        let app = try launchAndLogin(username: "test@username.edu", password: "TestPassword")
+
+        app.terminate()
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 2.0))
+
+        try await FirebaseClient.deleteAllAccounts()
+
+        try relaunchAndAssertLoggedOut(app, username: "test@username.edu")
+    }
+
+    @MainActor
+    func testLoggedOutOnStartupIfAccountWasDisabled() async throws {
+        try await FirebaseClient.createAccount(email: "test@username.edu", password: "TestPassword", displayName: "Username Test")
+
+        let app = try launchAndLogin(username: "test@username.edu", password: "TestPassword")
+
+        app.terminate()
+        XCTAssertTrue(app.wait(for: .notRunning, timeout: 2.0))
+
+        try await FirebaseClient.disableAccount(email: "test@username.edu")
+
+        try relaunchAndAssertLoggedOut(app, username: "test@username.edu")
+    }
+
+    @MainActor
+    private func launchAndLogin(username: String, password: String) throws -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["--firebaseAccount"]
+        app.launch()
+
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 2.0))
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        try app.login(username: username, password: password)
+        XCTAssert(app.staticTexts[username].waitForExistence(timeout: 2.0))
+        return app
+    }
+
+    /// Relaunches the app without the test app's reset that logs out a signed-in user on launch.
+    @MainActor
+    private func relaunchKeepingSignedIn(_ app: XCUIApplication) throws {
+        app.launchArguments = ["--firebaseAccount", "--keep-signed-in"]
+        app.launch()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 2.0))
+
+        XCTAssert(app.buttons["FirebaseAccount"].waitForExistence(timeout: 2.0))
+        app.buttons["FirebaseAccount"].tap()
+
+        XCTAssert(app.staticTexts["User Present on Startup, Yes"].waitForExistence(timeout: 2.0))
+    }
+
+    @MainActor
+    private func relaunchAndAssertLoggedOut(_ app: XCUIApplication, username: String) throws {
+        try relaunchKeepingSignedIn(app)
+
+        // the cached user is restored first, then the refresh on launch fails with a terminal error and logs the user out
+        XCTAssert(app.staticTexts[username].waitForNonExistence(timeout: 10.0))
+    }
 }
 
 

@@ -145,4 +145,45 @@ enum FirebaseClient {
             throw URLError(.fileDoesNotExist)
         }
     }
+
+    // curl -H "Authorization: Bearer owner" -H "Content-Type: application/json" -X POST -d '{"localId":"[ID]","disableUser":true}' http://localhost:9099/identitytoolkit.googleapis.com/v1/projects/spezifirebaseuitests/accounts:update
+    static func disableAccount(email: String) async throws {
+        let queryURL = try XCTUnwrap(
+            URL(string: "http://localhost:9099/identitytoolkit.googleapis.com/v1/projects/\(projectId)/accounts:query")
+        )
+        var queryRequest = URLRequest(url: queryURL)
+        queryRequest.httpMethod = "POST"
+        queryRequest.addValue("Bearer owner", forHTTPHeaderField: "Authorization")
+        queryRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        queryRequest.httpBody = Data("{}".utf8)
+
+        struct QueryResponse: Decodable {
+            struct UserInfo: Decodable {
+                let localId: String
+                let email: String
+            }
+
+            let userInfo: [UserInfo]
+        }
+
+        let (queryData, _) = try await URLSession.shared.data(for: queryRequest)
+        let localId = try XCTUnwrap(
+            try JSONDecoder().decode(QueryResponse.self, from: queryData).userInfo.first { $0.email == email }?.localId
+        )
+
+        let updateURL = try XCTUnwrap(
+            URL(string: "http://localhost:9099/identitytoolkit.googleapis.com/v1/projects/\(projectId)/accounts:update")
+        )
+        var updateRequest = URLRequest(url: updateURL)
+        updateRequest.httpMethod = "POST"
+        updateRequest.addValue("Bearer owner", forHTTPHeaderField: "Authorization")
+        updateRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        updateRequest.httpBody = try JSONSerialization.data(withJSONObject: ["localId": localId, "disableUser": true])
+
+        let (_, response) = try await URLSession.shared.data(for: updateRequest)
+        guard let urlResponse = response as? HTTPURLResponse,
+              200...299 ~= urlResponse.statusCode else {
+            throw URLError(.badServerResponse)
+        }
+    }
 }
