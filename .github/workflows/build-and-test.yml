@@ -29,8 +29,7 @@ jobs:
       scheme: SpeziFirebase-Package
   buildandtestuitests:
     name: Build and Test UI Tests
-    # TODO: switch back to @v2 once StanfordBDHG/.github#161 is merged and released.
-    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@vishnu/firebase-emulator-swift-package-ci
+    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
     with:
       artifactname: UITests.xcresult
       runsonlabels: '["macOS", "self-hosted"]'
