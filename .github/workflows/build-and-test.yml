@@ -29,14 +29,16 @@ jobs:
       scheme: SpeziFirebase-Package
   buildandtestuitests:
     name: Build and Test UI Tests
-    uses: StanfordSpezi/.github/.github/workflows/xcodebuild-or-fastlane.yml@v2
+    # TODO: switch back to @v2 once StanfordBDHG/.github#161 is merged and released.
+    uses: StanfordBDHG/.github/.github/workflows/xcodebuild-or-fastlane.yml@vishnu/firebase-emulator-swift-package-ci
     with:
       artifactname: UITests.xcresult
       runsonlabels: '["macOS", "self-hosted"]'
       setupfirebaseemulator: true
       path: Tests/UITests
-      customcommand: |
-          firebase emulators:exec 'set -o pipefail && xcodebuild test -project UITests.xcodeproj -scheme TestApp -destination "platform=iOS Simulator,name=iPhone 17 Pro" -resultBundlePath UITests.xcresult -derivedDataPath ".derivedData" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO -skipPackagePluginValidation -skipMacroValidation | xcbeautify'
+      scheme: TestApp
+      destination: 'platform=iOS Simulator,name=iPhone 17 Pro'
+      resultBundle: UITests.xcresult
   uploadcoveragereport:
     name: Upload Coverage Report
     needs: [buildandtest, buildandtestuitests]
