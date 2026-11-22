@@ -13,7 +13,7 @@ import Foundation
 /// Error thrown by the `FirebaseAccountService`.
 ///
 /// This error type might be thrown by methods of the ``FirebaseAccountService``.
-public enum FirebaseAccountError {
+public enum FirebaseAccountError: Hashable, Sendable {
     /// The provided email is invalid.
     case invalidEmail
     /// The account is already in use.

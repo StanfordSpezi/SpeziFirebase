@@ -106,8 +106,8 @@ private struct UserUpdate {
 ///
 /// ### Signup
 /// - ``signUpAnonymously()``
-/// - ``signUp(with:)-6qeht``
-/// - ``signUp(with:)-1jtx6``
+/// - ``signUp(with:)-(AccountDetails)``
+/// - ``signUp(with:)-(OAuthCredential)``
 ///
 /// ### Login
 /// - ``login(userId:password:)``
@@ -121,6 +121,9 @@ private struct UserUpdate {
 /// ### Logout & Deletion
 /// - ``logout()``
 /// - ``delete()``
+///
+/// ### Refreshing the Account
+/// - ``refresh()``
 ///
 /// ### Presenting the security alert
 /// - ``securityAlert``
@@ -241,33 +244,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         }
 
         Task { @MainActor in
-            guard let user = Auth.auth().currentUser else {
-                return
-            }
-            // if there is a cached user, we trigger a refresh to make sure everything is up to date and correct.
-            // if the refresh fails for a non-network-connectivity-related reason, we log the user out of the app.
-            // this also covers issues such as there being a (valid) logged-in user, but the app connecting to an incorrect firebase deployment.
-            do {
-                logger.notice("Triggering user reload")
-                try await user.reload()
-            } catch {
-                switch AuthErrorCode(rawValue: (error as NSError).code) {
-                case .networkError:
-                    // we make sure that we don't remove the account when we don't have network (e.g., flight mode)
-                    return
-                default:
-                    logger.error("Error trying to reload user: \(error). Will log out. (IsLoggedIn: \(Auth.auth().currentUser != nil))")
-                    do {
-                        try await self.logout()
-                    } catch FirebaseAccountError.notSignedIn {
-                        // the reload() call, for some errors, already triggers an automatic log out,
-                        // meaning that the user might already be signed out when we call `logout()` above.
-                        // we nonetheless call it unconditionally, since it will in both cases notify the Account module of the account removal.
-                    } catch {
-                        logger.error("Error trying to log out after failed reload: \(error)")
-                    }
-                }
-            }
+            await refreshCachedUserOnLaunch()
         }
 
         // Firebase v11.6.0 restore the v10 behavior where the currentUser is available immediately after startup.
@@ -554,6 +531,8 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
             if modifications.modifiedDetails.contains(AccountKeys.userId) {
                 logger.debug("updateEmail(to:) for user.")
                 try await currentUser.updateEmail(to: modifications.modifiedDetails.userId)
+                // make sure the locally cached user (e.g., `email` and `isEmailVerified`) reflects the change
+                try await currentUser.reload()
             }
 
             if let password = modifications.modifiedDetails.password {
@@ -573,7 +552,7 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         }
 
         // None of the above requests will trigger our state change listener, therefore, we just call it manually.
-        await notifyUserSignIn(user: currentUser)
+        await supplyUserDetails(for: currentUser)
     }
 
     private func reauthenticateUser(user: User) async throws -> ReauthenticationOperation {
@@ -629,6 +608,89 @@ public final class FirebaseAccountService: AccountService { // swiftlint:disable
         let changeRequest = user.createProfileChangeRequest()
         changeRequest.displayName = name
         try await changeRequest.commitChanges()
+    }
+
+    /// Refresh the currently signed-in account.
+    ///
+    /// Reloads the Firebase user and supplies the updated account details (e.g., an updated email verification status) to the `Account` module.
+    /// If the email address was verified since the last refresh, the ID token is refreshed as well, so that Firebase Security Rules
+    /// immediately observe the updated `email_verified` claim.
+    ///
+    /// - Note: If the refresh fails for an unrecoverable reason (e.g., the user was deleted or disabled, or the refresh token was revoked),
+    ///     Firebase Auth might sign out the user as part of this call.
+    ///
+    /// - Throws: Throws an ``FirebaseAccountError`` if the operation fails. A ``FirebaseAccountError/notSignedIn`` is thrown if
+    ///     no user is signed in.
+    public func refresh() async throws {
+        try await actionSemaphore.waitCheckingCancellation()
+        defer {
+            actionSemaphore.signal()
+        }
+
+        guard let user = Auth.auth().currentUser else {
+            throw FirebaseAccountError.notSignedIn
+        }
+
+        logger.debug("Reloading user ...")
+        try await mapFirebaseAccountError {
+            try await user.reload()
+        }
+
+        if user.isEmailVerified && account.details?.isVerified != true {
+            // the cached ID token still carries the pre-verification `email_verified` claim;
+            // force a token refresh so Security Rules observe the new state immediately.
+            _ = try await mapFirebaseAccountError {
+                try await user.getIDTokenResult(forcingRefresh: true)
+            }
+        }
+
+        guard Auth.auth().currentUser?.uid == user.uid else {
+            // the user was signed out or switched while we were waiting for the reload
+            return
+        }
+
+        await supplyUserDetails(for: user)
+    }
+
+    /// Refreshes a user restored from the Firebase Auth cache on app launch.
+    ///
+    /// Transient failures (e.g., no network connection) keep the user signed in, while terminal failures (e.g., the user was deleted, disabled,
+    /// the refresh token was revoked, or the app connects to a different Firebase project) sign out the user.
+    private func refreshCachedUserOnLaunch() async {
+        guard Auth.auth().currentUser != nil else {
+            return // no cached user, nothing to refresh
+        }
+
+        do {
+            logger.notice("Triggering user refresh")
+            try await refresh()
+        } catch {
+            // errors that should result in the user being signed out
+            let terminalErrors: Set<FirebaseAccountError> = [
+                .invalidCredentials, // user was deleted or disabled
+                .unknown(.userTokenExpired), // refresh token was revoked (e.g., password reset on another device)
+                .unknown(.invalidUserToken) // ID token was rejected (e.g., a different Firebase project)
+            ]
+            let sessionInvalidated = Auth.auth().currentUser == nil // Firebase Auth already signed out the user
+            let isTerminalError = (error as? FirebaseAccountError).map { terminalErrors.contains($0) } ?? false
+
+            guard sessionInvalidated || isTerminalError else {
+                // most likely a transient error (e.g., no network connection, as in flight mode).
+                // We keep the user signed in; a later refresh will bring everything back in sync.
+                logger.error("Failed to refresh user, keeping the user signed in: \(error)")
+                return
+            }
+
+            logger.error("Failed to refresh user: \(error). Will log out. (IsLoggedIn: \(Auth.auth().currentUser != nil))")
+            do {
+                try await logout()
+            } catch FirebaseAccountError.notSignedIn {
+                // Firebase Auth, for some errors, already signs out the user as part of the reload.
+                // We nonetheless call `logout()` unconditionally, as it notifies the Account module of the account removal in both cases.
+            } catch {
+                logger.error("Error trying to log out after failed refresh: \(error)")
+            }
+        }
     }
 }
 
@@ -828,6 +890,13 @@ extension FirebaseAccountService {
 
         // we don't care if removal of the legacy item fails
         try? localStorage.delete(LocalStorageKey<Never>(StorageKeys.activeAccountService))
+
+        // Even older releases stored the user's email and password in the keychain for re-authentication.
+        // Nothing reads them anymore, so we make sure no stale copy of a user's password remains on the device.
+        try? keychainStorage.deleteCredentials(
+            withUsername: nil,
+            for: .internetPassword(forServer: StorageKeys.emailPasswordCredentials)
+        )
     }
 
     // a overload that just returns void
@@ -953,7 +1022,7 @@ extension FirebaseAccountService {
             let wasAnonymous = account.details?.isAnonymous == true
             let isNewUser = wasAnonymous || update.authResult?.additionalUserInfo?.isNewUser ?? false
 
-            await notifyUserSignIn(user: user, isNewUser: isNewUser)
+            await supplyUserDetails(for: user, isNewUser: isNewUser)
         case .removed:
             notifyUserRemoval()
         }
@@ -1000,7 +1069,12 @@ extension FirebaseAccountService {
         return details
     }
 
-    func notifyUserSignIn(user: User, isNewUser: Bool = false) async {
+    /// Supplies the details of the user to the `Account` module.
+    /// - Parameters:
+    ///   - user: The Firebase user.
+    ///   - isNewUser: Whether the user was just created. If `nil`, the value of the currently associated account details is retained.
+    func supplyUserDetails(for user: User, isNewUser: Bool? = nil) async { // swiftlint:disable:this discouraged_optional_boolean
+        let isNewUser = isNewUser ?? account.details?.isNewUser ?? false
         let details = await buildUserQueryingStorageProvider(user: user, isNewUser: isNewUser)
 
         logger.debug("Notifying SpeziAccount with updated user details.")
