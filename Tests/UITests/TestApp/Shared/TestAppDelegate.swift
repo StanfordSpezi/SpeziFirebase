@@ -50,7 +50,7 @@ class TestAppDelegate: SpeziAppDelegate {
         private var service
 
         func configure() {
-            if account.signedIn {
+            if account.signedIn && !FeatureFlags.keepSignedIn {
                 Task { [logger, service] in
                     do {
                         logger.info("Performing initial logout!")
